@@ -266,6 +266,303 @@
         color: #94a3b8;
         font-size: 14px;
     }
+    .drilldown-btn {
+        appearance: none;
+        border: 1px solid #2563eb;
+        background: transparent;
+        color: #2563eb;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background 0.15s ease, color 0.15s ease;
+    }
+    .drilldown-btn:hover {
+        background: #2563eb;
+        color: #fff;
+    }
+    .drilldown-btn:disabled {
+        border-color: #cbd5e1;
+        color: #94a3b8;
+        cursor: not-allowed;
+    }
+    .cost-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.6);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.2s ease, visibility 0.2s ease;
+    }
+    .cost-modal-overlay.visible {
+        opacity: 1;
+        visibility: visible;
+    }
+    .cost-modal {
+        background: #fff;
+        border-radius: 14px;
+        box-shadow: 0 25px 60px rgba(15, 23, 42, 0.25);
+        max-width: 1100px;
+        width: 95%;
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+        transform: translateY(20px);
+        transition: transform 0.2s ease;
+    }
+    .cost-modal-overlay.visible .cost-modal {
+        transform: translateY(0);
+    }
+    .cost-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: 20px 24px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .cost-modal-header h2 {
+        margin: 0;
+        font-size: 18px;
+        color: #0f172a;
+    }
+    .cost-modal-header .subtitle {
+        margin: 4px 0 0;
+        font-size: 13px;
+        color: #64748b;
+    }
+    .cost-modal-close {
+        appearance: none;
+        border: none;
+        background: #f1f5f9;
+        color: #475569;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        font-size: 18px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.15s ease;
+    }
+    .cost-modal-close:hover {
+        background: #e2e8f0;
+    }
+    .cost-modal-body {
+        padding: 20px 24px;
+        overflow-y: auto;
+        flex: 1;
+    }
+    .cost-modal-kpis {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+    .cost-modal-kpi {
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 14px;
+        text-align: center;
+        background: #fafafa;
+    }
+    .cost-modal-kpi .value {
+        font-size: 20px;
+        font-weight: 700;
+        color: #0f172a;
+    }
+    .cost-modal-kpi .label {
+        margin-top: 4px;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: #94a3b8;
+    }
+    .cost-breakdown-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+    }
+    .cost-breakdown-table th,
+    .cost-breakdown-table td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #f1f5f9;
+        text-align: left;
+    }
+    .cost-breakdown-table th {
+        background: #0f172a;
+        color: #fff;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        position: sticky;
+        top: 0;
+        z-index: 5;
+    }
+    .cost-breakdown-table tr:nth-child(even) { background: #fafafa; }
+    .cost-breakdown-table tr:hover { background: #eef2ff; }
+    .cost-breakdown-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .cost-tag {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 600;
+    }
+    .cost-tag-stock { background: #dcfce7; color: #166534; }
+    .cost-tag-make { background: #dbeafe; color: #1e40af; }
+    .cost-tag-buy { background: #fef9c3; color: #854d0e; }
+    .cost-tag-std { background: #fee2e2; color: #991b1b; }
+    .row-make-header { background: #eff6ff !important; font-weight: 600; color: #1e40af; }
+    .level-0 td:first-child { padding-left: 12px; font-weight: 600; }
+    .level-1 td:first-child { padding-left: 28px; border-left: 3px solid #cbd5e1; }
+    .level-2 td:first-child { padding-left: 44px; border-left: 3px solid #94a3b8; }
+    .level-3 td:first-child { padding-left: 60px; border-left: 3px solid #64748b; }
+    .level-4 td:first-child { padding-left: 76px; border-left: 3px solid #475569; }
+    .cost-modal-loading {
+        text-align: center;
+        padding: 60px 20px;
+        color: #64748b;
+    }
+    .cost-modal-error {
+        text-align: center;
+        padding: 40px 20px;
+        color: #dc2626;
+        background: #fef2f2;
+        border-radius: 8px;
+    }
+    .precedent-section {
+        margin-bottom: 20px;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    .precedent-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 16px;
+        background: #f8fafc;
+        cursor: pointer;
+        user-select: none;
+        transition: background 0.15s ease;
+    }
+    .precedent-header:hover {
+        background: #f1f5f9;
+    }
+    .precedent-header h3 {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 600;
+        color: #1e293b;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .precedent-header .queue-badge {
+        background: #2563eb;
+        color: #fff;
+        font-size: 11px;
+        padding: 2px 8px;
+        border-radius: 999px;
+    }
+    .precedent-header .toggle-icon {
+        font-size: 18px;
+        color: #64748b;
+        transition: transform 0.2s ease;
+    }
+    .precedent-section.expanded .toggle-icon {
+        transform: rotate(180deg);
+    }
+    .precedent-body {
+        display: none;
+        padding: 16px;
+        border-top: 1px solid #e2e8f0;
+    }
+    .precedent-section.expanded .precedent-body {
+        display: block;
+    }
+    .precedent-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        gap: 10px;
+        margin-bottom: 16px;
+    }
+    .precedent-stat {
+        padding: 10px 12px;
+        background: #f8fafc;
+        border-radius: 8px;
+        text-align: center;
+    }
+    .precedent-stat .value {
+        font-size: 18px;
+        font-weight: 700;
+        color: #0f172a;
+    }
+    .precedent-stat .label {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: #64748b;
+        margin-top: 2px;
+    }
+    .precedent-orders-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+    }
+    .precedent-orders-table th,
+    .precedent-orders-table td {
+        padding: 8px 10px;
+        border-bottom: 1px solid #f1f5f9;
+        text-align: left;
+    }
+    .precedent-orders-table th {
+        background: #334155;
+        color: #fff;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+    .precedent-orders-table tr:hover { background: #f8fafc; }
+    .precedent-orders-table tr.current-order {
+        background: #eff6ff !important;
+        font-weight: 600;
+    }
+    .precedent-orders-table tr.current-order td:first-child {
+        border-left: 3px solid #2563eb;
+    }
+    .layers-consumed {
+        font-size: 11px;
+        color: #64748b;
+    }
+    .layers-consumed .layer {
+        margin: 2px 0;
+    }
+    .precedent-note {
+        font-size: 12px;
+        color: #64748b;
+        padding: 12px;
+        background: #fffbeb;
+        border-radius: 8px;
+        margin-top: 12px;
+        border: 1px solid #fef3c7;
+    }
+    .component-precedent {
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px dashed #e2e8f0;
+    }
+    .component-precedent h4 {
+        margin: 0 0 12px;
+        font-size: 13px;
+        color: #475569;
+    }
     @media (max-width: 720px) {
         .workbook-grid {
             grid-template-columns: 1fr;
@@ -367,6 +664,22 @@
         </div>
     </div>
 </div>
+
+<div id="costDrilldownModal" class="cost-modal-overlay">
+    <div class="cost-modal">
+        <div class="cost-modal-header">
+            <div>
+                <h2 id="modalItemTitle">Cost Breakdown</h2>
+                <p class="subtitle" id="modalItemSubtitle"></p>
+            </div>
+            <button type="button" class="cost-modal-close" id="closeCostModal">&times;</button>
+        </div>
+        <div class="cost-modal-body" id="costModalBody">
+            <div class="cost-modal-loading">Loading cost breakdown...</div>
+        </div>
+    </div>
+</div>
+
 <form id="csrfProxyForm" style="display:none;">{% csrf_token %}</form>
 {% endblock content %}
 
@@ -375,6 +688,7 @@
 <script>
 (() => {
     const API_URL = '/core/api/sales-order-bom-cost/';
+    const BOM_COST_API_URL = '/core/api/bom-cost/';
     const warehouse = 'MTG';
     const analyzeBtn = document.getElementById('analyzeBtn');
     const downloadBtn = document.getElementById('downloadBtn');
@@ -387,11 +701,17 @@
         const analysisStatus = document.getElementById('analysisStatus');
         const pricingSourceLabel = document.getElementById('pricingSourceLabel');
         const negativeFilterToggle = document.getElementById('negativeFilter');
+        const costModal = document.getElementById('costDrilldownModal');
+        const costModalBody = document.getElementById('costModalBody');
+        const modalItemTitle = document.getElementById('modalItemTitle');
+        const modalItemSubtitle = document.getElementById('modalItemSubtitle');
+        const closeCostModalBtn = document.getElementById('closeCostModal');
 
         let cachedRows = [];
         let isLoading = false;
         let latestPayload = null;
         let showNegativeOnly = true;
+        let isDrilldownLoading = false;
 
     costFileInput.addEventListener('change', () => {
         if (costFileInput.files && costFileInput.files.length) {
@@ -419,6 +739,440 @@
             );
         }
     });
+
+    closeCostModalBtn.addEventListener('click', closeCostModal);
+    costModal.addEventListener('click', (e) => {
+        if (e.target === costModal) {
+            closeCostModal();
+        }
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && costModal.classList.contains('visible')) {
+            closeCostModal();
+        }
+    });
+    resultsTable.addEventListener('click', (e) => {
+        const btn = e.target.closest('.drilldown-btn');
+        if (!btn) return;
+        const itemCode = btn.dataset.item;
+        const qty = parseFloat(btn.dataset.qty) || 1;
+        const description = btn.dataset.desc || '';
+        const salesOrderNo = btn.dataset.so || '';
+        const lineKey = btn.dataset.linekey || '';
+        const promiseDate = btn.dataset.promise || '';
+        openCostDrilldown(itemCode, qty, description, salesOrderNo, lineKey, promiseDate);
+    });
+
+    function openCostModal() {
+        costModal.classList.add('visible');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeCostModal() {
+        costModal.classList.remove('visible');
+        document.body.style.overflow = '';
+    }
+
+    async function openCostDrilldown(itemCode, quantity, description, salesOrderNo, lineKey, promiseDate) {
+        if (isDrilldownLoading) return;
+        isDrilldownLoading = true;
+
+        modalItemTitle.textContent = itemCode || 'Cost Breakdown';
+        modalItemSubtitle.textContent = description || '';
+        costModalBody.innerHTML = '<div class="cost-modal-loading">Loading cost breakdown...</div>';
+        openCostModal();
+
+        try {
+            const overrideFile = costFileInput.files && costFileInput.files[0];
+            let response;
+
+            if (overrideFile) {
+                const csrfToken = getCsrfToken();
+                if (!csrfToken) {
+                    throw new Error('Missing CSRF token.');
+                }
+                const formData = new FormData();
+                formData.append('item_code', itemCode);
+                formData.append('quantity', quantity);
+                formData.append('warehouse', warehouse);
+                formData.append('cost_override', overrideFile);
+                formData.append('sales_order_no', salesOrderNo);
+                formData.append('line_key', lineKey);
+                formData.append('promise_date', promiseDate);
+                formData.append('include_precedent', 'true');
+                response = await fetch(BOM_COST_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRFToken': csrfToken,
+                    },
+                    credentials: 'same-origin',
+                    body: formData,
+                });
+            } else {
+                const params = new URLSearchParams({
+                    item_code: itemCode,
+                    quantity: quantity,
+                    warehouse: warehouse,
+                    sales_order_no: salesOrderNo,
+                    line_key: lineKey,
+                    promise_date: promiseDate,
+                    include_precedent: 'true',
+                });
+                response = await fetch(`${BOM_COST_API_URL}?${params.toString()}`, {
+                    headers: { 'Accept': 'application/json' },
+                    credentials: 'same-origin',
+                });
+            }
+
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(payload.error || 'Unable to load cost breakdown.');
+            }
+            renderCostBreakdown(payload);
+        } catch (error) {
+            costModalBody.innerHTML = `<div class="cost-modal-error">${error.message || 'Failed to load cost breakdown.'}</div>`;
+        } finally {
+            isDrilldownLoading = false;
+        }
+    }
+
+    function renderCostBreakdown(data) {
+        if (!data || !Array.isArray(data.rows)) {
+            costModalBody.innerHTML = '<div class="cost-modal-error">No breakdown data available.</div>';
+            return;
+        }
+
+        const totalCost = formatCurrency(data.totalCost);
+        const unitCost = formatCurrency(data.unitCost, 2, 4);
+        const elapsed = Math.round(Number(data.elapsedMs) || 0);
+        const qty = formatNumber(data.requestedQuantity || 0, 4);
+        const source = data.pricingSource || 'Standard costs';
+        const isQueueAware = data.queueAware === true;
+
+        // Build cost breakdown table rows
+        let tableRows = '';
+        data.rows.forEach(row => {
+            const tagClass = row.action === 'STOCK' ? 'cost-tag-stock'
+                : row.action === 'MAKE' ? 'cost-tag-make'
+                : row.action === 'BUY' ? 'cost-tag-buy'
+                : 'cost-tag-std';
+            const rowClass = `${row.isHeader ? 'row-make-header' : ''} level-${Math.min(row.level || 0, 4)}`;
+            const rowQty = formatNumber(row.qty, 4);
+            const rowUnit = formatCurrency(row.unit, 2, 4);
+            const rowExt = `${row.isHeader ? '(' : ''}${formatCurrency(row.ext)}${row.isHeader ? ')' : ''}`;
+            const note = row.note || '';
+
+            tableRows += `
+                <tr class="${rowClass}">
+                    <td>${row.item || ''}</td>
+                    <td>${row.desc || ''}</td>
+                    <td><span class="cost-tag ${tagClass}">${row.action}</span></td>
+                    <td class="num">${rowQty}</td>
+                    <td class="num">${rowUnit}</td>
+                    <td class="num">${rowExt}</td>
+                    <td style="font-size:11px; color:#64748b;">${note}</td>
+                </tr>
+            `;
+        });
+
+        // Build precedent demand section if available
+        const precedentHtml = renderPrecedentDemand(data.precedentDemand);
+
+        costModalBody.innerHTML = `
+            <div class="cost-modal-kpis">
+                <div class="cost-modal-kpi">
+                    <div class="value">${totalCost}</div>
+                    <div class="label">Total Cost</div>
+                </div>
+                <div class="cost-modal-kpi">
+                    <div class="value">${unitCost}</div>
+                    <div class="label">Unit Cost</div>
+                </div>
+                <div class="cost-modal-kpi">
+                    <div class="value">${qty}</div>
+                    <div class="label">Quantity</div>
+                </div>
+                <div class="cost-modal-kpi">
+                    <div class="value">${elapsed} ms</div>
+                    <div class="label">Query Time</div>
+                </div>
+            </div>
+            <div style="font-size:12px; color:#64748b; margin-bottom:12px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                <span>Pricing: ${source}</span>
+                ${isQueueAware ? '<span style="background:#dcfce7; color:#166534; padding:2px 8px; border-radius:4px; font-weight:600; font-size:11px;">Queue-Aware Cost</span>' : '<span style="background:#fef3c7; color:#92400e; padding:2px 8px; border-radius:4px; font-weight:600; font-size:11px;">Fresh Calculation</span>'}
+            </div>
+            ${precedentHtml}
+            <div style="overflow-x:auto; max-height:400px; border:1px solid #e2e8f0; border-radius:10px;">
+                <table class="cost-breakdown-table">
+                    <thead>
+                        <tr>
+                            <th>Item / Component</th>
+                            <th>Description</th>
+                            <th>Action</th>
+                            <th class="num">Qty</th>
+                            <th class="num">Unit Cost</th>
+                            <th class="num">Ext Cost</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>${tableRows}</tbody>
+                </table>
+            </div>
+        `;
+
+        // Add event listener for precedent section toggle
+        const precedentSection = costModalBody.querySelector('.precedent-section');
+        if (precedentSection) {
+            const header = precedentSection.querySelector('.precedent-header');
+            header.addEventListener('click', () => {
+                precedentSection.classList.toggle('expanded');
+            });
+        }
+    }
+
+    function renderPrecedentDemand(precedent) {
+        if (!precedent) {
+            return '';
+        }
+
+        const queuePos = precedent.queuePosition || 1;
+        const totalOrders = precedent.totalOpenOrders || 1;
+        const priorOrders = precedent.priorOrders || [];
+        const currentOrder = precedent.currentOrder;
+        const availableStock = formatNumber(precedent.availableStockBefore || 0, 2);
+        const priorConsumption = formatNumber(precedent.totalPriorConsumption || 0, 2);
+        const costImpactEvents = precedent.costImpactEvents || [];
+
+        // Build prior orders table rows
+        let ordersTableHtml = '';
+        priorOrders.forEach((order, idx) => {
+            const promiseDate = order.promiseDate ? formatDate(order.promiseDate) : '—';
+            const layersHtml = (order.layersConsumed || []).map(lc =>
+                `<div class="layer">${formatNumber(lc.qty, 2)} @ ${formatCurrency(lc.unitCost)} (${lc.dateLabel})</div>`
+            ).join('');
+            const productionNote = order.productionQty > 0 ? `<div class="layer" style="color:#1e40af;">+ ${formatNumber(order.productionQty, 2)} production</div>` : '';
+            const purchaseNote = order.purchaseQty > 0 ? `<div class="layer" style="color:#854d0e;">+ ${formatNumber(order.purchaseQty, 2)} purchase</div>` : '';
+
+            ordersTableHtml += `
+                <tr>
+                    <td>${idx + 1}</td>
+                    <td>${order.salesOrderNo || ''}</td>
+                    <td>${promiseDate}</td>
+                    <td class="num">${formatNumber(order.openQty, 2)}</td>
+                    <td><div class="layers-consumed">${layersHtml}${productionNote}${purchaseNote}</div></td>
+                    <td class="num">${formatCurrency(order.unitCost, 2, 4)}</td>
+                </tr>
+            `;
+        });
+
+        // Add current order row
+        if (currentOrder) {
+            const promiseDate = currentOrder.promiseDate ? formatDate(currentOrder.promiseDate) : '—';
+            const layersHtml = (currentOrder.layersConsumed || []).map(lc =>
+                `<div class="layer">${formatNumber(lc.qty, 2)} @ ${formatCurrency(lc.unitCost)} (${lc.dateLabel})</div>`
+            ).join('');
+            const productionNote = currentOrder.productionQty > 0 ? `<div class="layer" style="color:#1e40af;">+ ${formatNumber(currentOrder.productionQty, 2)} production</div>` : '';
+            const purchaseNote = currentOrder.purchaseQty > 0 ? `<div class="layer" style="color:#854d0e;">+ ${formatNumber(currentOrder.purchaseQty, 2)} purchase</div>` : '';
+
+            ordersTableHtml += `
+                <tr class="current-order">
+                    <td>${queuePos} →</td>
+                    <td>${currentOrder.salesOrderNo || ''} (this order)</td>
+                    <td>${promiseDate}</td>
+                    <td class="num">${formatNumber(currentOrder.openQty, 2)}</td>
+                    <td><div class="layers-consumed">${layersHtml}${productionNote}${purchaseNote}</div></td>
+                    <td class="num">${formatCurrency(currentOrder.unitCost, 2, 4)}</td>
+                </tr>
+            `;
+        }
+
+        // Build the "Cost Impact Timeline" section - shows when component costs jump
+        let costImpactHtml = '';
+        if (costImpactEvents.length > 0) {
+            // Sort by position then by change magnitude
+            const sortedEvents = [...costImpactEvents].sort((a, b) => {
+                if (a.triggerOrderPosition !== b.triggerOrderPosition) {
+                    return a.triggerOrderPosition - b.triggerOrderPosition;
+                }
+                return b.costChangePct - a.costChangePct;
+            });
+
+            const eventsHtml = sortedEvents.map(evt => {
+                const pctChange = Math.round(evt.costChangePct);
+                const isThisOrder = evt.affectsCurrent === true;
+                const bgColor = isThisOrder ? '#fef2f2' : '#fff';
+                const borderColor = isThisOrder ? '#fca5a5' : '#e2e8f0';
+                const actionColor = evt.newAction === 'STOCK' ? '#16a34a' : evt.newAction === 'MAKE' ? '#2563eb' : '#d97706';
+                const priorActionColor = evt.priorAction === 'STOCK' ? '#16a34a' : evt.priorAction === 'MAKE' ? '#2563eb' : '#d97706';
+
+                // Show which finished good triggered the cost change
+                const triggerInfo = evt.triggerItem && evt.triggerItem !== evt.componentItem
+                    ? `<div style="font-size:11px; color:#475569; margin-top:4px;">Triggered by: ${evt.triggerItem} ${evt.triggerItemDesc || ''}</div>`
+                    : '';
+
+                // Show root causes if available - the raw materials driving the cost increase
+                let rootCausesHtml = '';
+                if (evt.rootCauses && evt.rootCauses.length > 0) {
+                    const causesHtml = evt.rootCauses.map(rc => {
+                        const rcPct = Math.round(rc.changePct);
+                        const hasPrior = rc.priorCost > 0;
+                        const hasChange = rcPct > 0;
+
+                        // Format the cost display based on whether we have prior data
+                        let costDisplay = '';
+                        if (hasPrior && hasChange) {
+                            costDisplay = `
+                                <span style="color:#64748b;">${formatCurrency(rc.priorCost, 2, 4)} → ${formatCurrency(rc.newCost, 2, 4)}</span>
+                                <span style="color:#dc2626; font-weight:600; margin-left:6px;">+${rcPct}%</span>
+                            `;
+                        } else {
+                            costDisplay = `<span style="color:#1e293b; font-weight:500;">@ ${formatCurrency(rc.newCost, 2, 4)}/ea</span>`;
+                        }
+
+                        const reasonBadge = rc.reason ? `<span style="background:#fef3c7; color:#92400e; font-size:10px; padding:1px 6px; border-radius:3px; margin-left:6px;">${rc.reason}</span>` : '';
+
+                        return `
+                            <div style="display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px solid #fef3c7;">
+                                <div style="flex:1;">
+                                    <span style="font-weight:500;">${rc.item}</span>
+                                    <span style="color:#64748b; font-size:11px; margin-left:4px;">${rc.desc || ''}</span>
+                                    ${reasonBadge}
+                                </div>
+                                <div style="text-align:right; white-space:nowrap; font-size:11px;">
+                                    ${costDisplay}
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+
+                    rootCausesHtml = `
+                        <div style="margin-top:8px; padding:8px; background:#fffbeb; border-radius:4px; font-size:12px;">
+                            <div style="font-weight:500; color:#92400e; margin-bottom:6px;">Sub-Component Cost Breakdown:</div>
+                            ${causesHtml}
+                        </div>
+                    `;
+                }
+
+                return `
+                    <div style="padding:10px 12px; background:${bgColor}; border:1px solid ${borderColor}; border-radius:6px; margin-bottom:8px;">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                            <div style="flex:1;">
+                                <div style="font-weight:600; color:#1e293b;">${evt.componentItem} ${evt.componentDesc || ''}</div>
+                                <div style="font-size:12px; color:#64748b; margin-top:4px;">
+                                    <span style="color:${priorActionColor};">${evt.priorAction}</span>
+                                    ${formatCurrency(evt.priorUnitCost, 2, 4)}
+                                    → <span style="color:${actionColor};">${evt.newAction}</span>
+                                    ${formatCurrency(evt.newUnitCost, 2, 4)}
+                                </div>
+                                ${triggerInfo}
+                            </div>
+                            <div style="text-align:right;">
+                                <div style="font-weight:600; color:#dc2626;">+${pctChange}%</div>
+                                <div style="font-size:11px; color:#64748b;">SO ${evt.triggerOrderNo}</div>
+                            </div>
+                        </div>
+                        ${rootCausesHtml}
+                        ${isThisOrder ? '<div style="font-size:11px; color:#b91c1c; margin-top:6px; font-weight:500;">Affects this order</div>' : ''}
+                    </div>
+                `;
+            }).join('');
+
+            costImpactHtml = `
+                <div style="background:#fef3c7; border:1px solid #fcd34d; border-radius:8px; padding:14px; margin-bottom:16px;">
+                    <div style="font-weight:600; color:#92400e; margin-bottom:10px;">Cost Impact Timeline</div>
+                    <div style="font-size:12px; color:#78350f; margin-bottom:12px;">
+                        Component costs increase >5% at these queue positions:
+                    </div>
+                    ${eventsHtml}
+                </div>
+            `;
+        }
+
+        // Show top cost drivers from the breakdown (always show this for context)
+        const topDrivers = precedent.topCostDrivers || [];
+        let topDriversHtml = '';
+        if (topDrivers.length > 0) {
+            const driversHtml = topDrivers.map(d => {
+                const actionColor = d.action === 'STOCK' ? '#16a34a' : d.action === 'MAKE' ? '#2563eb' : '#d97706';
+                return `
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; padding:6px 0; border-bottom:1px solid #f1f5f9;">
+                        <div style="flex:1;">
+                            <div style="font-weight:500; color:#1e293b;">${d.item} ${d.desc || ''}</div>
+                            <div style="font-size:11px; color:#64748b;">
+                                <span style="color:${actionColor}; font-weight:500;">${d.action}</span>
+                                @ ${formatCurrency(d.unit, 2, 4)}/ea
+                                ${d.note ? ` · ${d.note.replace('Layer: ', '')}` : ''}
+                            </div>
+                        </div>
+                        <div style="text-align:right; white-space:nowrap;">
+                            <div style="font-weight:500;">${formatCurrency(d.ext)}</div>
+                            <div style="font-size:11px; color:#64748b;">${d.pct}%</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            topDriversHtml = `
+                <div style="background:#f0fdf4; border:1px solid #86efac; border-radius:8px; padding:14px; margin-bottom:16px;">
+                    <div style="font-weight:600; color:#166534; margin-bottom:10px;">Top Cost Drivers</div>
+                    <div style="font-size:13px;">${driversHtml}</div>
+                </div>
+            `;
+        }
+
+        return `
+            <div class="precedent-section">
+                <div class="precedent-header">
+                    <h3>
+                        Precedent Demand
+                        <span class="queue-badge">#${queuePos} of ${totalOrders}</span>
+                        ${costImpactEvents.length > 0 ? `<span style="background:#fef2f2; color:#dc2626; font-size:11px; padding:2px 8px; border-radius:999px; margin-left:6px;">${costImpactEvents.length} cost impact${costImpactEvents.length > 1 ? 's' : ''}</span>` : ''}
+                    </h3>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div class="precedent-body">
+                    ${topDriversHtml}
+                    ${costImpactHtml}
+                    <div class="precedent-summary">
+                        <div class="precedent-stat">
+                            <div class="value">${queuePos}</div>
+                            <div class="label">Queue Position</div>
+                        </div>
+                        <div class="precedent-stat">
+                            <div class="value">${priorOrders.length}</div>
+                            <div class="label">Prior Orders</div>
+                        </div>
+                        <div class="precedent-stat">
+                            <div class="value">${availableStock}</div>
+                            <div class="label">Total Stock</div>
+                        </div>
+                        <div class="precedent-stat">
+                            <div class="value">${priorConsumption}</div>
+                            <div class="label">Prior Consumption</div>
+                        </div>
+                    </div>
+                    ${priorOrders.length > 0 || currentOrder ? `
+                        <div style="overflow-x:auto; border:1px solid #e2e8f0; border-radius:8px;">
+                            <table class="precedent-orders-table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Sales Order</th>
+                                        <th>Promise Date</th>
+                                        <th class="num">Open Qty</th>
+                                        <th>Layers Consumed</th>
+                                        <th class="num">Unit Cost</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${ordersTableHtml}</tbody>
+                            </table>
+                        </div>
+                    ` : '<div style="text-align:center; padding:20px; color:#64748b;">No prior orders in queue.</div>'}
+                </div>
+            </div>
+        `;
+    }
 
     function setLoading(state) {
         isLoading = state;
@@ -562,6 +1316,8 @@
             const marginClass = row.margin < 0 ? 'negative' : 'positive';
             const statusClass = row.status === 'ok' ? 'ok' : 'error';
             const promiseDate = formatDate(row.promiseDate);
+            const safeDesc = (row.description || '').replace(/"/g, '&quot;');
+            const canDrilldown = row.status === 'ok' && row.itemCode;
             return `
                 <tr>
                     <td>${promiseDate}</td>
@@ -577,6 +1333,9 @@
                     <td class="num">
                         <span class="status-chip ${statusClass}">${row.status === 'ok' ? 'OK' : 'Check'}</span>
                         ${row.statusNote ? `<div style="font-size:11px;color:#64748b;margin-top:4px;">${row.statusNote}</div>` : ''}
+                    </td>
+                    <td>
+                        <button type="button" class="drilldown-btn" data-item="${row.itemCode || ''}" data-qty="${row.openQty || 1}" data-desc="${safeDesc}" data-so="${row.salesOrderNo || ''}" data-linekey="${row.lineKey || ''}" data-promise="${row.promiseDate || ''}" ${canDrilldown ? '' : 'disabled'}>Drilldown</button>
                     </td>
                 </tr>
             `;
@@ -598,6 +1357,7 @@
                             <th class="num">Margin $</th>
                             <th class="num">Margin %</th>
                             <th>Status</th>
+                            <th>Cost Details</th>
                         </tr>
                     </thead>
                     <tbody>${tableRows}</tbody>
