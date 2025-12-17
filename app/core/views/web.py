@@ -154,6 +154,21 @@ def display_sales_order_vs_bom_cost_report(request):
     """Render the Sales Order vs BOM Cost report UI."""
     return render(request, 'core/reports/sales_order_vs_bom_cost.html')
 
+
+@login_required
+def display_blend_costing_report(request):
+    """Render blend costing report comparing actual labor hours to standard costs."""
+    item_code_filter = request.GET.get('item_code') or None
+    report_data = get_blend_costing_report_data(item_code_filter)
+
+    context = {
+        'rows': report_data['rows'],
+        'item_codes': report_data['item_codes'],
+        'selected_item_code': item_code_filter or '',
+    }
+
+    return render(request, 'core/reports/blendcostingreport.html', context)
+
 def display_blend_shortages(request):
     """
     Displays a page showing blend shortages and related information.
