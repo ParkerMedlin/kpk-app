@@ -158,13 +158,10 @@ def display_sales_order_vs_bom_cost_report(request):
 @login_required
 def display_blend_costing_report(request):
     """Render blend costing report comparing actual labor hours to standard costs."""
-    item_code_filter = request.GET.get('item_code') or None
-    report_data = get_blend_costing_report_data(item_code_filter)
+    report_data = get_blend_costing_report_data()
 
     context = {
         'rows': report_data['rows'],
-        'item_codes': report_data['item_codes'],
-        'selected_item_code': item_code_filter or '',
     }
 
     return render(request, 'core/reports/blendcostingreport.html', context)

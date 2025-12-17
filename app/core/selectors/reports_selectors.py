@@ -61,26 +61,13 @@ def get_blend_costing_report_data(item_code_filter=None):
     Return blend costing rows comparing actual labor hours to standard blend cost.
 
     Args:
-        item_code_filter (str | None): optional blend item code to filter results.
+        item_code_filter (str | None): optional blend item code to filter results (currently unused).
 
     Returns:
         dict: {
-            'rows': list of row dicts,
-            'item_codes': sorted list of available blend item codes for the filter dropdown
+            'rows': list of row dicts
         }
     """
-    base_params = ['/BLD%']
-    distinct_sql = """
-        SELECT DISTINCT lr.item_code
-        FROM core_lotnumrecord lr
-        LEFT JOIN bill_of_materials bom
-            ON lr.item_code = bom.item_code
-        WHERE bom.component_item_code LIKE %s
-          AND lr.start_time IS NOT NULL
-          AND lr.stop_time IS NOT NULL
-        ORDER BY lr.item_code
-    """
-
     params = ['/BLD%']
     data_sql = """
         SELECT
@@ -100,19 +87,11 @@ def get_blend_costing_report_data(item_code_filter=None):
           AND lr.stop_time IS NOT NULL
     """
 
-    if item_code_filter:
-        data_sql += " AND lr.item_code = %s"
-        params.append(item_code_filter)
-
     data_sql += " ORDER BY lr.lot_number DESC"
 
     rows = []
-    item_codes = []
 
     with connection.cursor() as cursor:
-        cursor.execute(distinct_sql, base_params)
-        item_codes = [row[0] for row in cursor.fetchall() if row[0]]
-
         cursor.execute(data_sql, params)
         for (
             lot_number,
@@ -130,4 +109,4 @@ def get_blend_costing_report_data(item_code_filter=None):
                 'extended_lot_cost': extended_lot_cost,
                 'hours': hours,
             })
-    return {'rows': rows, 'item_codes': item_codes}
+    return {'rows': rows}

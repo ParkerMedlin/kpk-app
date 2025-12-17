@@ -13,24 +13,6 @@
         <a class="btn btn-link p-0" href="/core/reports/">Return to Reports</a>
     </div>
 
-    <form method="get" class="row g-3 align-items-end mb-4">
-        <div class="col-md-4">
-            <label for="item_code" class="form-label">Blend Item Code</label>
-            <select id="item_code" name="item_code" class="form-select">
-                <option value="">All blend items</option>
-                {% for code in item_codes %}
-                    <option value="{{ code }}" {% if code == selected_item_code %}selected{% endif %}>{{ code }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="col-md-3">
-            <button type="submit" class="btn btn-primary">Apply Filter</button>
-            {% if selected_item_code %}
-                <a href="{% url 'blend-costing-report' %}" class="btn btn-outline-secondary ms-2">Reset</a>
-            {% endif %}
-        </div>
-    </form>
-
     <div class="card">
         <div class="card-body">
             <div class="table-responsive">
