@@ -19,6 +19,7 @@ urlpatterns = [
     path('timestudies/', web.display_timestudy_entry, name='display-timestudies'),
     path('timestudies/report/', web.display_timestudy_report, name='timestudy-report'),
     path('reports/', web.display_report_center, name='report-center'),
+    path('blend-costing-report/', web.display_blend_costing_report, name='blend-costing-report'),
     path('blend-protection-audit/', web.display_blend_protection_audit, name='blend-protection-audit'),
     path('blend-protection-audit/run-uv-freeze/', web.trigger_uv_freeze_audit, name='run-uv-freeze-audit'),
     path('blend-schedule/', web.display_blend_schedule, name='blend-schedule'),

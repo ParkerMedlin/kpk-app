@@ -54,3 +54,80 @@ def get_excess_blends():
     total_excess_inventory_value = sum(item['excess_inventory_value'] for item in excess_blends)
 
     return {'query_results' : excess_blends, 'total_excess_inventory_value' : total_excess_inventory_value}
+
+
+def get_blend_costing_report_data(item_code_filter=None):
+    """
+    Return blend costing rows comparing actual labor hours to standard blend cost.
+
+    Args:
+        item_code_filter (str | None): optional blend item code to filter results.
+
+    Returns:
+        dict: {
+            'rows': list of row dicts,
+            'item_codes': sorted list of available blend item codes for the filter dropdown
+        }
+    """
+    base_params = ['/BLD%']
+    distinct_sql = """
+        SELECT DISTINCT lr.item_code
+        FROM core_lotnumrecord lr
+        LEFT JOIN bill_of_materials bom
+            ON lr.item_code = bom.item_code
+        WHERE bom.component_item_code LIKE %s
+          AND lr.start_time IS NOT NULL
+          AND lr.stop_time IS NOT NULL
+        ORDER BY lr.item_code
+    """
+
+    params = ['/BLD%']
+    data_sql = """
+        SELECT
+            lr.lot_number,
+            lr.lot_quantity,
+            lr.item_code,
+            ci.standardunitcost AS standard_unit_cost,
+            (ci.standardunitcost * lr.lot_quantity) AS extended_lot_cost,
+            EXTRACT(EPOCH FROM (lr.stop_time - lr.start_time)) / 3600.0 AS hours
+        FROM core_lotnumrecord lr
+        LEFT JOIN bill_of_materials bom
+            ON lr.item_code = bom.item_code
+        LEFT JOIN ci_item ci
+            ON bom.component_item_code = ci.itemcode
+        WHERE bom.component_item_code LIKE %s
+          AND lr.start_time IS NOT NULL
+          AND lr.stop_time IS NOT NULL
+    """
+
+    if item_code_filter:
+        data_sql += " AND lr.item_code = %s"
+        params.append(item_code_filter)
+
+    data_sql += " ORDER BY lr.lot_number DESC"
+
+    rows = []
+    item_codes = []
+
+    with connection.cursor() as cursor:
+        cursor.execute(distinct_sql, base_params)
+        item_codes = [row[0] for row in cursor.fetchall() if row[0]]
+
+        cursor.execute(data_sql, params)
+        for (
+            lot_number,
+            lot_quantity,
+            item_code,
+            standard_unit_cost,
+            extended_lot_cost,
+            hours,
+        ) in cursor.fetchall():
+            rows.append({
+                'lot_number': lot_number,
+                'lot_quantity': lot_quantity,
+                'item_code': item_code,
+                'standard_unit_cost': standard_unit_cost,
+                'extended_lot_cost': extended_lot_cost,
+                'hours': hours,
+            })
+    return {'rows': rows, 'item_codes': item_codes}
