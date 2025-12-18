@@ -192,6 +192,14 @@ _MISC_REPORT_DEFINITIONS = [
         'requires_start_time': False,
         'direct_url': '/core/timestudies/report/',
     },
+    {
+        'slug': 'Blend-Costing-Report',
+        'label': 'Blend Costing Report',
+        'requires_item': False,
+        'requires_quantity': False,
+        'requires_start_time': False,
+        'direct_url': '/core/blend-costing-report/',
+    },
 ]
 
 def get_active_blends_missing_blend_protection():
