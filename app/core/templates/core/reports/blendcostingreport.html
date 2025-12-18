@@ -20,20 +20,20 @@
                     <thead class="table-light">
                         <tr>
                             <th scope="col">Lot #</th>
-                            <th scope="col" class="text-end">Gallons</th>
                             <th scope="col">Blend Item</th>
+                            <th scope="col" class="text-end">Gallons</th>
                             <th scope="col" class="text-end">Std Cost / Unit</th>
-                            <th scope="col" class="text-end">Extended Lot Cost</th>
+                            <th scope="col" class="text-end">Sage Labor Cost</th>
                             <th scope="col" class="text-end">Hours (actual)</th>
-                            <th scope="col" class="text-end">Labor Cost</th>
+                            <th scope="col" class="text-end">Actual Labor Cost</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for row in rows %}
                         <tr>
                             <td>{{ row.lot_number }}</td>
-                            <td class="text-end">{{ row.lot_quantity|floatformat:2 }}</td>
                             <td>{{ row.item_code }}</td>
+                            <td class="text-end">{{ row.lot_quantity|floatformat:2 }}</td>
                             <td class="text-end">${{ row.standard_unit_cost|floatformat:4 }}</td>
                             <td class="text-end">${{ row.extended_lot_cost|floatformat:2 }}</td>
                             <td class="text-end">{{ row.hours|floatformat:2 }}</td>
