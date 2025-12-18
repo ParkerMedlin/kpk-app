@@ -25,6 +25,7 @@
                             <th scope="col" class="text-end">Std Cost / Unit</th>
                             <th scope="col" class="text-end">Extended Lot Cost</th>
                             <th scope="col" class="text-end">Hours (actual)</th>
+                            <th scope="col" class="text-end">Labor Cost</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -36,10 +37,17 @@
                             <td class="text-end">${{ row.standard_unit_cost|floatformat:4 }}</td>
                             <td class="text-end">${{ row.extended_lot_cost|floatformat:2 }}</td>
                             <td class="text-end">{{ row.hours|floatformat:2 }}</td>
+                            <td class="text-end">
+                                {% if row.labor_cost is not None %}
+                                    ${{ row.labor_cost|floatformat:2 }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="6" class="text-center">No results found for the selected criteria.</td>
+                            <td colspan="7" class="text-center">No results found for the selected criteria.</td>
                         </tr>
                         {% endfor %}
                     </tbody>
