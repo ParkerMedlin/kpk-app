@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}<title>Desk Labor Rates</title>{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-3">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <h1 class="mb-0">Desk Labor Rates</h1>
+        <div class="text-muted">Admin only</div>
+    </div>
+
+    <form id="desk-labor-rates-csrf" style="display:none;" aria-hidden="true">{% csrf_token %}</form>
+
+    <div id="alert-container" class="mb-3" style="display:none;">
+        <div class="alert mb-0" role="alert"></div>
+    </div>
+
+    <div class="table-responsive-sm">
+        <table class="table table-striped align-middle" id="desk-labor-rates-table">
+            <thead class="th-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
+                <tr>
+                    <th scope="col" style="min-width: 160px;">Desk</th>
+                    <th scope="col" style="min-width: 140px;">Hourly Rate ($/hr)</th>
+                    <th scope="col" style="min-width: 200px;">Updated At</th>
+                    <th scope="col" style="min-width: 140px;">Updated By</th>
+                    <th scope="col" style="width: 140px;" class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rate in rates %}
+                    <tr class="rate-row" data-desk="{{ rate.desk_name }}">
+                        <td class="desk-name fw-semibold">{{ rate.desk_name }}</td>
+                        <td class="hourly-rate" data-value="{{ rate.hourly_rate }}">{{ rate.hourly_rate }}</td>
+                        <td class="updated-at text-muted small">
+                            {% if rate.updated_at %}{{ rate.updated_at|date:'Y-m-d H:i' }}{% else %}—{% endif %}
+                        </td>
+                        <td class="updated-by text-muted">{{ rate.updated_by.username|default_if_none:"—" }}</td>
+                        <td class="text-center" data-field="actions">
+                            <button type="button" class="btn btn-sm btn-outline-primary edit-btn">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4 text-muted">No desk labor rates have been configured yet.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const table = document.getElementById('desk-labor-rates-table');
+    const alertContainer = document.getElementById('alert-container');
+    const alertBox = alertContainer.querySelector('.alert');
+
+    const csrfToken = (() => {
+        const csrfInput = document.querySelector('input[name=\"csrfmiddlewaretoken\"]');
+        return csrfInput ? csrfInput.value : '';
+    })();
+
+    const formatMoney = (value) => {
+        const num = Number(value);
+        if (Number.isNaN(num)) return '—';
+        return num.toFixed(2);
+    };
+
+    const showAlert = (message, type='success') => {
+        alertBox.className = `alert alert-${type}`;
+        alertBox.textContent = message;
+        alertContainer.style.display = 'block';
+        setTimeout(() => {
+            alertContainer.style.display = 'none';
+        }, 4000);
+    };
+
+    const enterEditMode = (row) => {
+        const rateCell = row.querySelector('.hourly-rate');
+        const currentValue = rateCell.dataset.value || rateCell.textContent.trim();
+
+        rateCell.innerHTML = '';
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.min = '0';
+        input.step = '0.01';
+        input.className = 'form-control form-control-sm';
+        input.value = Number(currentValue || 0).toFixed(2);
+        rateCell.appendChild(input);
+        input.focus();
+
+        const actionsCell = row.querySelector('[data-field=\"actions\"]');
+        actionsCell.innerHTML = `
+            <button type=\"button\" class=\"btn btn-sm btn-success save-btn\"><i class=\"fas fa-save\"></i> Save</button>
+            <button type=\"button\" class=\"btn btn-sm btn-secondary ms-1 cancel-btn\">Cancel</button>
+        `;
+
+        actionsCell.querySelector('.save-btn').addEventListener('click', () => handleSave(row, input));
+        actionsCell.querySelector('.cancel-btn').addEventListener('click', () => exitEditMode(row, currentValue));
+    };
+
+    const exitEditMode = (row, value) => {
+        const rateCell = row.querySelector('.hourly-rate');
+        rateCell.dataset.value = value;
+        rateCell.textContent = formatMoney(value);
+
+        const actionsCell = row.querySelector('[data-field=\"actions\"]');
+        actionsCell.innerHTML = `
+            <button type=\"button\" class=\"btn btn-sm btn-outline-primary edit-btn\">
+                <i class=\"fas fa-edit\"></i> Edit
+            </button>
+        `;
+        actionsCell.querySelector('.edit-btn').addEventListener('click', () => enterEditMode(row));
+    };
+
+    const handleSave = async (row, input) => {
+        const deskName = row.dataset.desk;
+        const newRate = input.value;
+
+        try {
+            const response = await fetch('/core/api/desk-labor-rates/update/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken,
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ desk_name: deskName, hourly_rate: newRate }),
+                credentials: 'same-origin',
+            });
+
+            const data = await response.json();
+            if (!response.ok || data.status !== 'success') {
+                throw new Error(data.error || 'Failed to save rate');
+            }
+
+            const updated = data.rate;
+            const rateCell = row.querySelector('.hourly-rate');
+            rateCell.dataset.value = updated.hourly_rate;
+            rateCell.textContent = formatMoney(updated.hourly_rate);
+
+            row.querySelector('.updated-at').textContent = updated.updated_at
+                ? new Date(updated.updated_at).toLocaleString()
+                : '—';
+            row.querySelector('.updated-by').textContent = updated.updated_by || '—';
+
+            const actionsCell = row.querySelector('[data-field=\"actions\"]');
+            actionsCell.innerHTML = `
+                <button type=\"button\" class=\"btn btn-sm btn-outline-primary edit-btn\">
+                    <i class=\"fas fa-edit\"></i> Edit
+                </button>
+            `;
+            actionsCell.querySelector('.edit-btn').addEventListener('click', () => enterEditMode(row));
+
+            showAlert('Rate saved successfully.', 'success');
+        } catch (err) {
+            showAlert(err.message || 'Unable to save rate.', 'danger');
+        }
+    };
+
+    if (table) {
+        table.querySelectorAll('.rate-row .edit-btn').forEach((btn) => {
+            btn.addEventListener('click', (e) => {
+                const row = e.target.closest('tr');
+                enterEditMode(row);
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

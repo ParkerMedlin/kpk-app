@@ -17,6 +17,7 @@ from core.models import (
     BlendContainerClassification,
     SoSalesOrderDetail,
     ProductionHoliday,
+    DeskLaborRate,
 )
 from prodverse.models import SpecSheetData
 from django.http import JsonResponse, HttpRequest
@@ -1953,6 +1954,66 @@ def delete_json_production_holiday(request, holiday_id):
         return JsonResponse({'status': 'error', 'error': str(exc)}, status=404)
 
     return JsonResponse({'status': 'success', 'holiday_id': holiday_id})
+
+
+@login_required
+@require_GET
+def get_json_desk_labor_rates(request):
+    """List all desk labor rates (staff-only)."""
+    if not _require_staff(request.user):
+        return JsonResponse({'error': 'Forbidden'}, status=403)
+
+    rates = [
+        {
+            'id': rate.id,
+            'desk_name': rate.desk_name,
+            'hourly_rate': float(rate.hourly_rate),
+            'updated_at': rate.updated_at.isoformat() if rate.updated_at else None,
+            'updated_by': rate.updated_by.get_username() if rate.updated_by else None,
+        }
+        for rate in DeskLaborRate.objects.order_by('desk_name')
+    ]
+
+    return JsonResponse({'status': 'success', 'rates': rates})
+
+
+@login_required
+@require_POST
+def update_json_desk_labor_rate(request):
+    """Create or update a desk labor rate (staff-only)."""
+    if not _require_staff(request.user):
+        return JsonResponse({'error': 'Forbidden'}, status=403)
+
+    payload = _parse_json_payload(request) or request.POST
+    desk_name = (payload.get('desk_name') or '').strip()
+    hourly_rate_raw = (payload.get('hourly_rate') or '').strip()
+
+    if not desk_name:
+        return JsonResponse({'error': 'desk_name is required'}, status=400)
+
+    try:
+        hourly_rate = Decimal(hourly_rate_raw)
+    except (InvalidOperation, ValueError):
+        return JsonResponse({'error': 'hourly_rate must be numeric'}, status=400)
+
+    if hourly_rate < 0:
+        return JsonResponse({'error': 'hourly_rate must be non-negative'}, status=400)
+
+    rate_obj, _created = DeskLaborRate.objects.get_or_create(desk_name=desk_name)
+    rate_obj.hourly_rate = hourly_rate
+    rate_obj.updated_by = request.user
+    rate_obj.save(update_fields=['hourly_rate', 'updated_by', 'updated_at'])
+
+    return JsonResponse({
+        'status': 'success',
+        'rate': {
+            'id': rate_obj.id,
+            'desk_name': rate_obj.desk_name,
+            'hourly_rate': float(rate_obj.hourly_rate),
+            'updated_at': rate_obj.updated_at.isoformat() if rate_obj.updated_at else None,
+            'updated_by': rate_obj.updated_by.get_username() if rate_obj.updated_by else None,
+        }
+    })
 
 @csrf_exempt
 def validate_blend_item(request):
