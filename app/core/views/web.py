@@ -154,6 +154,18 @@ def display_sales_order_vs_bom_cost_report(request):
     """Render the Sales Order vs BOM Cost report UI."""
     return render(request, 'core/reports/sales_order_vs_bom_cost.html')
 
+
+@login_required
+def display_blend_costing_report(request):
+    """Render blend costing report comparing actual labor hours to standard costs."""
+    report_data = get_blend_costing_report_data()
+
+    context = {
+        'rows': report_data['rows'],
+    }
+
+    return render(request, 'core/reports/blendcostingreport.html', context)
+
 def display_blend_shortages(request):
     """
     Displays a page showing blend shortages and related information.
@@ -2110,3 +2122,14 @@ def display_production_holidays(request):
     }
 
     return render(request, 'core/production_holidays.html', context)
+
+
+@login_required
+@ensure_csrf_cookie
+def display_desk_labor_rates(request):
+    """Admin-only page to view and edit hourly labor rates by desk."""
+    if not (request.user.is_staff or request.user.is_superuser):
+        return HttpResponseForbidden('Admin access required.')
+
+    rates = DeskLaborRate.objects.order_by('desk_name')
+    return render(request, 'core/desk_labor_rates.html', {'rates': rates})
