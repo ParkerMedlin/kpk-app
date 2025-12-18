@@ -31,6 +31,22 @@ class ProductionHoliday(models.Model):
             label += f" - {self.description}"
         return label
 
+
+class DeskLaborRate(models.Model):
+    """Hourly labor rate configuration per production desk."""
+
+    desk_name = models.CharField(max_length=50, unique=True)
+    hourly_rate = models.DecimalField(max_digits=10, decimal_places=2)
+    updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+
+    class Meta:
+        db_table = 'core_desklaborrate'
+        ordering = ['desk_name']
+
+    def __str__(self):
+        return f"{self.desk_name}: {self.hourly_rate}"
+
 class AdjustmentStatistic(models.Model):
     id = models.IntegerField(primary_key=True)
     item_code = models.TextField(blank=True, null=True)

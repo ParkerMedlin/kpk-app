@@ -2122,3 +2122,14 @@ def display_production_holidays(request):
     }
 
     return render(request, 'core/production_holidays.html', context)
+
+
+@login_required
+@ensure_csrf_cookie
+def display_desk_labor_rates(request):
+    """Admin-only page to view and edit hourly labor rates by desk."""
+    if not (request.user.is_staff or request.user.is_superuser):
+        return HttpResponseForbidden('Admin access required.')
+
+    rates = DeskLaborRate.objects.order_by('desk_name')
+    return render(request, 'core/desk_labor_rates.html', {'rates': rates})
