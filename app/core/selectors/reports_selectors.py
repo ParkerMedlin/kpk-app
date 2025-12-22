@@ -54,3 +54,67 @@ def get_excess_blends():
     total_excess_inventory_value = sum(item['excess_inventory_value'] for item in excess_blends)
 
     return {'query_results' : excess_blends, 'total_excess_inventory_value' : total_excess_inventory_value}
+
+
+def get_blend_costing_report_data(item_code_filter=None):
+    """
+    Return blend costing rows comparing actual labor hours to standard blend cost and labor cost.
+
+    Args:
+        item_code_filter (str | None): optional blend item code to filter results (currently unused).
+
+    Returns:
+        dict: {
+            'rows': list of row dicts
+        }
+    """
+    params = ['/BLD%']
+    data_sql = """
+        SELECT
+            lr.lot_number,
+            lr.lot_quantity,
+            lr.item_code,
+            ci.standardunitcost AS standard_unit_cost,
+            (ci.standardunitcost * lr.lot_quantity) AS extended_lot_cost,
+            EXTRACT(EPOCH FROM (lr.stop_time - lr.start_time)) / 3600.0 AS hours,
+            dlr.hourly_rate AS desk_hourly_rate,
+            (dlr.hourly_rate * (EXTRACT(EPOCH FROM (lr.stop_time - lr.start_time)) / 3600.0)) AS labor_cost
+        FROM core_lotnumrecord lr
+        LEFT JOIN bill_of_materials bom
+            ON lr.item_code = bom.item_code
+        LEFT JOIN ci_item ci
+            ON bom.component_item_code = ci.itemcode
+        LEFT JOIN core_desklaborrate dlr
+            ON lr.desk = dlr.desk_name
+        WHERE bom.component_item_code LIKE %s
+          AND lr.start_time IS NOT NULL
+          AND lr.stop_time IS NOT NULL
+    """
+
+    data_sql += " ORDER BY lr.lot_number DESC"
+
+    rows = []
+
+    with connection.cursor() as cursor:
+        cursor.execute(data_sql, params)
+        for (
+            lot_number,
+            lot_quantity,
+            item_code,
+            standard_unit_cost,
+            extended_lot_cost,
+            hours,
+            desk_hourly_rate,
+            labor_cost,
+        ) in cursor.fetchall():
+            rows.append({
+                'lot_number': lot_number,
+                'lot_quantity': lot_quantity,
+                'item_code': item_code,
+                'standard_unit_cost': standard_unit_cost,
+                'extended_lot_cost': extended_lot_cost,
+                'hours': hours,
+                'desk_hourly_rate': desk_hourly_rate,
+                'labor_cost': labor_cost,
+            })
+    return {'rows': rows}

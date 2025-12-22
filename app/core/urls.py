@@ -19,6 +19,7 @@ urlpatterns = [
     path('timestudies/', web.display_timestudy_entry, name='display-timestudies'),
     path('timestudies/report/', web.display_timestudy_report, name='timestudy-report'),
     path('reports/', web.display_report_center, name='report-center'),
+    path('blend-costing-report/', web.display_blend_costing_report, name='blend-costing-report'),
     path('blend-protection-audit/', web.display_blend_protection_audit, name='blend-protection-audit'),
     path('blend-protection-audit/run-uv-freeze/', web.trigger_uv_freeze_audit, name='run-uv-freeze-audit'),
     path('blend-schedule/', web.display_blend_schedule, name='blend-schedule'),
@@ -75,6 +76,7 @@ urlpatterns = [
     path('purchasing-aliases/', web.display_all_purchasing_aliases, name='display_all_purchasing_aliases'),
     path('container-classifications/', web.display_container_classifications, name='display_container_classifications'),
     path('production-holidays/', web.display_production_holidays, name='production-holidays'),
+    path('desk-labor-rates/', web.display_desk_labor_rates, name='desk-labor-rates'),
 
     path('add-lot-num-record/', lot_numbers_services.add_lot_num_record, name='add-lot-num-record'),
     path('update-lot-num-record/<lot_num_id>', lot_numbers_services.update_lot_num_record, name='update-lot-num-record'),
@@ -166,6 +168,8 @@ urlpatterns = [
     path('api/production-holiday/create/', api.create_json_production_holiday, name='create-production-holiday'),
     path('api/production-holiday/<int:holiday_id>/', api.update_json_production_holiday, name='update-production-holiday'),
     path('api/production-holiday/<int:holiday_id>/delete/', api.delete_json_production_holiday, name='delete-production-holiday'),
+    path('api/desk-labor-rates/', api.get_json_desk_labor_rates, name='api-desk-labor-rates'),
+    path('api/desk-labor-rates/update/', api.update_json_desk_labor_rate, name='api-desk-labor-rate-update'),
 ]
 
 websocket_urlpatterns = [
