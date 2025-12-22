@@ -2,7 +2,7 @@
 
 A lightweight, portable control panel for managing the KPK App infrastructure via SSH.
 
-**Version:** 0.2.0
+**Version:** 0.3.0
 
 ## Features
 
@@ -15,6 +15,7 @@ A lightweight, portable control panel for managing the KPK App infrastructure vi
 - **Start Missing** - Start only services that aren't currently running
 - **Stop All** - Graceful shutdown of all services (kills process trees to clean up child processes)
 - **Reload Nginx Config** - Hot-reload nginx configuration without restart
+- **Git Control** - Remote git management (pull updates, view status, run collectstatic)
 
 ## Requirements
 
@@ -184,6 +185,18 @@ SSH User (jdavis) ──► SSH to server ──► PowerShell via SSH
 | excel_worker | `host-services/workers/excel_worker.py` | Processes Excel automation tasks |
 | stream_relay | `host-services/workers/stream_relay.py` | Relays RTSP streams |
 | looper_health | `host-services/watchdogs/looper_health.py` | Monitors data_sync health, provides restart endpoints |
+
+## Git Control
+
+The Git Control view provides remote repository management:
+
+| Action | Description |
+|--------|-------------|
+| Refresh Status | Fetches from origin and shows current branch, commit, and ahead/behind status |
+| Git Pull | Pulls latest changes from origin/main |
+| Collect Static | Runs `python manage.py collectstatic --noinput` in the app_blue container |
+
+Access Git Control via the "Git Control" button in Quick Actions. Use the "Back" button to return to the main services view.
 
 ## TODO
 

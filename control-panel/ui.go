@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os/exec"
+	"strings"
 	"time"
 
 	"fyne.io/fyne/v2"
@@ -26,6 +27,7 @@ type UI struct {
 	commands      *Commands
 	authenticated bool
 	isLocalMode   bool
+	currentView   string // "main" or "git"
 
 	// Connection fields
 	hostEntry     *widget.Entry
@@ -62,6 +64,12 @@ type UI struct {
 
 	// Main content
 	mainContent *fyne.Container
+
+	// Git view fields
+	gitBranchLabel *widget.Label
+	gitCommitLabel *widget.Label
+	gitStatusLabel *widget.Label
+	gitLogText     *widget.Entry
 }
 
 // NewUI creates a new UI instance
@@ -101,7 +109,7 @@ func (u *UI) buildLoginScreen() fyne.CanvasObject {
 
 	u.statusLabel = widget.NewLabel("")
 
-	u.connectBtn = widget.NewButton("Connect via SSH", u.handleConnect)
+	u.connectBtn = widget.NewButton("Connect to KPK App Server", u.handleConnect)
 	u.connectBtn.Importance = widget.HighImportance
 
 	u.localModeBtn = widget.NewButton("Run Locally (No SSH)", u.handleLocalMode)
@@ -202,6 +210,7 @@ func (u *UI) buildMainScreen() fyne.CanvasObject {
 		widget.NewLabelWithStyle("KPK Control Panel", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
 		layout.NewSpacer(),
 		widget.NewLabel(modeLabel),
+		widget.NewButtonWithIcon("Git Control", theme.StorageIcon(), u.switchToGitView),
 		widget.NewButtonWithIcon("Disconnect", theme.LogoutIcon(), u.handleDisconnect),
 	)
 
@@ -867,4 +876,216 @@ func (u *UI) trackContainerStateChanges(newContainers []ContainerStatus) {
 			u.crashLoopContainers[container.Name] = false
 		}
 	}
+}
+
+// --- Git Control View ---
+
+// switchToGitView switches to the Git control view
+func (u *UI) switchToGitView() {
+	u.currentView = "git"
+	u.window.SetContent(u.buildGitControlView())
+	// Fetch and refresh git status
+	go u.refreshGitStatus()
+}
+
+// switchToMainView switches back to the main services view
+func (u *UI) switchToMainView() {
+	u.currentView = "main"
+	u.window.SetContent(u.buildMainScreen())
+	go u.refreshStatusLoop()
+}
+
+// buildGitControlView creates the Git control panel view
+func (u *UI) buildGitControlView() fyne.CanvasObject {
+	// Header with back button
+	var modeLabel string
+	if u.isLocalMode {
+		modeLabel = "Running Locally"
+	} else if sshClient, ok := u.executor.(*SSHClient); ok {
+		modeLabel = fmt.Sprintf("SSH: %s", sshClient.Host)
+	}
+
+	header := container.NewHBox(
+		widget.NewLabelWithStyle("KPK Control Panel - Git Control", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
+		layout.NewSpacer(),
+		widget.NewLabel(modeLabel),
+		widget.NewButtonWithIcon("Services", theme.ComputerIcon(), u.switchToMainView),
+		widget.NewButtonWithIcon("Disconnect", theme.LogoutIcon(), u.handleDisconnect),
+	)
+
+	// Git status panel
+	u.gitBranchLabel = widget.NewLabel("Branch: loading...")
+	u.gitCommitLabel = widget.NewLabel("Commit: loading...")
+	u.gitStatusLabel = widget.NewLabel("Status: checking...")
+
+	statusCard := container.NewVBox(
+		widget.NewLabelWithStyle("Repository Status", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
+		widget.NewSeparator(),
+		u.gitBranchLabel,
+		u.gitCommitLabel,
+		u.gitStatusLabel,
+	)
+
+	// Action buttons
+	refreshBtn := widget.NewButtonWithIcon("Refresh Status", theme.ViewRefreshIcon(), func() {
+		u.setGitLogText("Fetching from remote...")
+		go u.refreshGitStatus()
+	})
+
+	pullBtn := widget.NewButtonWithIcon("Git Pull", theme.DownloadIcon(), u.handleGitPull)
+	pullBtn.Importance = widget.HighImportance
+
+	collectStaticBtn := widget.NewButtonWithIcon("Collect Static", theme.FolderIcon(), u.handleCollectStatic)
+
+	actionsPanel := container.NewVBox(
+		widget.NewLabelWithStyle("Actions", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
+		widget.NewSeparator(),
+		container.NewGridWithColumns(3,
+			refreshBtn,
+			pullBtn,
+			collectStaticBtn,
+		),
+	)
+
+	// Log panel for git output
+	u.gitLogText = widget.NewMultiLineEntry()
+	u.gitLogText.Wrapping = fyne.TextWrapWord
+	u.gitLogText.SetPlaceHolder("Git command output will appear here...")
+
+	clearBtn := widget.NewButtonWithIcon("Clear", theme.DeleteIcon(), func() {
+		u.gitLogText.SetText("")
+	})
+
+	logPanel := container.NewBorder(
+		container.NewHBox(
+			widget.NewLabelWithStyle("Output", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
+			layout.NewSpacer(),
+			clearBtn,
+		),
+		nil, nil, nil,
+		container.NewScroll(u.gitLogText),
+	)
+
+	// Layout: status + actions on top, logs on bottom
+	topSection := container.NewVBox(
+		statusCard,
+		widget.NewSeparator(),
+		actionsPanel,
+	)
+
+	mainSplit := container.NewVSplit(topSection, logPanel)
+	mainSplit.SetOffset(0.35)
+
+	return container.NewBorder(
+		container.NewVBox(header, widget.NewSeparator()),
+		nil, nil, nil,
+		mainSplit,
+	)
+}
+
+// setGitLogText sets the git log text and scrolls to bottom
+func (u *UI) setGitLogText(text string) {
+	if u.gitLogText != nil {
+		u.gitLogText.SetText(text)
+		u.gitLogText.CursorRow = len(u.gitLogText.Text)
+		u.gitLogText.Refresh()
+	}
+}
+
+// appendGitLog appends text to the git log
+func (u *UI) appendGitLog(text string) {
+	if u.gitLogText != nil {
+		current := u.gitLogText.Text
+		if current != "" {
+			current += "\n"
+		}
+		u.gitLogText.SetText(current + text)
+		u.gitLogText.CursorRow = len(u.gitLogText.Text)
+		u.gitLogText.Refresh()
+	}
+}
+
+// refreshGitStatus fetches from remote and updates the git status display
+func (u *UI) refreshGitStatus() {
+	// First fetch from remote
+	fetchOutput, err := u.commands.GitFetch()
+	if err != nil {
+		u.appendGitLog(fmt.Sprintf("Fetch warning: %v", err))
+	} else if fetchOutput != "" {
+		u.appendGitLog(fetchOutput)
+	}
+
+	// Get status
+	status, err := u.commands.GetGitStatus()
+	if err != nil {
+		u.gitBranchLabel.SetText(fmt.Sprintf("Branch: Error - %v", err))
+		u.gitCommitLabel.SetText("Commit: -")
+		u.gitStatusLabel.SetText("Status: Unable to get git status")
+		return
+	}
+
+	// Update labels
+	u.gitBranchLabel.SetText(fmt.Sprintf("Branch: %s", status.Branch))
+	u.gitCommitLabel.SetText(fmt.Sprintf("Commit: %s - %s", status.CommitHash, status.CommitMsg))
+
+	// Build status string
+	var statusParts []string
+	if status.Behind > 0 {
+		statusParts = append(statusParts, fmt.Sprintf("%d commits behind origin/%s", status.Behind, status.Branch))
+	}
+	if status.Ahead > 0 {
+		statusParts = append(statusParts, fmt.Sprintf("%d commits ahead of origin/%s", status.Ahead, status.Branch))
+	}
+	if status.HasChanges {
+		statusParts = append(statusParts, "has uncommitted changes")
+	}
+	if len(statusParts) == 0 {
+		statusParts = append(statusParts, "Up to date")
+	}
+
+	u.gitStatusLabel.SetText(fmt.Sprintf("Status: %s", strings.Join(statusParts, ", ")))
+	u.appendGitLog("Status refreshed")
+}
+
+// handleGitPull handles the git pull button
+func (u *UI) handleGitPull() {
+	dialog.ShowConfirm("Git Pull",
+		"Pull latest changes from origin/main?",
+		func(ok bool) {
+			if ok {
+				u.setGitLogText("Pulling from origin/main...")
+				go func() {
+					output, err := u.commands.GitPull()
+					if err != nil {
+						u.appendGitLog(fmt.Sprintf("\nERROR: %v", err))
+					}
+					if output != "" {
+						u.appendGitLog(output)
+					}
+					u.appendGitLog("\nPull complete. Refreshing status...")
+					u.refreshGitStatus()
+				}()
+			}
+		}, u.window)
+}
+
+// handleCollectStatic handles the collect static button
+func (u *UI) handleCollectStatic() {
+	dialog.ShowConfirm("Collect Static",
+		"Run collectstatic on app_blue container?",
+		func(ok bool) {
+			if ok {
+				u.setGitLogText("Running collectstatic...")
+				go func() {
+					output, err := u.commands.RunCollectStatic()
+					if err != nil {
+						u.appendGitLog(fmt.Sprintf("\nERROR: %v", err))
+					}
+					if output != "" {
+						u.appendGitLog(output)
+					}
+					u.appendGitLog("\nCollectstatic complete!")
+				}()
+			}
+		}, u.window)
 }
