@@ -22,6 +22,7 @@ class Command(BaseCommand):
             {'username' : 'amccloud', 'email' : 'polokid399@gmail.com', 'password' : 'aaron123', 'first_name' : 'Aaron', 'last_name' : 'McCloud', 'group' : 'blend_crew'},
             {'username' : 'jtyler', 'email' : 'tylerboi32@gmail.com', 'password' : 'jermaine123', 'first_name' : 'Jermaine', 'last_name' : 'Tyler', 'group' : 'blend_crew'},
             {'username' : 'swheeler', 'email' : 'swheeler@kinpakinc.com', 'password' : 'shawn123', 'first_name' : 'Shawn', 'last_name' : 'Wheeler', 'group' : 'blend_crew'},
+            {'username' : 'fdean', 'email' : 'frederick.dean@kinpakinc.com', 'password' : 'frederick1234', 'first_name' : 'Frederick', 'last_name' : 'Dean', 'group' : 'blend_crew'},
             {'username' : 'jblankenship', 'email' : 'warehouse@kinpakinc.com', 'password' : 'joey1234', 'first_name' : 'Joey', 'last_name' : 'Blankenship', 'group' : 'forklift_operator'},
             {'username' : 'mchandler', 'email' : '', 'password' : 'morris123', 'first_name' : 'Morris', 'last_name' : 'Chandler', 'group' : 'forklift_operator'},
             {'username' : 'tstone', 'email' : '', 'password' : 'tom12345', 'first_name' : 'Tom', 'last_name' : 'Stone', 'group' : 'forklift_operator'},

@@ -156,6 +156,55 @@ class RestartHandler(BaseHTTPRequestHandler):
                 'version': '1.0'
             })
             self.wfile.write(response.encode())
+        elif self.path.startswith('/get-log'):
+            # Serve the data_sync log file content with offset support
+            from urllib.parse import urlparse, parse_qs
+            parsed = urlparse(self.path)
+            params = parse_qs(parsed.query)
+            try:
+                offset = int(params.get('offset', [0])[0])
+            except (ValueError, TypeError):
+                offset = 0
+
+            log_file_path = os.path.join(LOG_DIR, 'data_sync.log')
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.send_header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+            self.send_header("Access-Control-Allow-Headers", "X-Requested-With, Content-type")
+            self.end_headers()
+
+            try:
+                if not os.path.exists(log_file_path):
+                    response = json.dumps({
+                        'logs': '[Log file not found - data_sync may not have started yet]\n',
+                        'new_offset': 0,
+                        'error': True,
+                        'status': 'not_found'
+                    })
+                else:
+                    with open(log_file_path, 'r', encoding='utf-8', errors='replace') as f:
+                        f.seek(0, 2)  # Seek to end
+                        file_size = f.tell()
+                        if offset > file_size:
+                            offset = 0
+                        f.seek(offset)
+                        new_content = f.read()
+                        new_offset = f.tell()
+                    response = json.dumps({
+                        'logs': new_content,
+                        'new_offset': new_offset,
+                        'error': False,
+                        'status': 'ok'
+                    })
+            except Exception as e:
+                response = json.dumps({
+                    'logs': f'[Error reading log: {str(e)}]\n',
+                    'new_offset': offset,
+                    'error': True,
+                    'status': 'error'
+                })
+            self.wfile.write(response.encode())
         else:
             log_and_queue(f"HTTPS: Received {self.path} from {client_ip} (404 Not Found)", logging.WARNING)
             self.send_response(404)

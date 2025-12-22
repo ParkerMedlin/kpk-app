@@ -110,6 +110,7 @@ urlpatterns = [
     path('add-note-line-to-schedule/', blend_scheduling_services.add_note_line_to_schedule, name='add-note-line-to-schedule'),
     path('trigger-restart/', pystray_services.trigger_looper_restart, name='trigger_looper_restart'),
     path('get-pystray-service-status/', pystray_services.get_pystray_service_status, name='get-pystray-service-status'),
+    path('get-data-looper-log/', pystray_services.get_data_looper_log, name='get-data-looper-log'),
     path('api/function-toggles/list/', pystray_services.list_function_toggles, name='function-toggle-list'),
     path('api/function-toggles/create/', pystray_services.create_function_toggle, name='function-toggle-create'),
     path('api/function-toggles/update/', pystray_services.update_function_toggle, name='function-toggle-update'),

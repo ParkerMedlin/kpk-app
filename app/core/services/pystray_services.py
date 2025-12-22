@@ -333,6 +333,54 @@ def trigger_excel_macro_execution(request):
     else:
         return JsonResponse({'status': 'error', 'message': 'Only POST requests allowed.'}, status=405)
     
+@login_required
+def get_data_looper_log(request):
+    """
+    Returns log content from the data_sync worker log file.
+    Proxies to the looper_health watchdog service on the host machine.
+    Supports offset-based polling for real-time log tailing.
+    """
+    if request.method != 'GET':
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=405)
+
+    try:
+        offset = int(request.GET.get('offset', 0))
+    except (ValueError, TypeError):
+        offset = 0
+
+    target_url = f"https://host.docker.internal:9999/get-log?offset={offset}"
+
+    try:
+        response = requests.get(target_url, verify=False, timeout=5)
+        response.raise_for_status()
+        return JsonResponse(response.json())
+
+    except requests.exceptions.ConnectionError:
+        logger.debug(f"Connection refused by looper_health service at {target_url}")
+        return JsonResponse({
+            'logs': '[Cannot connect to looper_health service - is it running?]\n',
+            'new_offset': offset,
+            'error': True,
+            'status': 'connection_refused'
+        })
+    except requests.exceptions.Timeout:
+        logger.debug(f"Timeout connecting to looper_health service at {target_url}")
+        return JsonResponse({
+            'logs': '[Timeout connecting to looper_health service]\n',
+            'new_offset': offset,
+            'error': True,
+            'status': 'timeout'
+        })
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error requesting log from {target_url}: {e}")
+        return JsonResponse({
+            'logs': f'[Error fetching log: {str(e)}]\n',
+            'new_offset': offset,
+            'error': True,
+            'status': 'error'
+        })
+
+
 def check_excel_job_status(request, job_id):
     """Check status of an Excel macro job.
     
