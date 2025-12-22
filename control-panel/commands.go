@@ -26,6 +26,16 @@ type HostServiceStatus struct {
 	Memory    string
 }
 
+// GitStatus represents the current git repository status
+type GitStatus struct {
+	Branch     string
+	CommitHash string
+	CommitMsg  string
+	Behind     int  // commits behind remote
+	Ahead      int  // commits ahead of remote
+	HasChanges bool // uncommitted changes
+}
+
 // Commands encapsulates all remote command operations
 type Commands struct {
 	exec Executor
@@ -524,6 +534,130 @@ func (c *Commands) StartMissingWithLog(logFunc func(string)) error {
 // StartMissing starts only the services that aren't currently running (no logging)
 func (c *Commands) StartMissing() error {
 	return c.StartMissingWithLog(nil)
+}
+
+// --- Git Commands ---
+
+const gitRepoPath = "C:/Users/pmedlin/Documents/kpk-app"
+
+// ensureGitSafeDirectory adds the repo to git's safe.directory list (needed when SSH user differs from repo owner)
+func (c *Commands) ensureGitSafeDirectory() error {
+	cmd := fmt.Sprintf(`git config --global --add safe.directory "%s" 2>$null; $true`, gitRepoPath)
+	_, err := c.exec.RunCommand(cmd)
+	return err
+}
+
+// ensureGitHubHostKey adds GitHub's SSH host key to known_hosts if not present
+func (c *Commands) ensureGitHubHostKey() error {
+	cmd := `
+$knownHosts = "$env:USERPROFILE\.ssh\known_hosts"
+if (-not (Test-Path "$env:USERPROFILE\.ssh")) {
+    New-Item -ItemType Directory -Path "$env:USERPROFILE\.ssh" -Force | Out-Null
+}
+if (-not (Test-Path $knownHosts) -or -not (Select-String -Path $knownHosts -Pattern "github.com" -Quiet)) {
+    # Add GitHub's SSH host keys
+    Add-Content -Path $knownHosts -Value "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl"
+    Add-Content -Path $knownHosts -Value "github.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEmKSENjQEezOmxkZMy7opKgwFB9nkt5YRrYMjNuG5N87uRgg6CLrbo5wAdT/y6v0mKV0U2w0WZ2YB/++Tpockg="
+    Add-Content -Path $knownHosts -Value "github.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCj7ndNxQowgcQnjshcLrqPEiiphnt+VTTvDP6mHBL9j1aNUkY4Ue1gvwnGLVlOhGeYrnZaMgRK6+PKCUXaDbC7qtbW8gIkhL7aGCsOr/C56SJMy/BCZfxd1nWzAOxSDPgVsmerOBYfNqltV9/hWCqBywINIR+5dIg6JTJ72pcEpEjcYgXkE2YEFXV1JHnsKgbLWNlhScqb2UmyRkQyytRLtL+38TGxkxCflmO+5Z8CSSNY7GidjMIZ7Q4zMjA2n1nGrlTDkzwDCsw+wqFPGQA179cnfGWOWRVruj16z6XyvxvjJwbz0wQZ75XK5tKSb7FNyeIEs4TT4jk+S4dhPeAUC5y+bDYirYgM4GC7uEnztnZyaVWQ7B381AK4Qdrwt51ZqExKbQpTUNn+EjqoTwvqNj4kqx5QUCI0ThS/YkOxJCXmPUWZbhjpCg56i+2aB6CmK2JGhn57K5mj0MNdBXA4/WnwH6XoPWJzK5Nyu2zB3nAZp+S5hpQs+p1vN1/wsjk="
+}
+$true
+`
+	_, err := c.exec.RunCommand(cmd)
+	return err
+}
+
+// GetGitStatus returns current branch, commit info, and sync status
+func (c *Commands) GetGitStatus() (GitStatus, error) {
+	c.ensureGitSafeDirectory()
+	status := GitStatus{}
+
+	// Get current branch
+	branchCmd := fmt.Sprintf(`git -C "%s" rev-parse --abbrev-ref HEAD`, gitRepoPath)
+	branch, err := c.exec.RunCommand(branchCmd)
+	if err != nil {
+		return status, fmt.Errorf("failed to get branch: %v", err)
+	}
+	status.Branch = strings.TrimSpace(branch)
+
+	// Get latest commit hash and message
+	logCmd := fmt.Sprintf(`git -C "%s" log -1 --format="%%h %%s"`, gitRepoPath)
+	logOutput, err := c.exec.RunCommand(logCmd)
+	if err != nil {
+		return status, fmt.Errorf("failed to get commit info: %v", err)
+	}
+	logOutput = strings.TrimSpace(logOutput)
+	if parts := strings.SplitN(logOutput, " ", 2); len(parts) >= 2 {
+		status.CommitHash = parts[0]
+		status.CommitMsg = parts[1]
+	} else if len(parts) == 1 {
+		status.CommitHash = parts[0]
+	}
+
+	// Check for uncommitted changes
+	statusCmd := fmt.Sprintf(`git -C "%s" status --porcelain`, gitRepoPath)
+	statusOutput, _ := c.exec.RunCommand(statusCmd)
+	status.HasChanges = strings.TrimSpace(statusOutput) != ""
+
+	// Get ahead/behind counts (requires fetch first, but don't fail if remote unavailable)
+	behindCmd := fmt.Sprintf(`git -C "%s" rev-list --count HEAD..origin/%s 2>$null`, gitRepoPath, status.Branch)
+	behindOutput, _ := c.exec.RunCommand(behindCmd)
+	if behindOutput = strings.TrimSpace(behindOutput); behindOutput != "" {
+		fmt.Sscanf(behindOutput, "%d", &status.Behind)
+	}
+
+	aheadCmd := fmt.Sprintf(`git -C "%s" rev-list --count origin/%s..HEAD 2>$null`, gitRepoPath, status.Branch)
+	aheadOutput, _ := c.exec.RunCommand(aheadCmd)
+	if aheadOutput = strings.TrimSpace(aheadOutput); aheadOutput != "" {
+		fmt.Sscanf(aheadOutput, "%d", &status.Ahead)
+	}
+
+	return status, nil
+}
+
+// GitFetch fetches from remote without merging
+func (c *Commands) GitFetch() (string, error) {
+	c.ensureGitSafeDirectory()
+	c.ensureGitHubHostKey()
+	// Git writes progress/info to stderr which PowerShell treats as errors
+	// Use SilentlyContinue to suppress PowerShell's NativeCommandError output
+	// Then check $LASTEXITCODE to detect actual git failures
+	cmd := fmt.Sprintf(`
+$ErrorActionPreference = 'SilentlyContinue'
+$env:GIT_TERMINAL_PROMPT=0
+$env:GIT_SSH_COMMAND="ssh -i C:/Users/pmedlin/.ssh/id_ed25519 -o IdentitiesOnly=yes"
+$output = git -C "%s" fetch origin 2>&1 | Out-String
+$exitCode = $LASTEXITCODE
+$ErrorActionPreference = 'Continue'
+Write-Output $output.Trim()
+if ($exitCode -ne 0) { exit $exitCode }
+`, gitRepoPath)
+	return c.exec.RunCommand(cmd)
+}
+
+// GitPull pulls latest changes from origin
+func (c *Commands) GitPull() (string, error) {
+	c.ensureGitSafeDirectory()
+	c.ensureGitHubHostKey()
+	// Git writes progress/info to stderr which PowerShell treats as errors
+	// Use SilentlyContinue to suppress PowerShell's NativeCommandError output
+	// Then check $LASTEXITCODE to detect actual git failures
+	cmd := fmt.Sprintf(`
+$ErrorActionPreference = 'SilentlyContinue'
+$env:GIT_TERMINAL_PROMPT=0
+$env:GIT_SSH_COMMAND="ssh -i C:/Users/pmedlin/.ssh/id_ed25519 -o IdentitiesOnly=yes"
+$output = git -C "%s" pull origin main 2>&1 | Out-String
+$exitCode = $LASTEXITCODE
+$ErrorActionPreference = 'Continue'
+Write-Output $output.Trim()
+if ($exitCode -ne 0) { exit $exitCode }
+`, gitRepoPath)
+	return c.exec.RunCommand(cmd)
+}
+
+// RunCollectStatic runs Django's collectstatic command in the app_blue container
+func (c *Commands) RunCollectStatic() (string, error) {
+	cmd := `docker exec kpk-app_app_blue_1 python manage.py collectstatic --noinput 2>&1`
+	return c.exec.RunCommand(cmd)
 }
 
 // Helper function to safely get string from map

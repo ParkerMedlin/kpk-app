@@ -10,11 +10,14 @@ import (
 
 const (
 	AppName    = "KPK Control Panel"
-	AppVersion = "0.2.0"
+	AppVersion = "0.3.0"
 )
 
 func main() {
 	a := app.New()
+
+	// Apply custom theme with more visible cursor
+	a.Settings().SetTheme(&KPKTheme{})
 
 	// Set the application icon (for taskbar/window)
 	if iconPath := findIcon(); iconPath != "" {
