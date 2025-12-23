@@ -1335,18 +1335,23 @@ def get_json_loop_status_detail(request):
     for status in loop_statuses:
         # Calculate minutes ago
         if status.time_stamp:
+            # Make timestamp timezone-aware if it isn't already
+            ts = status.time_stamp
+            if timezone.is_naive(ts):
+                ts = timezone.make_aware(ts, timezone.get_current_timezone())
             # Handle timezone offset (subtract 5 hours / 300 minutes for comparison)
             adjusted_now = now - dt.timedelta(minutes=300)
-            delta = adjusted_now - status.time_stamp
+            delta = adjusted_now - ts
             minutes_ago = int(delta.total_seconds() / 60)
         else:
             minutes_ago = -1
+            ts = None
 
         # Determine if this function is healthy
         # Healthy = recent timestamp AND result doesn't indicate error
         result_lower = (status.function_result or '').lower()
         is_error = any(word in result_lower for word in ['error', 'failed', 'exception', 'timeout'])
-        is_stale = status.time_stamp and status.time_stamp < stale_threshold
+        is_stale = ts and ts < stale_threshold
         is_healthy = not is_error and not is_stale and minutes_ago >= 0
 
         if is_error:
