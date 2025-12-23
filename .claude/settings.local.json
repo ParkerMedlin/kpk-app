@@ -14,7 +14,17 @@
       "Bash(git -C \"C:\\\\Users\\\\jdavis\\\\Documents\\\\kpk-app\" status --short)",
       "Bash(git -C \"C:\\\\Users\\\\jdavis\\\\Documents\\\\kpk-app\" diff --stat)",
       "Bash(git -C \"C:\\\\Users\\\\jdavis\\\\Documents\\\\kpk-app\" status)",
-      "Bash(ssh:*)"
+      "Bash(ssh:*)",
+      "Bash(git -C \"C:\\\\Users\\\\jdavis\\\\Documents\\\\kpk-app\" log --oneline --all)",
+      "Bash(git -C \"C:\\\\Users\\\\jdavis\\\\Documents\\\\kpk-app\" tag -l)",
+      "Bash(git -C \"C:\\\\Users\\\\jdavis\\\\Documents\\\\kpk-app\" log --oneline --all -- control-panel/)",
+      "Bash(git -C \"C:\\\\Users\\\\jdavis\\\\Documents\\\\kpk-app\" log --oneline --all --grep=\"0.3\" -- control-panel/)",
+      "Bash(git -C \"C:\\\\Users\\\\jdavis\\\\Documents\\\\kpk-app\" show 51b40b7e --stat)",
+      "Bash(git -C \"C:\\\\Users\\\\jdavis\\\\Documents\\\\kpk-app\" log --oneline -p --all -S \"0.3.0\" -- control-panel/)",
+      "Bash(git -C \"C:\\\\Users\\\\jdavis\\\\Documents\\\\kpk-app\" log --oneline fe0f9cf8~1 -1)",
+      "Bash(git -C \"C:\\\\Users\\\\jdavis\\\\Documents\\\\kpk-app\" ls-tree --name-only fe0f9cf8~1 control-panel/)",
+      "Bash(git -C:*)",
+      "Bash(del \"C:\\\\Users\\\\jdavis\\\\Documents\\\\kpk-app\\\\control-panel\\\\cli.go\")"
     ],
     "deny": [],
     "ask": []

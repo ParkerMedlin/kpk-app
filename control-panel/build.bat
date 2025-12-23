@@ -9,14 +9,14 @@ set CGO_ENABLED=1
 set GOOS=windows
 set GOARCH=amd64
 
-go build -ldflags="-s -w -H windowsgui" -o bin\kpk.exe .
+go build -ldflags="-s -w -H windowsgui" -o bin\kpk-control-panel.exe .
 
 if %ERRORLEVEL% EQU 0 (
-    echo Build successful! Output: bin\kpk.exe
+    echo Build successful! Output: bin\kpk-control-panel.exe
 
     :: Copy to network share for distribution
     echo Copying to M:\kpkapp\control-panel...
-    copy /Y bin\kpk.exe M:\kpkapp\control-panel\kpk.exe
+    copy /Y bin\kpk-control-panel.exe M:\kpkapp\control-panel\kpk-control-panel.exe
     copy /Y icon.png M:\kpkapp\control-panel\icon.png
     if %ERRORLEVEL% EQU 0 (
         echo Deployed to M:\kpkapp\control-panel\
