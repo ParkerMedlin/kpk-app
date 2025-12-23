@@ -1322,9 +1322,9 @@ def get_json_loop_status_detail(request):
                 - minutes_ago (int): Minutes since last execution
                 - is_healthy (bool): Whether function is considered healthy
     """
-    now = timezone.now()
-    # 305 minutes offset due to timezone handling quirk (see get_json_refresh_status)
-    stale_threshold = now - dt.timedelta(minutes=305)
+    # Use naive datetime to match database timestamps (stored in local time)
+    now_naive = dt.datetime.now()
+    stale_threshold = now_naive - dt.timedelta(minutes=5)
 
     loop_statuses = LoopStatus.objects.all().order_by('function_name')
 
@@ -1333,15 +1333,13 @@ def get_json_loop_status_detail(request):
     has_stale = False
 
     for status in loop_statuses:
-        # Calculate minutes ago
+        # Calculate minutes ago using naive comparison
         if status.time_stamp:
-            # Make timestamp timezone-aware if it isn't already
             ts = status.time_stamp
-            if timezone.is_naive(ts):
-                ts = timezone.make_aware(ts, timezone.get_current_timezone())
-            # Handle timezone offset (subtract 5 hours / 300 minutes for comparison)
-            adjusted_now = now - dt.timedelta(minutes=300)
-            delta = adjusted_now - ts
+            # Strip timezone info if present for consistent comparison
+            if hasattr(ts, 'tzinfo') and ts.tzinfo is not None:
+                ts = ts.replace(tzinfo=None)
+            delta = now_naive - ts
             minutes_ago = int(delta.total_seconds() / 60)
         else:
             minutes_ago = -1
@@ -1379,7 +1377,7 @@ def get_json_loop_status_detail(request):
 
     response_data = {
         'status': overall_status,
-        'checked_at': now.isoformat(),
+        'checked_at': now_naive.isoformat(),
         'function_count': len(functions),
         'healthy_count': sum(1 for f in functions if f['is_healthy']),
         'functions': functions,
