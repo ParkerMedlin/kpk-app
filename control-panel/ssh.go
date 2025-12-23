@@ -32,15 +32,30 @@ func NewSSHClient(host, port, user string) *SSHClient {
 
 // Connect establishes an SSH connection using key-based auth
 func (s *SSHClient) Connect() error {
-	keyPath := filepath.Join(os.Getenv("USERPROFILE"), ".ssh", "id_rsa")
-	key, err := os.ReadFile(keyPath)
-	if err != nil {
-		return fmt.Errorf("unable to read private key: %v", err)
+	sshDir := filepath.Join(os.Getenv("USERPROFILE"), ".ssh")
+
+	// Try common key types in order of preference
+	keyNames := []string{"id_ed25519", "id_rsa", "id_ecdsa", "id_dsa"}
+
+	var key []byte
+	var err error
+	var keyPath string
+
+	for _, name := range keyNames {
+		keyPath = filepath.Join(sshDir, name)
+		key, err = os.ReadFile(keyPath)
+		if err == nil {
+			break
+		}
+	}
+
+	if key == nil {
+		return fmt.Errorf("no SSH key found (tried: %v)", keyNames)
 	}
 
 	signer, err := ssh.ParsePrivateKey(key)
 	if err != nil {
-		return fmt.Errorf("unable to parse private key: %v", err)
+		return fmt.Errorf("unable to parse private key %s: %v", keyPath, err)
 	}
 
 	config := &ssh.ClientConfig{

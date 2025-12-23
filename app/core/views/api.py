@@ -1277,14 +1277,14 @@ def get_json_current_user_initials(request):
 
 def get_json_refresh_status(request):
     """Get JSON response indicating if loop status needs refresh.
-    
+
     Checks if any loop status records are older than 5 minutes and returns
     status indicating if system is up or down. Uses timezone offset to handle
     timestamp comparison issues.
-    
+
     Args:
         request: HTTP GET request
-        
+
     Returns:
         JsonResponse containing:
             status (str): 'up' if all records are current, 'down' if any are stale
@@ -1300,6 +1300,87 @@ def get_json_refresh_status(request):
         else:
             response_data = {'status' : 'up'}
     return JsonResponse(response_data, safe=False)
+
+
+@require_GET
+def get_json_loop_status_detail(request):
+    """Get detailed loop status for all functions.
+
+    Returns all LoopStatus records with function names, results, and timestamps.
+    Used by CLI tools to show detailed health of data sync functions.
+
+    Args:
+        request: HTTP GET request
+
+    Returns:
+        JsonResponse containing:
+            status (str): 'up' if all functions healthy, 'degraded' if some failed, 'down' if stale
+            functions (list): List of function status objects with:
+                - function_name (str): Name of the function
+                - function_result (str): Result/status of last execution
+                - time_stamp (str): ISO timestamp of last execution
+                - minutes_ago (int): Minutes since last execution
+                - is_healthy (bool): Whether function is considered healthy
+    """
+    now = timezone.now()
+    # 305 minutes offset due to timezone handling quirk (see get_json_refresh_status)
+    stale_threshold = now - dt.timedelta(minutes=305)
+
+    loop_statuses = LoopStatus.objects.all().order_by('function_name')
+
+    functions = []
+    has_failures = False
+    has_stale = False
+
+    for status in loop_statuses:
+        # Calculate minutes ago
+        if status.time_stamp:
+            # Handle timezone offset (subtract 5 hours / 300 minutes for comparison)
+            adjusted_now = now - dt.timedelta(minutes=300)
+            delta = adjusted_now - status.time_stamp
+            minutes_ago = int(delta.total_seconds() / 60)
+        else:
+            minutes_ago = -1
+
+        # Determine if this function is healthy
+        # Healthy = recent timestamp AND result doesn't indicate error
+        result_lower = (status.function_result or '').lower()
+        is_error = any(word in result_lower for word in ['error', 'failed', 'exception', 'timeout'])
+        is_stale = status.time_stamp and status.time_stamp < stale_threshold
+        is_healthy = not is_error and not is_stale and minutes_ago >= 0
+
+        if is_error:
+            has_failures = True
+        if is_stale:
+            has_stale = True
+
+        functions.append({
+            'function_name': status.function_name,
+            'function_result': status.function_result,
+            'time_stamp': status.time_stamp.isoformat() if status.time_stamp else None,
+            'minutes_ago': minutes_ago,
+            'is_healthy': is_healthy,
+            'is_stale': is_stale,
+            'is_error': is_error,
+        })
+
+    # Determine overall status
+    if has_stale:
+        overall_status = 'down'
+    elif has_failures:
+        overall_status = 'degraded'
+    else:
+        overall_status = 'up'
+
+    response_data = {
+        'status': overall_status,
+        'checked_at': now.isoformat(),
+        'function_count': len(functions),
+        'healthy_count': sum(1 for f in functions if f['is_healthy']),
+        'functions': functions,
+    }
+
+    return JsonResponse(response_data)
 
 def get_json_all_ghs_fields(request):
     """Get all GHS pictogram fields as JSON.

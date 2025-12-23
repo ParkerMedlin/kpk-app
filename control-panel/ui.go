@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 	"time"
@@ -210,6 +211,7 @@ func (u *UI) buildMainScreen() fyne.CanvasObject {
 		widget.NewLabelWithStyle("KPK Control Panel", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
 		layout.NewSpacer(),
 		widget.NewLabel(modeLabel),
+		widget.NewButtonWithIcon("Remote Desktop", theme.LoginIcon(), u.openRemoteDesktop),
 		widget.NewButtonWithIcon("Git Control", theme.StorageIcon(), u.switchToGitView),
 		widget.NewButtonWithIcon("Disconnect", theme.LogoutIcon(), u.handleDisconnect),
 	)
@@ -447,6 +449,47 @@ func (u *UI) handleDisconnect() {
 	u.authenticated = false
 	u.isLocalMode = false
 	u.window.SetContent(u.buildLoginScreen())
+}
+
+// openRemoteDesktop launches Remote Desktop connection to the server
+func (u *UI) openRemoteDesktop() {
+	var host string
+	if sshClient, ok := u.executor.(*SSHClient); ok {
+		host = sshClient.Host
+	} else {
+		host = "192.168.178.169" // Default
+	}
+
+	// Create temp .rdp file with username pre-filled
+	rdpContent := fmt.Sprintf("full address:s:%s\nusername:s:KINPAK03\\pmedlin\n", host)
+
+	tmpFile, err := os.CreateTemp("", "kpk-rdp-*.rdp")
+	if err != nil {
+		dialog.ShowError(err, u.window)
+		return
+	}
+
+	_, err = tmpFile.WriteString(rdpContent)
+	tmpFile.Close()
+	if err != nil {
+		dialog.ShowError(err, u.window)
+		return
+	}
+
+	// Launch mstsc with the rdp file
+	cmd := exec.Command("mstsc", tmpFile.Name())
+	err = cmd.Start()
+	if err != nil {
+		dialog.ShowError(err, u.window)
+		os.Remove(tmpFile.Name())
+		return
+	}
+
+	// Clean up temp file after a delay (give mstsc time to read it)
+	go func() {
+		time.Sleep(5 * time.Second)
+		os.Remove(tmpFile.Name())
+	}()
 }
 
 // setLogText sets the log text and scrolls to the bottom
@@ -909,6 +952,7 @@ func (u *UI) buildGitControlView() fyne.CanvasObject {
 		widget.NewLabelWithStyle("KPK Control Panel - Git Control", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
 		layout.NewSpacer(),
 		widget.NewLabel(modeLabel),
+		widget.NewButtonWithIcon("Remote Desktop", theme.LoginIcon(), u.openRemoteDesktop),
 		widget.NewButtonWithIcon("Services", theme.ComputerIcon(), u.switchToMainView),
 		widget.NewButtonWithIcon("Disconnect", theme.LogoutIcon(), u.handleDisconnect),
 	)
