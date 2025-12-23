@@ -577,7 +577,22 @@ function Invoke-KPKGitPull {
     Write-Host "Pulling from origin/main..." -ForegroundColor Yellow
     $repoPath = $script:GitRepoPath
     $cmd = 'git config --global --add safe.directory "' + $repoPath + '" 2>$null; $env:GIT_TERMINAL_PROMPT=0; $env:GIT_SSH_COMMAND="ssh -i C:/Users/pmedlin/.ssh/id_ed25519 -o IdentitiesOnly=yes"; git -C "' + $repoPath + '" pull origin main 2>&1'
-    Invoke-KPKCommand -Command $cmd
+    try {
+        $output = Invoke-KPKCommand -Command $cmd
+        Write-Host $output
+        Write-Host "Pull complete." -ForegroundColor Green
+    } catch {
+        # Git writes progress to stderr which PowerShell sees as errors
+        # Check if it's actually an error or just git's normal output
+        $errMsg = $_.Exception.Message
+        if ($errMsg -match "From github\.com" -or $errMsg -match "Already up to date" -or $errMsg -match "Updating .+\.\..+") {
+            # This is normal git output, not an error
+            Write-Host ($errMsg -replace "^SSH connection failed: ", "")
+            Write-Host "Pull complete." -ForegroundColor Green
+        } else {
+            throw $_
+        }
+    }
 }
 
 function Invoke-KPKCollectStatic {
