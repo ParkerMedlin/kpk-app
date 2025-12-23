@@ -167,22 +167,8 @@ function Get-KPKLoopStatus {
 
     Write-Host "=== Loop Functions ===" -ForegroundColor Cyan
 
-    # Call the API via SSH on the server (use HTTPS with cert skip for localhost)
-    $apiCmd = @'
-try {
-    # PowerShell 7+ has -SkipCertificateCheck, older versions need callback
-    if ($PSVersionTable.PSVersion.Major -ge 7) {
-        $response = Invoke-WebRequest -Uri "https://localhost/core/api/loop-status/" -SkipCertificateCheck -UseBasicParsing -TimeoutSec 10
-    } else {
-        [System.Net.ServicePointManager]::ServerCertificateValidationCallback = { $true }
-        $response = Invoke-WebRequest -Uri "https://localhost/core/api/loop-status/" -UseBasicParsing -TimeoutSec 10
-        [System.Net.ServicePointManager]::ServerCertificateValidationCallback = $null
-    }
-    $response.Content
-} catch {
-    Write-Output ('{"status":"error","error":"' + $_.Exception.Message + '"}')
-}
-'@
+    # Call the API via SSH on the server using curl (works on all Windows versions)
+    $apiCmd = 'curl -sk https://localhost/core/api/loop-status/ 2>&1'
 
     try {
         $output = Invoke-KPKCommand -Command $apiCmd
