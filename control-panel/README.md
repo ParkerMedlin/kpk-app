@@ -17,6 +17,7 @@ A lightweight, portable control panel for managing the KPK App infrastructure vi
 - **Reload Nginx Config** - Hot-reload nginx configuration without restart
 - **Git Control** - Remote git management (pull updates, view status, run collectstatic)
 - **CLI Mode** - All operations available via command-line for scripting and automation
+- **AI Assistant** - Claude-powered chat assistant that can diagnose issues, check logs, and fix problems with user confirmation
 
 ## CLI Usage
 
@@ -98,9 +99,27 @@ For convenience, container names can be shortened:
 | `redis` | `kpk-app_redis_1` |
 | `celery` | `kpk-app_celery_worker_1` |
 
+## AI Assistant Setup
+
+The AI Assistant feature requires an Anthropic API key:
+
+1. Copy `secrets.go.example` to `secrets.go`
+2. Replace `YOUR-KEY-HERE` with your Anthropic API key
+3. Rebuild the application
+
+The `secrets.go` file is gitignored and will not be committed.
+
+**Usage:** Click the "AI Assistant" button in the GUI header to open the chat panel. Ask questions like:
+- "What's the status of the app?"
+- "Why isn't data_sync running?"
+- "Check the app_blue logs for errors"
+- "Start missing services"
+
+The assistant will check statuses, read logs, and suggest fixes. Write operations (start/stop/restart) require confirmation before execution.
+
 ## Requirements
 
-- Go 1.21+ (for building)
+- Go 1.23+ (for building)
 - SSH access to the KPK App server
 - OpenSSH server running on target machine (Windows 10+ has this built-in)
 - **PsExec** on target server (for starting host services with system tray icons)

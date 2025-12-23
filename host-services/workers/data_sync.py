@@ -163,7 +163,11 @@ def clone_sage_tables():
                 exception_list = []
             for item in table_list:
                 try:
+                    table_start = dt.datetime.now()
+                    logger.info(f'Sage table {item}: Starting sync...')
                     sage_pg.get_sage_table(item)
+                    table_elapsed = dt.datetime.now() - table_start
+                    logger.info(f'Sage table {item}: Completed in {table_elapsed.total_seconds():.1f}s')
                     try:
                         update_table_status(f'get_sage_table({item})', 'Success')
                     except Exception as e:

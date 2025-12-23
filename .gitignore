@@ -171,3 +171,6 @@ control-panel/dev/*
 .claude/settings.local.json
 local_machine_scripts/stream_logs/realtime_stream.log.2
 .claude/settings.local.json
+
+# control panel secrets (API keys)
+control-panel/secrets.go

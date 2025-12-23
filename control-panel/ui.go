@@ -71,6 +71,9 @@ type UI struct {
 	gitCommitLabel *widget.Label
 	gitStatusLabel *widget.Label
 	gitLogText     *widget.Entry
+
+	// Assistant UI
+	assistantUI *AssistantUI
 }
 
 // NewUI creates a new UI instance
@@ -211,6 +214,7 @@ func (u *UI) buildMainScreen() fyne.CanvasObject {
 		widget.NewLabelWithStyle("KPK Control Panel", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
 		layout.NewSpacer(),
 		widget.NewLabel(modeLabel),
+		widget.NewButtonWithIcon("AI Assistant", theme.InfoIcon(), u.toggleAssistantPanel),
 		widget.NewButtonWithIcon("Remote Desktop", theme.LoginIcon(), u.openRemoteDesktop),
 		widget.NewButtonWithIcon("Git Control", theme.StorageIcon(), u.switchToGitView),
 		widget.NewButtonWithIcon("Disconnect", theme.LogoutIcon(), u.handleDisconnect),
@@ -241,10 +245,19 @@ func (u *UI) buildMainScreen() fyne.CanvasObject {
 	outerSplit := container.NewVSplit(innerSplit, bottomRow)
 	outerSplit.SetOffset(0.75) // Logs get 25% at bottom initially
 
+	// Check if assistant panel should be shown
+	var mainArea fyne.CanvasObject = outerSplit
+	if u.assistantUI != nil && u.assistantUI.panelVisible {
+		chatPanel := u.assistantUI.BuildChatPanel()
+		mainWithChat := container.NewHSplit(outerSplit, chatPanel)
+		mainWithChat.SetOffset(0.65) // Main content gets 65%, chat gets 35%
+		mainArea = mainWithChat
+	}
+
 	content := container.NewBorder(
 		container.NewVBox(header, widget.NewSeparator()),
 		nil, nil, nil,
-		outerSplit,
+		mainArea,
 	)
 
 	return content
@@ -442,12 +455,23 @@ func (u *UI) buildLogPanel() fyne.CanvasObject {
 
 // --- Action Handlers ---
 
+// toggleAssistantPanel shows/hides the Claude AI assistant panel
+func (u *UI) toggleAssistantPanel() {
+	if u.assistantUI == nil {
+		u.assistantUI = NewAssistantUI(u)
+		u.assistantUI.Initialize()
+	}
+	u.assistantUI.panelVisible = !u.assistantUI.panelVisible
+	u.window.SetContent(u.buildMainScreen())
+}
+
 func (u *UI) handleDisconnect() {
 	if u.executor != nil {
 		u.executor.Disconnect()
 	}
 	u.authenticated = false
 	u.isLocalMode = false
+	u.assistantUI = nil // Reset assistant on disconnect
 	u.window.SetContent(u.buildLoginScreen())
 }
 
