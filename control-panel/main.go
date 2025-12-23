@@ -10,10 +10,16 @@ import (
 
 const (
 	AppName    = "KPK Control Panel"
-	AppVersion = "0.3.0"
+	AppVersion = "0.4.0"
 )
 
 func main() {
+	// Check for CLI mode first (if command-line arguments present)
+	if RunCLI() {
+		return // CLI handled execution and exit
+	}
+
+	// GUI mode
 	a := app.New()
 
 	// Apply custom theme with more visible cursor

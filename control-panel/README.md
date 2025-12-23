@@ -2,7 +2,7 @@
 
 A lightweight, portable control panel for managing the KPK App infrastructure via SSH.
 
-**Version:** 0.3.0
+**Version:** 0.4.0
 
 ## Features
 
@@ -16,6 +16,87 @@ A lightweight, portable control panel for managing the KPK App infrastructure vi
 - **Stop All** - Graceful shutdown of all services (kills process trees to clean up child processes)
 - **Reload Nginx Config** - Hot-reload nginx configuration without restart
 - **Git Control** - Remote git management (pull updates, view status, run collectstatic)
+- **CLI Mode** - All operations available via command-line for scripting and automation
+
+## CLI Usage
+
+The control panel supports both GUI and CLI modes in a single binary. Running without arguments shows the help reference; use `kpk gui` to launch the GUI.
+
+### Connection Flags
+
+```
+-H, --host <host>      SSH host (default: 192.168.178.169)
+-p, --port <port>      SSH port (default: 22)
+-u, --user <user>      SSH username (default: current user)
+-P, --password <pass>  SSH password (or use SSH key)
+--local                Use local mode instead of SSH
+-n, --lines <n>        Number of log lines (default: 100)
+```
+
+### Commands
+
+```powershell
+# Show all containers and host services
+kpk status
+
+# Start only stopped services
+kpk start-missing
+
+# Cold start everything (Docker + all services)
+kpk start-all
+
+# Stop all services and containers
+kpk stop-all
+
+# Container operations
+kpk container list
+kpk container logs app_blue -n 50
+kpk container start app_blue
+kpk container stop app_blue
+kpk container restart app_blue
+
+# Host service operations
+kpk service list
+kpk service logs data_sync
+kpk service start data_sync
+kpk service stop data_sync
+
+# Database backup operations
+kpk backup create
+kpk backup list
+kpk backup restore <backup-name>
+
+# Git operations
+kpk git status
+kpk git fetch
+kpk git pull
+kpk git collectstatic
+
+# Nginx
+kpk nginx reload
+
+# Local mode (run on the server itself)
+kpk status --local
+
+# Override username if needed
+kpk status -u otheruser
+
+# Launch GUI
+kpk gui
+```
+
+### Container Short Names
+
+For convenience, container names can be shortened:
+
+| Short Name | Full Name |
+|------------|-----------|
+| `app_blue`, `blue` | `kpk-app_app_blue_1` |
+| `app_green`, `green` | `kpk-app_app_green_1` |
+| `nginx` | `kpk-app_nginx_1` |
+| `postgres`, `db` | `kpk-app_postgres_1` |
+| `redis` | `kpk-app_redis_1` |
+| `celery` | `kpk-app_celery_worker_1` |
 
 ## Requirements
 
@@ -36,7 +117,7 @@ A lightweight, portable control panel for managing the KPK App infrastructure vi
 
 This will:
 1. Build the exe with embedded icon
-2. Output to `bin\kpk-control-panel.exe`
+2. Output to `bin\kpk.exe`
 3. Deploy to `M:\kpkapp\control-panel\` (network share)
 
 ### Manual Build
@@ -49,20 +130,20 @@ magick icon.png -define icon:auto-resize=256,128,64,48,32,16 icon.ico
 windres -o app.syso app.rc
 
 # Build
-go build -ldflags="-s -w -H windowsgui" -o bin\kpk-control-panel.exe .
+go build -ldflags="-s -w -H windowsgui" -o bin\kpk.exe .
 ```
 
 ## Distribution
 
 Built executables are deployed to `M:\kpkapp\control-panel\`:
-- `kpk-control-panel.exe` - The application
+- `kpk.exe` - The application (GUI + CLI)
 - `icon.png` - Application icon (loaded at runtime for taskbar)
 
 Users can run the exe directly from the network share or copy it locally.
 
 ## Usage
 
-1. Run `kpk-control-panel.exe`
+1. Run `kpk.exe` (or `kpk` from command line)
 2. Enter SSH connection details:
    - Host: Server IP or hostname (default: 192.168.178.169)
    - Port: SSH port (default: 22)
@@ -88,7 +169,8 @@ All operations are executed remotely via SSH. No additional services need to run
 
 ```
 control-panel/
-├── main.go       # Entry point, window setup, icon loading
+├── main.go       # Entry point, CLI/GUI mode detection, window setup
+├── cli.go        # CLI argument parsing and command handlers
 ├── ssh.go        # SSH connection handling
 ├── executor.go   # Executor interface (SSH vs Local mode)
 ├── commands.go   # Remote command execution (Docker, host services, backups)

@@ -8,7 +8,9 @@
       "Bash(cmd /c build.bat)",
       "Bash(cmd /c \"copy /Y C:\\Users\\jdavis\\Downloads\\kpkctrlpnl.png C:\\Users\\jdavis\\Documents\\kpk-app\\control-panel\\icon.png\")",
       "Bash(powershell:*)",
-      "Bash(python -m py_compile:*)"
+      "Bash(python -m py_compile:*)",
+      "Bash(psql:*)",
+      "Bash(cmd /c \"cd /d C:\\\\Users\\\\jdavis\\\\Documents\\\\kpk-app\\\\control-panel && go build -o dev\\\\kpk.exe .\")"
     ],
     "deny": [],
     "ask": []
