@@ -1,35 +1,29 @@
 <#
 .SYNOPSIS
-Installs the KPK PowerShell module and creates shortcuts.
+Installs the KPK PowerShell CLI by adding a function to user's PowerShell profile.
 
 .DESCRIPTION
-Can be run from a network share or deployed via GPO.
-Copies files to user's local modules folder and adds to PATH.
+Sets up a 'kpk' function in your PowerShell profile that runs the PowerShell CLI.
+Works with both Windows PowerShell and PowerShell 7.
+Handles OneDrive Documents folder redirection automatically.
 
 .EXAMPLE
 # Install for current user
 .\Install-KPK.ps1
 
-# Install for all users (requires admin)
-.\Install-KPK.ps1 -AllUsers
-
-# Install from network share
-\\server\share\kpk\Install-KPK.ps1
-
-.PARAMETER AllUsers
-Install to Program Files for all users (requires admin)
+# Uninstall
+.\Install-KPK.ps1 -Uninstall
 
 .PARAMETER SourcePath
-Path to source files (defaults to script directory)
+Path to kpk.ps1 (defaults to script directory)
 
-.PARAMETER SkipPathUpdate
-Don't update PATH environment variable
+.PARAMETER Uninstall
+Remove the kpk function from PowerShell profiles
 #>
 
 param(
-    [switch]$AllUsers,
     [string]$SourcePath = $PSScriptRoot,
-    [switch]$SkipPathUpdate
+    [switch]$Uninstall
 )
 
 $ErrorActionPreference = 'Stop'
@@ -37,128 +31,101 @@ $ErrorActionPreference = 'Stop'
 Write-Host "KPK Control Panel Installer" -ForegroundColor Cyan
 Write-Host ""
 
-# Determine install location
-if ($AllUsers) {
-    # Requires admin
-    $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-    if (-not $isAdmin) {
-        throw "AllUsers install requires administrator privileges. Run as admin or omit -AllUsers."
+# Get actual Documents folder (handles OneDrive redirect)
+$documentsPath = [Environment]::GetFolderPath('MyDocuments')
+Write-Host "Documents folder: $documentsPath"
+
+# Profile locations for both PowerShell versions
+$profiles = @(
+    @{
+        Name = "Windows PowerShell"
+        Path = Join-Path $documentsPath "WindowsPowerShell\Microsoft.PowerShell_profile.ps1"
+    },
+    @{
+        Name = "PowerShell 7"
+        Path = Join-Path $documentsPath "PowerShell\Microsoft.PowerShell_profile.ps1"
     }
-    $installDir = "C:\Program Files\KPK"
-    $modulePath = "C:\Program Files\WindowsPowerShell\Modules\KPK"
-} else {
-    $installDir = Join-Path $env:LOCALAPPDATA "KPK"
-    $modulePath = Join-Path (Join-Path $env:USERPROFILE "Documents\WindowsPowerShell\Modules") "KPK"
-}
+)
 
-Write-Host "Install directory: $installDir"
-Write-Host "Module path: $modulePath"
-Write-Host ""
-
-# Create directories
-if (-not (Test-Path $installDir)) {
-    New-Item -ItemType Directory -Path $installDir -Force | Out-Null
-    Write-Host "Created: $installDir" -ForegroundColor Green
+# Path to kpk.ps1 script
+$kpkScript = Join-Path $SourcePath "kpk.ps1"
+if (-not (Test-Path $kpkScript)) {
+    throw "kpk.ps1 not found at: $kpkScript"
 }
+$kpkScriptPath = (Resolve-Path $kpkScript).Path
 
-$moduleParent = Split-Path $modulePath -Parent
-if (-not (Test-Path $moduleParent)) {
-    New-Item -ItemType Directory -Path $moduleParent -Force | Out-Null
-}
-if (-not (Test-Path $modulePath)) {
-    New-Item -ItemType Directory -Path $modulePath -Force | Out-Null
-    Write-Host "Created: $modulePath" -ForegroundColor Green
-}
+# The function block we add to profiles
+$functionBlock = @"
 
-# Copy files
-$filesToCopy = @("kpk.ps1", "kpk.cmd", "KPK.psm1")
-foreach ($file in $filesToCopy) {
-    $src = Join-Path $SourcePath $file
-    if (Test-Path $src) {
-        Copy-Item $src $installDir -Force
-        Write-Host "Copied: $file -> $installDir" -ForegroundColor Green
-    } else {
-        Write-Warning "Source file not found: $src"
-    }
-}
-
-# Copy module file to modules folder
-$modSrc = Join-Path $SourcePath "KPK.psm1"
-if (Test-Path $modSrc) {
-    Copy-Item $modSrc $modulePath -Force
-    Write-Host "Copied: KPK.psm1 -> $modulePath" -ForegroundColor Green
-}
-
-# Create module manifest
-$manifestPath = Join-Path $modulePath "KPK.psd1"
-$manifestContent = @"
-@{
-    RootModule = 'KPK.psm1'
-    ModuleVersion = '1.0.0'
-    GUID = '$(New-Guid)'
-    Author = 'KPK Team'
-    Description = 'KPK Control Panel - Manage Docker containers and host services'
-    PowerShellVersion = '5.1'
-    FunctionsToExport = @(
-        'Set-KPKConfig',
-        'Get-KPKConfig',
-        'Invoke-KPKCommand',
-        'Get-KPKStatus',
-        'Start-KPKMissing',
-        'Start-KPKAll',
-        'Stop-KPKAll',
-        'Get-KPKContainerList',
-        'Get-KPKContainerLogs',
-        'Start-KPKContainer',
-        'Stop-KPKContainer',
-        'Restart-KPKContainer',
-        'Get-KPKHostServiceList',
-        'Get-KPKHostServiceLogs',
-        'Start-KPKHostService',
-        'Stop-KPKHostService',
-        'New-KPKBackup',
-        'Get-KPKBackupList',
-        'Restore-KPKBackup',
-        'Get-KPKGitStatus',
-        'Invoke-KPKGitFetch',
-        'Invoke-KPKGitPull',
-        'Invoke-KPKCollectStatic',
-        'Invoke-KPKNginxReload'
-    )
+# KPK Control Panel CLI (auto-updates from source)
+function kpk {
+    & "$kpkScriptPath" @args
 }
 "@
-Set-Content -Path $manifestPath -Value $manifestContent -Force
-Write-Host "Created module manifest: $manifestPath" -ForegroundColor Green
 
-# Update PATH
-if (-not $SkipPathUpdate) {
-    if ($AllUsers) {
-        $scope = [EnvironmentVariableTarget]::Machine
-    } else {
-        $scope = [EnvironmentVariableTarget]::User
+$markerStart = "# KPK Control Panel CLI"
+
+if ($Uninstall) {
+    Write-Host "Uninstalling..." -ForegroundColor Yellow
+    foreach ($profile in $profiles) {
+        if (Test-Path $profile.Path) {
+            $content = Get-Content $profile.Path -Raw
+            if ($content -match [regex]::Escape($markerStart)) {
+                # Remove the function block
+                $pattern = "(?s)\r?\n?# KPK Control Panel CLI.*?function kpk \{.*?\}"
+                $newContent = $content -replace $pattern, ""
+                Set-Content -Path $profile.Path -Value $newContent.TrimEnd() -NoNewline
+                Write-Host "Removed from: $($profile.Name)" -ForegroundColor Green
+            }
+        }
+    }
+    Write-Host ""
+    Write-Host "Uninstall complete. Restart your terminal." -ForegroundColor Green
+    return
+}
+
+# Install to each profile
+foreach ($profile in $profiles) {
+    $profileDir = Split-Path $profile.Path -Parent
+
+    # Create directory if needed
+    if (-not (Test-Path $profileDir)) {
+        New-Item -ItemType Directory -Path $profileDir -Force | Out-Null
+        Write-Host "Created: $profileDir" -ForegroundColor Green
     }
 
-    $currentPath = [Environment]::GetEnvironmentVariable("PATH", $scope)
-    if ($currentPath -notlike "*$installDir*") {
-        [Environment]::SetEnvironmentVariable("PATH", "$currentPath;$installDir", $scope)
-        Write-Host "Added to PATH: $installDir" -ForegroundColor Green
-        Write-Host "(Restart your terminal for PATH changes to take effect)" -ForegroundColor Yellow
+    # Read or initialize profile content
+    if (Test-Path $profile.Path) {
+        $content = Get-Content $profile.Path -Raw
+        if ([string]::IsNullOrEmpty($content)) {
+            $content = ""
+        }
     } else {
-        Write-Host "PATH already contains: $installDir" -ForegroundColor Gray
+        $content = ""
+    }
+
+    # Check if already installed
+    if ($content -match [regex]::Escape($markerStart)) {
+        # Update existing - replace the function block
+        $pattern = "(?s)# KPK Control Panel CLI.*?function kpk \{.*?\}"
+        $replacement = $functionBlock.TrimStart()
+        $newContent = $content -replace $pattern, $replacement
+        Set-Content -Path $profile.Path -Value $newContent -NoNewline
+        Write-Host "Updated: $($profile.Name)" -ForegroundColor Green
+    } else {
+        # Add new
+        $newContent = $content.TrimEnd() + "`n" + $functionBlock
+        Set-Content -Path $profile.Path -Value $newContent -NoNewline
+        Write-Host "Added to: $($profile.Name)" -ForegroundColor Green
     }
 }
 
 Write-Host ""
 Write-Host "Installation complete!" -ForegroundColor Green
 Write-Host ""
-Write-Host "Usage:" -ForegroundColor Yellow
-Write-Host "  # From command prompt (after restart):"
+Write-Host "Restart your terminal, then use:" -ForegroundColor Yellow
 Write-Host "  kpk status"
 Write-Host "  kpk container logs blue"
+Write-Host "  kpk host start data_sync"
 Write-Host ""
-Write-Host "  # From PowerShell:"
-Write-Host "  Import-Module KPK"
-Write-Host "  Get-KPKStatus"
-Write-Host ""
-Write-Host "  # Or run directly:"
-Write-Host "  & '$installDir\kpk.cmd' status"
+Write-Host "The 'kpk' command runs directly from source - no reinstall needed after updates." -ForegroundColor Cyan

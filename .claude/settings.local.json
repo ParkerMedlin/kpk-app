@@ -10,7 +10,11 @@
       "Bash(powershell:*)",
       "Bash(python -m py_compile:*)",
       "Bash(psql:*)",
-      "Bash(cmd /c \"cd /d C:\\\\Users\\\\jdavis\\\\Documents\\\\kpk-app\\\\control-panel && go build -o dev\\\\kpk.exe .\")"
+      "Bash(cmd /c \"cd /d C:\\\\Users\\\\jdavis\\\\Documents\\\\kpk-app\\\\control-panel && go build -o dev\\\\kpk.exe .\")",
+      "Bash(git -C \"C:\\\\Users\\\\jdavis\\\\Documents\\\\kpk-app\" status --short)",
+      "Bash(git -C \"C:\\\\Users\\\\jdavis\\\\Documents\\\\kpk-app\" diff --stat)",
+      "Bash(git -C \"C:\\\\Users\\\\jdavis\\\\Documents\\\\kpk-app\" status)",
+      "Bash(ssh:*)"
     ],
     "deny": [],
     "ask": []

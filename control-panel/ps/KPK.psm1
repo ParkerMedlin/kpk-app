@@ -474,7 +474,7 @@ if (-not (Test-Path $psexec)) { $psexec = "C:/SysinternalsSuite/PsExec.exe" }
 if (-not (Test-Path $psexec)) { $psexec = "C:/Tools/PsExec.exe" }
 if (Test-Path $psexec) {
     $vbsPath = "C:/Users/pmedlin/Documents/kpk-app/host-services/launcher.vbs"
-    $vbsContent = "Set objShell = CreateObject(`"WScript.Shell`")`r`nobjShell.CurrentDirectory = `"C:\Users\pmedlin\Documents\kpk-app`"`r`nobjShell.Run `"`"`"$py`"`" `"`"$script`"`"`", 0, False"
+    $vbsContent = "Set objShell = CreateObject(`"WScript.Shell`")`r`nSet objEnv = objShell.Environment(`"Process`")`r`nobjEnv(`"USERPROFILE`") = `"C:\Users\pmedlin`"`r`nobjEnv(`"HOME`") = `"C:\Users\pmedlin`"`r`nobjEnv(`"HOMEPATH`") = `"\Users\pmedlin`"`r`nobjEnv(`"HOMEDRIVE`") = `"C:`"`r`nobjShell.CurrentDirectory = `"C:\Users\pmedlin\Documents\kpk-app`"`r`nobjShell.Run `"`"`"$py`"`" `"`"$script`"`"`", 0, False"
     Set-Content -Path $vbsPath -Value $vbsContent -Force
     $null = & $psexec -accepteula -i $sessionId -d wscript.exe $vbsPath 2>&1
     Write-Output "Started via PsExec (session $sessionId)"
