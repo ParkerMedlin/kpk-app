@@ -167,8 +167,8 @@ function Get-KPKLoopStatus {
 
     Write-Host "=== Loop Functions ===" -ForegroundColor Cyan
 
-    # Call the API via SSH on the server using curl (works on all Windows versions)
-    $apiCmd = 'curl -sk https://localhost/core/api/loop-status/ 2>&1'
+    # Call the API via SSH on the server using curl.exe (not the PowerShell alias)
+    $apiCmd = 'curl.exe -sk https://localhost/core/api/loop-status/ 2>&1'
 
     try {
         $output = Invoke-KPKCommand -Command $apiCmd
