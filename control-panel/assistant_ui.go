@@ -26,7 +26,8 @@ type AssistantUI struct {
 	ui            *UI
 	client        *AssistantClient
 	messages      []ChatMessage
-	chatDisplay   *widget.Entry
+	chatDisplay   *widget.RichText
+	chatScroll    *container.Scroll
 	inputEntry    *widget.Entry
 	sendButton    *widget.Button
 	clearButton   *widget.Button
@@ -34,6 +35,14 @@ type AssistantUI struct {
 	panelVisible  bool
 	chatPanel     *fyne.Container
 	mu            sync.Mutex
+
+	// Pending action bar
+	actionBar        *fyne.Container
+	actionLabel      *widget.Label
+	actionDescLabel  *widget.Label
+	approveBtn       *widget.Button
+	denyBtn          *widget.Button
+	pendingConfirm   chan bool
 }
 
 // NewAssistantUI creates a new chat UI
@@ -61,23 +70,21 @@ func (aui *AssistantUI) Initialize() {
 
 // BuildChatPanel creates the chat panel UI
 func (aui *AssistantUI) BuildChatPanel() *fyne.Container {
-	// Chat history display (read-only multi-line entry)
-	aui.chatDisplay = widget.NewMultiLineEntry()
+	// Chat history display using RichText for markdown rendering
+	aui.chatDisplay = widget.NewRichTextFromMarkdown("")
 	aui.chatDisplay.Wrapping = fyne.TextWrapWord
-	aui.chatDisplay.Disable()
-	aui.chatDisplay.SetPlaceHolder("Ask Claude about the KPK system status, logs, or request actions...")
+	aui.chatScroll = container.NewScroll(aui.chatDisplay)
 
 	// Loading indicator
 	aui.loadingBar = widget.NewProgressBarInfinite()
 	aui.loadingBar.Hide()
 
-	// User input
-	aui.inputEntry = widget.NewMultiLineEntry()
-	aui.inputEntry.SetPlaceHolder("Type your message...")
-	aui.inputEntry.Wrapping = fyne.TextWrapWord
-	aui.inputEntry.SetMinRowsVisible(2)
+	// Build the pending action bar (initially hidden)
+	aui.buildActionBar()
 
-	// Handle Enter key to send (Shift+Enter for newline)
+	// User input - single line Entry so Enter sends message
+	aui.inputEntry = widget.NewEntry()
+	aui.inputEntry.SetPlaceHolder("Type your message and press Enter...")
 	aui.inputEntry.OnSubmitted = func(s string) {
 		aui.handleSend()
 	}
@@ -102,15 +109,58 @@ func (aui *AssistantUI) BuildChatPanel() *fyne.Container {
 		aui.loadingBar,
 	)
 
+	// Bottom area: action bar + input
+	bottomArea := container.NewVBox(
+		aui.actionBar,
+		inputRow,
+	)
+
 	// Main chat panel
 	aui.chatPanel = container.NewBorder(
 		header,
-		inputRow,
+		bottomArea,
 		nil, nil,
-		container.NewScroll(aui.chatDisplay),
+		aui.chatScroll,
 	)
 
 	return aui.chatPanel
+}
+
+// buildActionBar creates the pending action confirmation bar
+func (aui *AssistantUI) buildActionBar() {
+	aui.actionLabel = widget.NewLabelWithStyle("PENDING ACTION", fyne.TextAlignLeading, fyne.TextStyle{Bold: true})
+	aui.actionDescLabel = widget.NewLabel("")
+	aui.actionDescLabel.Wrapping = fyne.TextWrapWord
+
+	aui.approveBtn = widget.NewButtonWithIcon("Approve", theme.ConfirmIcon(), func() {
+		if aui.pendingConfirm != nil {
+			aui.pendingConfirm <- true
+		}
+	})
+	aui.approveBtn.Importance = widget.HighImportance
+
+	aui.denyBtn = widget.NewButtonWithIcon("Deny", theme.CancelIcon(), func() {
+		if aui.pendingConfirm != nil {
+			aui.pendingConfirm <- false
+		}
+	})
+	aui.denyBtn.Importance = widget.DangerImportance
+
+	buttonRow := container.NewHBox(aui.approveBtn, aui.denyBtn)
+
+	aui.actionBar = container.NewVBox(
+		widget.NewSeparator(),
+		container.NewHBox(
+			widget.NewIcon(theme.WarningIcon()),
+			aui.actionLabel,
+		),
+		aui.actionDescLabel,
+		buttonRow,
+		widget.NewSeparator(),
+	)
+
+	// Initially hidden
+	aui.actionBar.Hide()
 }
 
 // handleSend processes user input
@@ -161,7 +211,8 @@ func (aui *AssistantUI) handleClear() {
 				aui.mu.Lock()
 				aui.messages = []ChatMessage{}
 				aui.mu.Unlock()
-				aui.chatDisplay.SetText("")
+				aui.chatDisplay.ParseMarkdown("")
+				aui.chatDisplay.Refresh()
 				if aui.client != nil {
 					aui.client.ClearHistory()
 				}
@@ -182,51 +233,62 @@ func (aui *AssistantUI) addMessage(role, content string) {
 	aui.refreshChatDisplay()
 }
 
-// refreshChatDisplay updates the chat display text
+// refreshChatDisplay updates the chat display with rendered markdown
 func (aui *AssistantUI) refreshChatDisplay() {
 	aui.mu.Lock()
 	defer aui.mu.Unlock()
 
 	var sb strings.Builder
-	for _, msg := range aui.messages {
+	for i, msg := range aui.messages {
 		timestamp := msg.Time.Format("15:04")
+
 		if msg.Role == "user" {
-			sb.WriteString(fmt.Sprintf("[%s] You:\n%s\n\n", timestamp, msg.Content))
+			sb.WriteString(fmt.Sprintf("**You** `%s`\n\n%s", timestamp, msg.Content))
 		} else {
-			sb.WriteString(fmt.Sprintf("[%s] Claude:\n%s\n\n", timestamp, msg.Content))
+			sb.WriteString(fmt.Sprintf("**Claude** `%s`\n\n%s", timestamp, msg.Content))
+		}
+
+		// Add separator between messages
+		if i < len(aui.messages)-1 {
+			sb.WriteString("\n\n---\n\n")
+		} else {
+			sb.WriteString("\n")
 		}
 	}
 
-	aui.chatDisplay.SetText(sb.String())
-	// Scroll to bottom
-	aui.chatDisplay.CursorRow = len(strings.Split(aui.chatDisplay.Text, "\n"))
+	aui.chatDisplay.ParseMarkdown(sb.String())
 	aui.chatDisplay.Refresh()
+
+	// Scroll to bottom after a brief delay to let layout complete
+	go func() {
+		time.Sleep(50 * time.Millisecond)
+		aui.chatScroll.ScrollToBottom()
+	}()
 }
 
-// showToolConfirmation shows a confirmation dialog for tool execution
-// Blocks until user responds
+// showToolConfirmation shows the action bar for tool confirmation
+// Blocks until user responds with Approve or Deny
 func (aui *AssistantUI) showToolConfirmation(toolName, description string) bool {
-	resultChan := make(chan bool, 1)
+	// Create the confirmation channel
+	aui.pendingConfirm = make(chan bool, 1)
 
-	// Create a label with the description
-	descLabel := widget.NewLabel(description)
-	descLabel.Wrapping = fyne.TextWrapWord
+	// Update action bar content
+	aui.actionLabel.SetText(fmt.Sprintf("PENDING: %s", toolName))
+	aui.actionDescLabel.SetText(description)
 
-	// Must run dialog on main thread
-	dialog.ShowCustomConfirm(
-		fmt.Sprintf("Confirm: %s", toolName),
-		"Execute",
-		"Cancel",
-		container.NewVBox(
-			widget.NewLabel("Claude wants to perform:"),
-			widget.NewSeparator(),
-			descLabel,
-		),
-		func(confirmed bool) {
-			resultChan <- confirmed
-		},
-		aui.ui.window,
-	)
+	// Show the action bar
+	aui.actionBar.Show()
+	aui.chatPanel.Refresh()
 
-	return <-resultChan
+	// Wait for user response
+	result := <-aui.pendingConfirm
+
+	// Hide the action bar
+	aui.actionBar.Hide()
+	aui.chatPanel.Refresh()
+
+	// Clean up
+	aui.pendingConfirm = nil
+
+	return result
 }
