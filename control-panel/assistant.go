@@ -57,7 +57,7 @@ func (ac *AssistantClient) runAgentLoop(ctx context.Context) (string, error) {
 
 	for {
 		message, err := ac.client.Messages.New(ctx, anthropic.MessageNewParams{
-			Model:     "claude-sonnet-4-20250514",
+			Model:     "claude-haiku-4-5-20251001",
 			MaxTokens: 4096,
 			System:    ac.systemPrompt,
 			Messages:  ac.messages,
