@@ -20,6 +20,7 @@ from PIL import Image
 from tkinter import messagebox
 import tkinter as tk
 import logging
+import time
 
 # --- Path Configuration ---
 KPK_APP_ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -184,6 +185,29 @@ def clone_sage_tables():
     except Exception as e:
         logger.exception(f"clone_sage_tables CRASHED: {e}")
 
+
+def log_tank_levels_table():
+    """Continuously log live tank levels into core_tanklevellog."""
+    try:
+        logger.info("log_tank_levels_table: Starting...")
+        exception_list = []
+        while len(exception_list) < 11:
+            try:
+                tank_level_reading.log_tank_levels_table()
+                # Sleep 5 minutes between polls to match prior behavior
+                time.sleep(300)
+            except Exception as e:
+                logger.error(f"log_tank_levels_table failed: {str(e)}")
+                exception_list.append(e)
+                logger.warning(f"log_tank_levels_table exceptions so far: {len(exception_list)}")
+                # brief backoff before retrying
+                time.sleep(60)
+        else:
+            logger.error("log_tank_levels_table: Too many exceptions, shutting down loop.")
+            email_sender.send_email_error(exception_list, 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')
+    except Exception as e:
+        logger.exception(f"log_tank_levels_table CRASHED: {e}")
+
 def show_info(icon):
     connection_postgres = psycopg2.connect(DB_CONNECTION_STRING)
     cursor_postgres = connection_postgres.cursor()
@@ -247,6 +271,8 @@ def main():
     logger.info("Started clone_sage_tables process")
     Process(target=update_xlsb_tables).start()
     logger.info("Started update_xlsb_tables process")
+    Process(target=log_tank_levels_table).start()
+    logger.info("Started log_tank_levels_table process")
     # Call this function with the path to your icon image
     create_icon(ICON_PATH)
 
