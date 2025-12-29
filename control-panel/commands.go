@@ -206,80 +206,47 @@ func (c *Commands) StartHostServiceWithOutput(serviceName string) (string, error
 	}
 
 	// Use PsExec to run AS pmedlin in pmedlin's interactive desktop session (for tray icon)
-	// -i = interactive (run in user's session), -d = don't wait, -accepteula = skip EULA prompt
-	// -u/-p = run as pmedlin so we get their drive mappings and network credentials
-	// Dynamically detect pmedlin's session ID using query user
+	// Credentials loaded from .env (PSEXEC_USER, PSEXEC_PASS)
 	cmd := fmt.Sprintf(`
+$ErrorActionPreference = 'SilentlyContinue'
+$root = "C:/Users/pmedlin/Documents/kpk-app"
 $py = "C:/Users/pmedlin/AppData/Local/Programs/Python/Python311/pythonw.exe"
-$script = "C:/Users/pmedlin/Documents/kpk-app/%s"
-if (-not (Test-Path $py)) { throw "Python not found at $py" }
-if (-not (Test-Path $script)) { throw "Script not found: $script" }
+$script = "$root/%s"
 
-# Load credentials from .env file
-$envFile = "C:/Users/pmedlin/Documents/kpk-app/.env"
-$psexecUser = $null
-$psexecPass = $null
-if (Test-Path $envFile) {
-    Get-Content $envFile | ForEach-Object {
-        if ($_ -match '^PSEXEC_USER=(.+)$') { $psexecUser = $Matches[1] }
-        if ($_ -match '^PSEXEC_PASS=(.+)$') { $psexecPass = $Matches[1] }
-    }
+# Load PSEXEC_USER/PSEXEC_PASS from .env
+$u=$null; $p=$null
+Get-Content "$root/.env" 2>$null | ForEach-Object {
+    if ($_ -match '^PSEXEC_USER=(.+)$') { $u = $Matches[1] }
+    if ($_ -match '^PSEXEC_PASS=(.+)$') { $p = $Matches[1] }
 }
 
-# Detect pmedlin's session ID dynamically
-$sessionId = $null
-$queryResult = query user 2>$null | Select-String "pmedlin"
-if ($queryResult) {
-    # Parse session ID from query user output (format: USERNAME SESSIONNAME ID STATE IDLE TIME LOGON TIME)
-    $parts = $queryResult -split '\s+'
-    foreach ($part in $parts) {
-        if ($part -match '^\d+$' -and [int]$part -gt 0) {
-            $sessionId = $part
-            break
-        }
-    }
-}
-if (-not $sessionId) {
-    # Fallback: try to get from current process if running as pmedlin
-    $sessionId = (Get-Process -Id $PID).SessionId
-    if ($sessionId -eq 0) { $sessionId = 1 }
-}
-Write-Output "Detected session ID: $sessionId"
+# Get pmedlin's session ID
+$sid = 1
+$q = query user 2>$null | Select-String "pmedlin"
+if ($q) { $q -split '\s+' | ForEach-Object { if ($_ -match '^\d+$' -and [int]$_ -gt 0) { $sid = $_; return } } }
 
-# Try PsExec first to run in pmedlin's interactive session
-$psexec = "C:/Windows/System32/PsExec.exe"
-if (-not (Test-Path $psexec)) { $psexec = "C:/SysinternalsSuite/PsExec.exe" }
-if (-not (Test-Path $psexec)) { $psexec = "C:/Tools/PsExec.exe" }
+# Find PsExec
+$px = "C:/Windows/System32/PsExec.exe"
+if (!(Test-Path $px)) { $px = "C:/SysinternalsSuite/PsExec.exe" }
 
-if (Test-Path $psexec) {
-    Write-Output "Using PsExec for interactive session $sessionId..."
-    # Create a temporary VBS script to launch pythonw silently with correct environment
-    $vbsPath = "C:/Users/pmedlin/Documents/kpk-app/host-services/launcher.vbs"
-    $vbsContent = @"
-Set objShell = CreateObject("WScript.Shell")
-objShell.Environment("Process")("USERPROFILE") = "C:\Users\pmedlin"
-objShell.Environment("Process")("HOME") = "C:\Users\pmedlin"
-objShell.CurrentDirectory = "C:\Users\pmedlin\Documents\kpk-app"
-objShell.Run """$py"" ""$script""", 0, False
-"@
-    Set-Content -Path $vbsPath -Value $vbsContent -Force
-    # -i $sessionId = detected session, -d = detach, -u/-p = run as pmedlin
-    if ($psexecUser -and $psexecPass) {
-        Write-Output "Running as user: $psexecUser"
-        & $psexec -accepteula -i $sessionId -d -u $psexecUser -p $psexecPass wscript.exe $vbsPath 2>&1
-    } else {
-        Write-Output "Warning: PSEXEC_USER/PSEXEC_PASS not found in .env, running without credentials"
-        & $psexec -accepteula -i $sessionId -d wscript.exe $vbsPath 2>&1
-    }
-    Write-Output "Started %s via PsExec (interactive session $sessionId)"
+# Create VBS launcher
+$vbs = "$root/host-services/launcher.vbs"
+@"
+Set s=CreateObject("WScript.Shell")
+s.Environment("Process")("USERPROFILE")="C:\Users\pmedlin"
+s.Environment("Process")("HOME")="C:\Users\pmedlin"
+s.CurrentDirectory="$root"
+s.Run """$py"" ""$script""",0,False
+"@ | Set-Content $vbs -Force
+
+# Run PsExec (suppress stderr noise)
+if ($u -and $p) {
+    $null = & $px -accepteula -i $sid -d -u $u -p $p wscript.exe $vbs 2>$null
 } else {
-    Write-Output "PsExec not found, falling back to regular Start-Process..."
-    $p = Start-Process -FilePath $py -ArgumentList $script -WorkingDirectory "C:/Users/pmedlin/Documents/kpk-app" -WindowStyle Hidden -PassThru
-    Start-Sleep -Seconds 2
-    if ($p.HasExited) { throw "Process died immediately" }
-    Write-Output "Started %s (PID: $($p.Id))"
+    $null = & $px -accepteula -i $sid -d wscript.exe $vbs 2>$null
 }
-`, path, serviceName, serviceName)
+Write-Output "Started %s (session $sid)"
+`, path, serviceName)
 
 	output, err := c.exec.RunCommand(cmd)
 	return output, err
