@@ -341,11 +341,21 @@ func (c *Commands) ListBackups() ([]string, error) {
 }
 
 // RestoreBackup restores from a specific backup
-func (c *Commands) RestoreBackup(backupName string) error {
-	// Hardcoded path - scripts always in pmedlin's profile regardless of SSH user
-	cmd := `& "C:/Users/pmedlin/Documents/kpk-app/local_machine_scripts/batch_scripts/helper_scripts/db_restore_latest_backup.bat"`
-	_, err := c.exec.RunCommand(cmd)
-	return err
+func (c *Commands) RestoreBackup(backupName string) (string, error) {
+	// Run restore script with backup name parameter
+	// Use cmd /c to run batch file and capture output
+	cmd := fmt.Sprintf(`
+$batFile = "C:/Users/pmedlin/Documents/kpk-app/local_machine_scripts/batch_scripts/helper_scripts/db_restore_latest_backup.bat"
+if (-not (Test-Path $batFile)) {
+    Write-Output "ERROR: Batch file not found at $batFile"
+    exit 1
+}
+Write-Output "Running restore for: %s"
+$output = cmd /c $batFile "%s" 2>&1
+Write-Output $output
+exit $LASTEXITCODE
+`, backupName, backupName)
+	return c.exec.RunCommand(cmd)
 }
 
 // --- Deployment Commands ---

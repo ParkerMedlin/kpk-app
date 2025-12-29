@@ -122,6 +122,18 @@ set "REPO_ROOT=%~dp0..\.."
 set "ENV_FILE=%REPO_ROOT%\.env"
 ```
 
+### Network Drives (UNC Paths)
+
+Mapped drive letters (M:, N:, etc.) are per-user and per-session. They won't be available
+in SSH sessions. Always use UNC paths for network locations:
+```batch
+REM BAD - drive letter may not exist in SSH session
+set "BACKUP_DIR=M:\kpkapp\backups"
+
+REM GOOD - UNC path works regardless of drive mappings
+set "BACKUP_DIR=\\KinPak-Svr1\apps\kpkapp\backups"
+```
+
 ### Checklist for New Commands
 
 When adding commands that display output in the GUI:

@@ -210,13 +210,10 @@ function Get-KPKLoopStatus {
 
             Write-Host "$icon " -ForegroundColor $color -NoNewline
 
-            # Format the time ago
-            $timeAgo = if ($func.minutes_ago -ge 0) {
-                if ($func.minutes_ago -lt 60) {
-                    "$($func.minutes_ago) min ago"
-                } else {
-                    "$([math]::Floor($func.minutes_ago / 60)) hr ago"
-                }
+            # Format the timestamp
+            $timeDisplay = if ($func.time_stamp) {
+                $ts = [DateTime]::Parse($func.time_stamp)
+                $ts.ToString("HH:mm:ss")
             } else {
                 "unknown"
             }
@@ -230,11 +227,11 @@ function Get-KPKLoopStatus {
                     $result = $result.Substring(0, 37) + "..."
                 }
                 Write-Host " $result" -ForegroundColor Red -NoNewline
-                Write-Host " ($timeAgo)" -ForegroundColor Gray
+                Write-Host " ($timeDisplay)" -ForegroundColor Gray
             } elseif ($func.is_stale) {
-                Write-Host " STALE ($timeAgo)" -ForegroundColor Yellow
+                Write-Host " STALE ($timeDisplay)" -ForegroundColor Yellow
             } else {
-                Write-Host " $timeAgo" -ForegroundColor Gray
+                Write-Host " $timeDisplay" -ForegroundColor Gray
             }
         }
     } catch {
