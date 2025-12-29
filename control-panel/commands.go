@@ -306,13 +306,25 @@ func (c *Commands) GetHostServiceLogs(serviceName string, lines int) (string, er
 // CreateBackup creates a database backup
 func (c *Commands) CreateBackup() (string, error) {
 	// Run the backup script (hardcoded path - scripts always in pmedlin's profile)
-	cmd := `& "C:/Users/pmedlin/Documents/kpk-app/local_machine_scripts/batch_scripts/backup_and_copy.bat"`
+	// Use cmd /c to run batch file and capture both stdout and stderr
+	cmd := `
+$batFile = "C:/Users/pmedlin/Documents/kpk-app/local_machine_scripts/batch_scripts/backup_and_copy.bat"
+if (-not (Test-Path $batFile)) {
+    Write-Output "ERROR: Batch file not found at $batFile"
+    exit 1
+}
+Write-Output "Running: $batFile"
+$output = cmd /c $batFile 2>&1
+Write-Output $output
+exit $LASTEXITCODE
+`
 	return c.exec.RunCommand(cmd)
 }
 
 // ListBackups returns available backups
 func (c *Commands) ListBackups() ([]string, error) {
-	cmd := `Get-ChildItem -Path 'M:\kpkapp\backups' -Directory | Sort-Object LastWriteTime -Descending | Select-Object -First 10 -ExpandProperty Name`
+	// Use cmd /c dir for UNC paths - PowerShell Get-ChildItem has auth issues over SSH
+	cmd := `cmd /c "dir /b /ad /o-d \\KinPak-Svr1\apps\kpkapp\backups 2>nul" | Select-Object -First 10`
 	output, err := c.exec.RunCommand(cmd)
 	if err != nil {
 		return nil, err
@@ -330,11 +342,21 @@ func (c *Commands) ListBackups() ([]string, error) {
 }
 
 // RestoreBackup restores from a specific backup
-func (c *Commands) RestoreBackup(backupName string) error {
-	// Hardcoded path - scripts always in pmedlin's profile regardless of SSH user
-	cmd := `& "C:/Users/pmedlin/Documents/kpk-app/local_machine_scripts/batch_scripts/db_restore_latest_backup.bat"`
-	_, err := c.exec.RunCommand(cmd)
-	return err
+func (c *Commands) RestoreBackup(backupName string) (string, error) {
+	// Run restore script with backup name parameter
+	// Use cmd /c to run batch file and capture output
+	cmd := fmt.Sprintf(`
+$batFile = "C:/Users/pmedlin/Documents/kpk-app/local_machine_scripts/batch_scripts/helper_scripts/db_restore_latest_backup.bat"
+if (-not (Test-Path $batFile)) {
+    Write-Output "ERROR: Batch file not found at $batFile"
+    exit 1
+}
+Write-Output "Running restore for: %s"
+$output = cmd /c $batFile "%s" 2>&1
+Write-Output $output
+exit $LASTEXITCODE
+`, backupName, backupName)
+	return c.exec.RunCommand(cmd)
 }
 
 // --- Deployment Commands ---

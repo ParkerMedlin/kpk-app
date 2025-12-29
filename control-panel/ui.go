@@ -661,17 +661,31 @@ func (u *UI) restoreBackup() {
 	}
 
 	if len(backups) == 0 {
-		dialog.ShowInformation("No Backups", "No backups found in M:\\kpkapp\\backups", u.window)
+		dialog.ShowInformation("No Backups", "No backups found", u.window)
 		return
 	}
 
-	// Show selection dialog
-	dialog.ShowCustomConfirm("Select Backup", "Restore", "Cancel",
-		widget.NewSelect(backups, nil),
+	// Show selection dialog with backup list
+	// Note: Current restore script always restores the LATEST backup
+	selectedBackup := ""
+	selectWidget := widget.NewSelect(backups, func(s string) {
+		selectedBackup = s
+	})
+	selectWidget.SetSelected(backups[0]) // Default to most recent
+
+	dialog.ShowCustomConfirm("Restore Backup", "Restore", "Cancel",
+		selectWidget,
 		func(ok bool) {
-			if ok {
-				// TODO: Get selected backup and restore
-				dialog.ShowInformation("Restore", "Restore functionality coming soon", u.window)
+			if ok && selectedBackup != "" {
+				u.logText.SetText(fmt.Sprintf("Restoring from backup: %s...", selectedBackup))
+				go func() {
+					output, err := u.commands.RestoreBackup(selectedBackup)
+					if err != nil {
+						u.logText.SetText(fmt.Sprintf("Restore failed: %v\n%s", err, output))
+					} else {
+						u.logText.SetText(fmt.Sprintf("Restore complete:\n%s", output))
+					}
+				}()
 			}
 		}, u.window)
 }

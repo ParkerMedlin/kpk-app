@@ -129,16 +129,30 @@ func (s *SSHClient) RunCommand(cmd string) (string, error) {
 	session.Stdout = &stdout
 	session.Stderr = &stderr
 
+	// Wrap command to suppress PowerShell progress output (avoids CLIXML noise in stderr)
+	wrappedCmd := "$ProgressPreference = 'SilentlyContinue'; " + cmd
+
 	// Use PowerShell with encoded command to avoid quote escaping issues
 	// Base64 encode the command for safe transport
-	encoded := base64.StdEncoding.EncodeToString([]byte(utf16LEEncode(cmd)))
-	psCmd := fmt.Sprintf(`powershell -NoProfile -EncodedCommand %s`, encoded)
+	encoded := base64.StdEncoding.EncodeToString([]byte(utf16LEEncode(wrappedCmd)))
+	psCmd := fmt.Sprintf(`powershell -NoProfile -NoLogo -EncodedCommand %s`, encoded)
 	err = session.Run(psCmd)
-	if err != nil {
-		return stderr.String(), fmt.Errorf("command failed: %v - %s", err, stderr.String())
+
+	// Combine stdout and stderr for better visibility
+	// Return stdout first (actual output), then stderr if present
+	output := stdout.String()
+	if stderr.Len() > 0 {
+		if output != "" {
+			output += "\n"
+		}
+		output += stderr.String()
 	}
 
-	return stdout.String(), nil
+	if err != nil {
+		return output, fmt.Errorf("command failed: %v", err)
+	}
+
+	return output, nil
 }
 
 // utf16LEEncode converts string to UTF-16 LE bytes (required for PowerShell -EncodedCommand)
