@@ -1,22 +1,19 @@
 # KPK Control Panel Development
 
-## Dual Implementation
+## Architecture
 
-The control panel has **two implementations** with identical command structures:
+| Component | Implementation | Files |
+|-----------|----------------|-------|
+| **GUI** | Go (Fyne) | `main.go`, `ui.go`, `commands.go`, `ssh.go` |
+| **CLI** | PowerShell | `ps/KPK.psm1`, `ps/kpk.ps1` |
 
-| Implementation | Files | Notes |
-|----------------|-------|-------|
-| **Go CLI** | `cli.go`, `commands.go`, `ssh.go`, `ui.go`, `main.go` | Compiled binary |
-| **PowerShell** | `ps/KPK.psm1`, `ps/kpk.ps1` | Uses native Windows SSH |
-
-Both must stay in sync. The PowerShell version exists to avoid AV false positives that can occur with Go binaries containing SSH libraries.
+The Go app is GUI-only. The CLI is purely PowerShell to avoid AV false positives with Go SSH libraries.
 
 ## When Adding/Modifying Commands
 
-1. **Update Go implementation** in `cli.go` and/or `commands.go`
-2. **Update PowerShell module** in `ps/KPK.psm1`
-3. **Update PowerShell CLI wrapper** in `ps/kpk.ps1` (if command structure changes)
-4. **Update documentation**:
+1. **GUI**: Update `commands.go` (shared logic) and `ui.go` (GUI bindings)
+2. **CLI**: Update `ps/KPK.psm1` (module) and `ps/kpk.ps1` (CLI wrapper)
+3. **Documentation**:
    - `kpk-cli-reference.md` (project reference)
    - `~/.claude/skills/kpk-cli/reference.md` (global Claude skill)
 
@@ -24,63 +21,62 @@ Both must stay in sync. The PowerShell version exists to avoid AV false positive
 
 ```
 control-panel/
-├── main.go              # Entry point, GUI vs CLI detection
-├── cli.go               # CLI argument parsing, command dispatch
-├── commands.go          # Command implementations (shared by CLI & GUI)
-├── ssh.go               # SSH client wrapper
+├── main.go              # GUI entry point
 ├── ui.go                # Fyne GUI implementation
-├── build.bat            # Build script
-├── kpk-cli-reference.md # User-facing command reference
+├── commands.go          # Command implementations (used by GUI)
+├── ssh.go               # SSH client wrapper
+├── build.bat            # Build script for GUI
+├── kpk-cli-reference.md # CLI command reference
 ├── development.md       # This file
 └── ps/
-    ├── KPK.psm1         # PowerShell module (all logic)
+    ├── KPK.psm1         # PowerShell module (CLI logic)
     ├── kpk.ps1          # CLI wrapper script
     ├── kpk.cmd          # Batch wrapper for cmd.exe
     └── Install-KPK.ps1  # Installer script
 ```
 
-## Command Mapping
+## CLI Command → PowerShell Cmdlet
 
-| CLI Command | Go Function | PowerShell Cmdlet |
-|-------------|-------------|-------------------|
-| `status` | `cmdStatus()` | `Get-KPKStatus` |
-| `loop status` | N/A (PS only) | `Get-KPKLoopStatus` |
-| `start-missing` | `cmdStartMissing()` | `Start-KPKMissing` |
-| `start-all` | `cmdColdStart()` | `Start-KPKAll` |
-| `stop-all` | `cmdStopAll()` | `Stop-KPKAll` |
-| `container list` | `cmdContainer()` | `Get-KPKContainerList` |
-| `container logs` | `cmdContainer()` | `Get-KPKContainerLogs` |
-| `container start` | `cmdContainer()` | `Start-KPKContainer` |
-| `container stop` | `cmdContainer()` | `Stop-KPKContainer` |
-| `container restart` | `cmdContainer()` | `Restart-KPKContainer` |
-| `service list` | `cmdService()` | `Get-KPKHostServiceList` |
-| `service logs` | `cmdService()` | `Get-KPKHostServiceLogs` |
-| `service start` | `cmdService()` | `Start-KPKHostService` |
-| `service stop` | `cmdService()` | `Stop-KPKHostService` |
-| `backup create` | `cmdBackup()` | `New-KPKBackup` |
-| `backup list` | `cmdBackup()` | `Get-KPKBackupList` |
-| `backup restore` | `cmdBackup()` | `Restore-KPKBackup` |
-| `git status` | `cmdGit()` | `Get-KPKGitStatus` |
-| `git fetch` | `cmdGit()` | `Invoke-KPKGitFetch` |
-| `git pull` | `cmdGit()` | `Invoke-KPKGitPull` |
-| `git collectstatic` | `cmdGit()` | `Invoke-KPKCollectStatic` |
-| `nginx reload` | `cmdNginx()` | `Invoke-KPKNginxReload` |
+| CLI Command | PowerShell Cmdlet |
+|-------------|-------------------|
+| `status` | `Get-KPKStatus` |
+| `loop status` | `Get-KPKLoopStatus` |
+| `start-missing` | `Start-KPKMissing` |
+| `start-all` | `Start-KPKAll` |
+| `stop-all` | `Stop-KPKAll` |
+| `container list` | `Get-KPKContainerList` |
+| `container logs` | `Get-KPKContainerLogs` |
+| `container start` | `Start-KPKContainer` |
+| `container stop` | `Stop-KPKContainer` |
+| `container restart` | `Restart-KPKContainer` |
+| `service list` | `Get-KPKHostServiceList` |
+| `service logs` | `Get-KPKHostServiceLogs` |
+| `service start` | `Start-KPKHostService` |
+| `service stop` | `Stop-KPKHostService` |
+| `backup create` | `New-KPKBackup` |
+| `backup list` | `Get-KPKBackupList` |
+| `backup restore` | `Restore-KPKBackup` |
+| `git status` | `Get-KPKGitStatus` |
+| `git fetch` | `Invoke-KPKGitFetch` |
+| `git pull` | `Invoke-KPKGitPull` |
+| `git collectstatic` | `Invoke-KPKCollectStatic` |
+| `nginx reload` | `Invoke-KPKNginxReload` |
 
 ## Building
 
 ```batch
-# Build Go binary
+# Build Go GUI
 build.bat
 
-# PowerShell requires no build step
+# PowerShell CLI requires no build step
 ```
 
 ## Testing
 
 ```powershell
-# Test PowerShell module
+# Test CLI
 powershell -NoProfile -ExecutionPolicy Bypass -File "ps\kpk.ps1" status
 
-# Test Go binary
-.\bin\kpk.exe status
+# Test GUI
+.\bin\kpk.exe
 ```

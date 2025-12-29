@@ -1,48 +1,33 @@
 # KPK CLI Reference
 
-## Implementations
+## Overview
 
-Two implementations are available with identical command structures:
+The KPK CLI is a **PowerShell module** located at `control-panel\ps\`. The Go application is GUI-only.
 
-| Version | Location | Notes |
-|---------|----------|-------|
-| **Go binary** | `M:\kpkapp\control-panel\kpk.exe` | Standalone executable |
-| **PowerShell** | `control-panel\ps\` | Uses native Windows SSH (avoids AV false positives) |
+## Usage
 
-### Go Binary
-```
-kpk status
-kpk container logs blue
-```
-
-### PowerShell Script
 ```powershell
+# From the ps directory
 .\kpk.ps1 status
 .\kpk.ps1 container logs blue
-```
 
-### Installing PowerShell Version
-```powershell
-# Install for current user (adds to PATH)
-.\Install-KPK.ps1
+# Or install globally
+.\Install-KPK.ps1           # Current user (adds to PATH)
+.\Install-KPK.ps1 -AllUsers # All users (requires admin)
 
-# Install for all users (requires admin)
-.\Install-KPK.ps1 -AllUsers
-
-# After install, use from cmd.exe:
+# After install, use from anywhere:
 kpk status
 ```
 
 ## Connection
 
 SSH uses current Windows username by default (uses SSH key at `~/.ssh/id_rsa`).
-Override with `-u <username>` if needed. Use `--local` when running on the server.
+Override with `-u <username>` if needed. Use `-Local` when running on the server.
 
 ## Commands
 
 ```
 kpk                                     # Show this help
-kpk gui                                 # Launch GUI
 
 kpk status                              # Show containers, services, AND loop functions
 kpk loop status                         # Show loop function status only
