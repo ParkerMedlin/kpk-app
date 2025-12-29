@@ -395,6 +395,109 @@ def exit_application(icon):
     os._exit(0)
 
 
+def simulate_leak(tank_name, leak_rate_gal_hr):
+    """
+    Simulate a leak and test if detection logic would catch it.
+
+    Args:
+        tank_name: Real tank to use for baseline control limits
+        leak_rate_gal_hr: Simulated leak rate in gallons/hour (positive = losing product)
+    """
+    print("=" * 60)
+    print(f"LEAK SIMULATION: Tank {tank_name}")
+    print(f"Simulated leak rate: {leak_rate_gal_hr} gal/hr")
+    print("=" * 60)
+
+    # Get real control limits for this tank
+    limits = calculate_control_limits(tank_name)
+    if not limits:
+        print(f"ERROR: Could not get control limits for tank {tank_name}")
+        return
+
+    print(f"\nBaseline statistics (from 60 days of real data):")
+    print(f"  Avg change (normal): {limits['avg_change']:.2f} gal/hr")
+    print(f"  Avg moving range:    {limits['avg_mr']:.2f} gal/hr")
+    print(f"  Upper Control Limit: {limits['ucl']:.2f} gal/hr")
+    print(f"  Lower Control Limit: {limits['lcl']:.2f} gal/hr")
+
+    # Simulate the leak as a rate of change
+    simulated_rate = -abs(leak_rate_gal_hr)  # Leak = negative change
+
+    print(f"\nSimulated scenario:")
+    print(f"  Simulated rate:      {simulated_rate:.2f} gal/hr")
+    print(f"  Over 4 hours:        {simulated_rate * 4:.0f} gallons lost")
+    print(f"  Over 8 hours:        {simulated_rate * 8:.0f} gallons lost")
+    print(f"  Over 24 hours:       {simulated_rate * 24:.0f} gallons lost")
+
+    # Check Rule 1: Rate below LCL
+    rule1_triggered = simulated_rate < limits['lcl']
+    print(f"\n--- Detection Analysis ---")
+    print(f"Rule 1 (Rate below LCL): {'TRIGGERED' if rule1_triggered else 'not triggered'}")
+    print(f"  {simulated_rate:.2f} {'<' if rule1_triggered else '>='} {limits['lcl']:.2f}")
+
+    # Rule 2 would require 6+ hours of consecutive decreases
+    # With a consistent leak, this would always trigger after 6 hours
+    print(f"Rule 2 (6+ consecutive decreases): WOULD TRIGGER after 6 hours of leak")
+
+    # Overall detection
+    would_detect = rule1_triggered
+    print(f"\n{'='*60}")
+    if would_detect:
+        print(f"RESULT: Leak of {leak_rate_gal_hr} gal/hr WOULD BE DETECTED immediately")
+    else:
+        margin = limits['lcl'] - simulated_rate
+        needed_rate = abs(limits['lcl']) + 0.01
+        print(f"RESULT: Leak of {leak_rate_gal_hr} gal/hr would NOT trigger Rule 1")
+        print(f"  Margin to LCL: {abs(margin):.2f} gal/hr")
+        print(f"  Min detectable leak (Rule 1): {needed_rate:.2f} gal/hr")
+        print(f"  However, Rule 2 would still catch it after 6+ hours")
+    print("=" * 60)
+
+    return would_detect
+
+
+def run_sensitivity_analysis(tank_name):
+    """
+    Run sensitivity analysis to find minimum detectable leak rate for a tank.
+    """
+    print("=" * 60)
+    print(f"SENSITIVITY ANALYSIS: Tank {tank_name}")
+    print("=" * 60)
+
+    limits = calculate_control_limits(tank_name)
+    if not limits:
+        print(f"ERROR: Could not get control limits for tank {tank_name}")
+        return
+
+    print(f"\nControl limits:")
+    print(f"  LCL: {limits['lcl']:.2f} gal/hr")
+    print(f"  Avg change: {limits['avg_change']:.2f} gal/hr")
+    print(f"  Avg moving range: {limits['avg_mr']:.2f} gal/hr")
+
+    # The minimum detectable leak (Rule 1) is when rate < LCL
+    # LCL = avg_change - 2.66 * avg_mr
+    # For detection: leak_rate < LCL
+    # Since LCL can be positive or negative, we need |leak_rate| > |LCL| in the negative direction
+
+    min_detectable = abs(limits['lcl']) if limits['lcl'] < 0 else abs(limits['avg_change']) + 2.66 * limits['avg_mr']
+
+    print(f"\n--- Minimum Detectable Leak Rates ---")
+    print(f"  Immediate detection (Rule 1): > {abs(limits['lcl']):.2f} gal/hr")
+    print(f"  Detection within 6 hours (Rule 2): Any consistent leak")
+
+    # Show what different leak rates would look like
+    print(f"\n--- Leak Scenarios ---")
+    test_rates = [5, 10, 25, 50, 100, 200]
+    for rate in test_rates:
+        simulated = -rate
+        detected_r1 = simulated < limits['lcl']
+        status = "DETECTED (Rule 1)" if detected_r1 else "Rule 2 only (6+ hrs)"
+        daily_loss = rate * 24
+        print(f"  {rate:3d} gal/hr ({daily_loss:,} gal/day): {status}")
+
+    print("=" * 60)
+
+
 def test_leak_detection():
     """Test mode: Run leak detection diagnostics without sending emails."""
     print("=" * 60)
@@ -453,12 +556,75 @@ def test_leak_detection():
     print("=" * 60)
 
 
+def print_usage():
+    print("""
+Tank Leak Detection Service - Usage:
+
+  python PYSTRAY_tank_level_email_service.pyw
+      Run as system tray application (normal mode)
+
+  python PYSTRAY_tank_level_email_service.pyw --test
+      Test mode: Show all tank stats and detection status (no emails)
+
+  python PYSTRAY_tank_level_email_service.pyw --simulate <tank> <rate>
+      Simulate a leak and check if detection would catch it
+      Example: --simulate 2 50   (simulate 50 gal/hr leak in tank 2)
+
+  python PYSTRAY_tank_level_email_service.pyw --sensitivity <tank>
+      Run sensitivity analysis to find min detectable leak rate
+      Example: --sensitivity 2
+
+  python PYSTRAY_tank_level_email_service.pyw --sensitivity-all
+      Run sensitivity analysis for ALL tanks
+""")
+
+
 def main():
     import sys
-    if len(sys.argv) > 1 and sys.argv[1] == '--test':
-        test_leak_detection()
-        return
 
+    if len(sys.argv) > 1:
+        cmd = sys.argv[1]
+
+        if cmd == '--test':
+            test_leak_detection()
+            return
+
+        elif cmd == '--simulate':
+            if len(sys.argv) < 4:
+                print("Usage: --simulate <tank_name> <leak_rate_gal_hr>")
+                print("Example: --simulate 2 50")
+                return
+            tank_name = sys.argv[2]
+            leak_rate = float(sys.argv[3])
+            simulate_leak(tank_name, leak_rate)
+            return
+
+        elif cmd == '--sensitivity':
+            if len(sys.argv) < 3:
+                print("Usage: --sensitivity <tank_name>")
+                print("Example: --sensitivity 2")
+                return
+            tank_name = sys.argv[2]
+            run_sensitivity_analysis(tank_name)
+            return
+
+        elif cmd == '--sensitivity-all':
+            tank_names = get_all_tank_names()
+            for tank_name in tank_names:
+                run_sensitivity_analysis(tank_name)
+                print()
+            return
+
+        elif cmd in ('--help', '-h'):
+            print_usage()
+            return
+
+        else:
+            print(f"Unknown command: {cmd}")
+            print_usage()
+            return
+
+    # Normal mode: run as systray app
     threading.Thread(target=start_schedule).start()
     create_icon()
 
