@@ -27,7 +27,7 @@ func main() {
 	}
 
 	w := a.NewWindow(AppName)
-	w.Resize(fyne.NewSize(950, 700))
+	w.Resize(fyne.NewSize(1100, 800))
 
 	// Initialize the UI
 	ui := NewUI(w)

@@ -122,20 +122,22 @@ func (u *UI) buildLoginScreen() fyne.CanvasObject {
 	localIPs := GetLocalIPSummary()
 	localInfo := widget.NewLabel(fmt.Sprintf("This machine: %s", localIPs))
 
-	form := container.NewVBox(
-		widget.NewLabel("Remote Connection (SSH)"),
+	// Use Fyne's Form widget for proper label/field alignment
+	sshForm := &widget.Form{
+		Items: []*widget.FormItem{
+			{Text: "Host", Widget: u.hostEntry},
+			{Text: "Port", Widget: u.portEntry},
+			{Text: "Username", Widget: u.userEntry},
+			{Text: "Password", Widget: u.passwordEntry},
+		},
+	}
+
+	// Build the login panel
+	loginPanel := container.NewVBox(
+		widget.NewLabelWithStyle("KPK Control Panel", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
+		widget.NewLabelWithStyle("v"+AppVersion, fyne.TextAlignCenter, fyne.TextStyle{}),
 		widget.NewSeparator(),
-		container.NewGridWithColumns(2,
-			widget.NewLabel("Host:"),
-			u.hostEntry,
-			widget.NewLabel("Port:"),
-			u.portEntry,
-			widget.NewLabel("Username:"),
-			u.userEntry,
-			widget.NewLabel("Password:"),
-			u.passwordEntry,
-		),
-		layout.NewSpacer(),
+		sshForm,
 		u.connectBtn,
 		widget.NewSeparator(),
 		widget.NewLabel("Or run on this machine:"),
@@ -144,14 +146,15 @@ func (u *UI) buildLoginScreen() fyne.CanvasObject {
 		u.statusLabel,
 	)
 
-	// Center the form
-	return container.NewCenter(
-		container.NewVBox(
-			widget.NewLabelWithStyle("KPK Control Panel", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
-			widget.NewLabelWithStyle("v"+AppVersion, fyne.TextAlignCenter, fyne.TextStyle{}),
-			layout.NewSpacer(),
-			container.NewPadded(form),
-		),
+	// Constrain width and position in upper-center area
+	fixedWidth := container.NewGridWrap(fyne.NewSize(350, 0), loginPanel)
+	centered := container.NewHBox(layout.NewSpacer(), fixedWidth, layout.NewSpacer())
+	return container.NewVBox(
+		layout.NewSpacer(),
+		centered,
+		layout.NewSpacer(),
+		layout.NewSpacer(),
+		layout.NewSpacer(),
 	)
 }
 
