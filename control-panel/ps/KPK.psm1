@@ -210,13 +210,10 @@ function Get-KPKLoopStatus {
 
             Write-Host "$icon " -ForegroundColor $color -NoNewline
 
-            # Format the time ago
-            $timeAgo = if ($func.minutes_ago -ge 0) {
-                if ($func.minutes_ago -lt 60) {
-                    "$($func.minutes_ago) min ago"
-                } else {
-                    "$([math]::Floor($func.minutes_ago / 60)) hr ago"
-                }
+            # Format the timestamp
+            $timeDisplay = if ($func.time_stamp) {
+                $ts = [DateTime]::Parse($func.time_stamp)
+                $ts.ToString("HH:mm:ss")
             } else {
                 "unknown"
             }
@@ -230,11 +227,11 @@ function Get-KPKLoopStatus {
                     $result = $result.Substring(0, 37) + "..."
                 }
                 Write-Host " $result" -ForegroundColor Red -NoNewline
-                Write-Host " ($timeAgo)" -ForegroundColor Gray
+                Write-Host " ($timeDisplay)" -ForegroundColor Gray
             } elseif ($func.is_stale) {
-                Write-Host " STALE ($timeAgo)" -ForegroundColor Yellow
+                Write-Host " STALE ($timeDisplay)" -ForegroundColor Yellow
             } else {
-                Write-Host " $timeAgo" -ForegroundColor Gray
+                Write-Host " $timeDisplay" -ForegroundColor Gray
             }
         }
     } catch {
@@ -515,7 +512,8 @@ function New-KPKBackup {
 }
 
 function Get-KPKBackupList {
-    $cmd = "Get-ChildItem -Path 'M:\kpkapp\backups' -Directory | Sort-Object LastWriteTime -Descending | Select-Object -First 10 -ExpandProperty Name"
+    # Use cmd /c dir for UNC paths - PowerShell Get-ChildItem has auth issues over SSH
+    $cmd = 'cmd /c "dir /b /ad /o-d \\KinPak-Svr1\apps\kpkapp\backups 2>nul" | Select-Object -First 10'
     $output = Invoke-KPKCommand -Command $cmd
     $backups = ($output -split "`n") | ForEach-Object { $_.Trim() } | Where-Object { $_ }
     if ($backups.Count -eq 0) { Write-Host "No backups found." }
@@ -525,9 +523,11 @@ function Get-KPKBackupList {
 function Restore-KPKBackup {
     param([Parameter(Mandatory)][string]$Name)
     Write-Host "Restoring from backup $Name..." -ForegroundColor Yellow
-    $cmd = '& "C:/Users/pmedlin/Documents/kpk-app/local_machine_scripts/batch_scripts/db_restore_latest_backup.bat"'
-    Invoke-KPKCommand -Command $cmd | Write-Host
-    Write-Host "Backup restored." -ForegroundColor Green
+    # Pass backup name to script - it will restore that specific backup
+    $cmd = "cmd /c `"C:/Users/pmedlin/Documents/kpk-app/local_machine_scripts/batch_scripts/helper_scripts/db_restore_latest_backup.bat`" `"$Name`" 2>&1"
+    $output = Invoke-KPKCommand -Command $cmd
+    if ($output) { Write-Host $output }
+    Write-Host "Restore complete: $Name" -ForegroundColor Green
 }
 
 #endregion
