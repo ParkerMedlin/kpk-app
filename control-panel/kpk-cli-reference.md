@@ -83,10 +83,10 @@ kpk status --local                      # Local mode (on server)
 | `blue`, `app_blue` | `kpk-app_app_blue_1` |
 | `green`, `app_green` | `kpk-app_app_green_1` |
 | `nginx` | `kpk-app_nginx_1` |
-| `db`, `postgres` | `kpk-app_postgres_1` |
+| `db` | `kpk-app_db_1` |
 | `redis` | `kpk-app_redis_1` |
-| `celery` | `kpk-app_celery_worker_1` |
-| `celery_beat` | `kpk-app_celery_beat_1` |
+| `excel`, `excel_completion` | `kpk-app_excel_completion_listener_1` |
+| `ws4kp`, `websocket` | `kpk-app_ws4kp_1` |
 
 ## Host Services
 
