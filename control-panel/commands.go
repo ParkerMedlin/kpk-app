@@ -323,7 +323,8 @@ exit $LASTEXITCODE
 
 // ListBackups returns available backups
 func (c *Commands) ListBackups() ([]string, error) {
-	cmd := `Get-ChildItem -Path '\\KinPak-Svr1\apps\kpkapp\backups' -Directory | Sort-Object LastWriteTime -Descending | Select-Object -First 10 -ExpandProperty Name`
+	// Use cmd /c dir for UNC paths - PowerShell Get-ChildItem has auth issues over SSH
+	cmd := `cmd /c "dir /b /ad /o-d \\KinPak-Svr1\apps\kpkapp\backups 2>nul" | Select-Object -First 10`
 	output, err := c.exec.RunCommand(cmd)
 	if err != nil {
 		return nil, err

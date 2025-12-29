@@ -512,8 +512,8 @@ function New-KPKBackup {
 }
 
 function Get-KPKBackupList {
-    # Use UNC path - drive letters aren't available in SSH sessions
-    $cmd = "Get-ChildItem -Path '\\KinPak-Svr1\apps\kpkapp\backups' -Directory | Sort-Object LastWriteTime -Descending | Select-Object -First 10 -ExpandProperty Name"
+    # Use cmd /c dir for UNC paths - PowerShell Get-ChildItem has auth issues over SSH
+    $cmd = 'cmd /c "dir /b /ad /o-d \\KinPak-Svr1\apps\kpkapp\backups 2>nul" | Select-Object -First 10'
     $output = Invoke-KPKCommand -Command $cmd
     $backups = ($output -split "`n") | ForEach-Object { $_.Trim() } | Where-Object { $_ }
     if ($backups.Count -eq 0) { Write-Host "No backups found." }

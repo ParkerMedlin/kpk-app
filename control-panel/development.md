@@ -134,6 +134,16 @@ REM GOOD - UNC path works regardless of drive mappings
 set "BACKUP_DIR=\\KinPak-Svr1\apps\kpkapp\backups"
 ```
 
+**Important:** PowerShell's `Get-ChildItem` on UNC paths often fails with "Access denied" over SSH,
+even when the same path works from batch files. Use `cmd /c dir` instead:
+```powershell
+# BAD - fails with access denied over SSH
+Get-ChildItem -Path '\\KinPak-Svr1\apps\kpkapp\backups' -Directory
+
+# GOOD - works over SSH
+cmd /c "dir /b /ad /o-d \\KinPak-Svr1\apps\kpkapp\backups"
+```
+
 ### Checklist for New Commands
 
 When adding commands that display output in the GUI:
