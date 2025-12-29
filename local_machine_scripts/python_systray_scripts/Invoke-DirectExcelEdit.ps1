@@ -17,21 +17,6 @@ $global:Workbook = $null
 $global:WordDocument = $null
 $TempWorkbookPath = $null
 
-# Establish network connections to required UNC paths
-# This ensures SMB sessions are active even when running via subprocess/PsExec
-$networkShares = @(
-    "\\KinPak-Svr1\users"
-)
-foreach ($share in $networkShares) {
-    if (-not (Test-Path $share -ErrorAction SilentlyContinue)) {
-        Write-Host "PS: Establishing connection to $share..."
-        $null = net use $share 2>$null
-        if (-not (Test-Path $share -ErrorAction SilentlyContinue)) {
-            Write-Warning "PS: Could not establish connection to $share - network operations may fail"
-        }
-    }
-}
-
 $BlendSheetNamingAlertRecipients = if ($env:BLEND_SHEET_NAMING_ALERT_RECIPIENTS -and $env:BLEND_SHEET_NAMING_ALERT_RECIPIENTS.Trim() -ne "") { $env:BLEND_SHEET_NAMING_ALERT_RECIPIENTS } else { "pmedlin@kinpakinc.com,jdavis@kinpakinc.com" }
 
 $BlendSheetFolders = @(
