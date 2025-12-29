@@ -2,7 +2,7 @@
 
 A lightweight, portable control panel for managing the KPK App infrastructure via SSH.
 
-**Version:** 0.4.0
+**Version:** 0.4.1
 
 ## Features
 

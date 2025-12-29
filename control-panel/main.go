@@ -10,7 +10,7 @@ import (
 
 const (
 	AppName    = "KPK Control Panel"
-	AppVersion = "0.4.0"
+	AppVersion = "0.4.1"
 )
 
 func main() {
