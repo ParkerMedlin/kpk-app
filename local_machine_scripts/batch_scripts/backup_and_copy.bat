@@ -9,7 +9,7 @@ set "REPO_ROOT=%~dp0..\.."
 set "TEMP_DIR=%REPO_ROOT%\temp_backup"
 set "SQL_DUMP=%TEMP_DIR%\full_db_dump.sql"
 set "REDIS_DUMP=%TEMP_DIR%\redis_dump.rdb"
-set "FINAL_DIR=M:\kpkapp\backups\%backupdir%"
+set "FINAL_DIR=\\KinPak-Svr1\apps\kpkapp\backups\%backupdir%"
 
 REM Locate .env relative to script location (script is in local_machine_scripts/batch_scripts/)
 set "ENV_FILE=%~dp0..\..\.env"

@@ -80,3 +80,53 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "ps\kpk.ps1" status
 # Test GUI
 .\bin\kpk.exe
 ```
+
+## PowerShell Output Handling (GUI)
+
+The GUI runs commands on the remote server via SSH + PowerShell. There are several gotchas:
+
+### CLIXML Progress Noise
+
+PowerShell writes progress updates to stderr as CLIXML (e.g., "Preparing modules for first use").
+This pollutes error output with XML like:
+```
+#< CLIXML
+<Objs Version="1.1.0.1" xmlns="http://schemas.microsoft.com/powershell/2004/04">...
+```
+
+**Solution** (implemented in `ssh.go` `RunCommand`):
+- Prefix all commands with `$ProgressPreference = 'SilentlyContinue'`
+- Use `powershell -NoProfile -NoLogo -EncodedCommand ...`
+
+### Stdout vs Stderr
+
+When a command fails, we need BOTH stdout (actual output) and stderr (errors). The SSH executor
+combines them so output isn't lost on failure.
+
+### Running Batch Files
+
+Batch files (.bat) run in cmd.exe, not PowerShell. To capture output properly:
+```powershell
+$output = cmd /c "path\to\script.bat" 2>&1
+Write-Output $output
+exit $LASTEXITCODE
+```
+
+### Path Resolution in Batch Scripts
+
+Batch scripts run via SSH may run as a different user. Never use `%USERPROFILE%` to locate
+repo files. Instead, use paths relative to the script:
+```batch
+REM %~dp0 = directory containing the script
+set "REPO_ROOT=%~dp0..\.."
+set "ENV_FILE=%REPO_ROOT%\.env"
+```
+
+### Checklist for New Commands
+
+When adding commands that display output in the GUI:
+
+1. Ensure stdout contains the useful output (not just stderr)
+2. Test with a user account different from the repo owner
+3. If calling batch files, use `cmd /c` wrapper with `2>&1`
+4. Don't rely on `%USERPROFILE%` - use script-relative paths
