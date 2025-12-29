@@ -15,12 +15,12 @@ $script:ContainerShortNames = @{
     "app_green" = "kpk-app_app_green_1"
     "green" = "kpk-app_app_green_1"
     "nginx" = "kpk-app_nginx_1"
-    "postgres" = "kpk-app_postgres_1"
-    "db" = "kpk-app_postgres_1"
+    "db" = "kpk-app_db_1"
     "redis" = "kpk-app_redis_1"
-    "celery" = "kpk-app_celery_worker_1"
-    "celery_worker" = "kpk-app_celery_worker_1"
-    "celery_beat" = "kpk-app_celery_beat_1"
+    "excel" = "kpk-app_excel_completion_listener_1"
+    "excel_completion" = "kpk-app_excel_completion_listener_1"
+    "ws4kp" = "kpk-app_ws4kp_1"
+    "websocket" = "kpk-app_ws4kp_1"
 }
 
 $script:HostServices = @{
