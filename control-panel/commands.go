@@ -332,7 +332,7 @@ func (c *Commands) ListBackups() ([]string, error) {
 // RestoreBackup restores from a specific backup
 func (c *Commands) RestoreBackup(backupName string) error {
 	// Hardcoded path - scripts always in pmedlin's profile regardless of SSH user
-	cmd := `& "C:/Users/pmedlin/Documents/kpk-app/local_machine_scripts/batch_scripts/db_restore_latest_backup.bat"`
+	cmd := `& "C:/Users/pmedlin/Documents/kpk-app/local_machine_scripts/batch_scripts/helper_scripts/db_restore_latest_backup.bat"`
 	_, err := c.exec.RunCommand(cmd)
 	return err
 }

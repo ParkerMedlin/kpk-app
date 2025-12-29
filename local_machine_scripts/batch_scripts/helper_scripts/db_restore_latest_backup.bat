@@ -20,8 +20,9 @@ IF NOT EXIST "!SQL_DUMP_FILE!" (
     exit /b 1
 )
 
-:: Load DB credentials
-for /f "usebackq tokens=1,* delims==" %%A in (`findstr /b "DB_USER= DB_PASS= DB_NAME=" "%USERPROFILE%\Documents\kpk-app\.env"`) do set "%%A=%%B"
+:: Load DB credentials (relative to script location: helper_scripts -> batch_scripts -> local_machine_scripts -> repo root)
+set "ENV_FILE=%~dp0..\..\..\.env"
+for /f "usebackq tokens=1,* delims==" %%A in (`findstr /b "DB_USER= DB_PASS= DB_NAME=" "%ENV_FILE%"`) do set "%%A=%%B"
 
 echo Restoring Postgres from !SQL_DUMP_FILE! ...
 echo Dropping and recreating schema 'public' ...

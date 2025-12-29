@@ -9,7 +9,9 @@ set "SQL_DUMP=%TEMP_DIR%\full_db_dump.sql"
 set "REDIS_DUMP=%TEMP_DIR%\redis_dump.rdb"
 set "FINAL_DIR=M:\kpkapp\backups\%backupdir%"
 
-for /f "usebackq tokens=1,* delims==" %%A in (`findstr /b "DB_USER= DB_PASS= DB_NAME=" "%USERPROFILE%\Documents\kpk-app\.env"`) do set "%%A=%%B"
+REM Locate .env relative to script location (script is in local_machine_scripts/batch_scripts/)
+set "ENV_FILE=%~dp0..\..\.env"
+for /f "usebackq tokens=1,* delims==" %%A in (`findstr /b "DB_USER= DB_PASS= DB_NAME=" "%ENV_FILE%"`) do set "%%A=%%B"
 
 mkdir "%TEMP_DIR%" 2>nul
 echo Backing up Postgres to %SQL_DUMP% ...
