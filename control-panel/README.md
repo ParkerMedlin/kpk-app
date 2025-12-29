@@ -10,7 +10,7 @@ A lightweight, portable control panel for managing the KPK App infrastructure vi
 - **View Logs** - Tail logs from any container or host service
 - **Start/Stop Services** - Control individual containers and host services
 - **Container Exec** - Open interactive shell into any container
-- **Database Backup** - Create backups to M:\kpkapp\backups\
+- **Database Backup** - Create backups to network share (\\\\KinPak-Svr1\\apps\\kpkapp\\backups\\)
 - **Database Restore** - Restore from available backups
 - **Start Missing** - Start only services that aren't currently running
 - **Stop All** - Graceful shutdown of all services (kills process trees to clean up child processes)
