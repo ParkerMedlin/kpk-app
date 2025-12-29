@@ -205,14 +205,26 @@ func (c *Commands) StartHostServiceWithOutput(serviceName string) (string, error
 		return "", fmt.Errorf("unknown service: %s", serviceName)
 	}
 
-	// Use PsExec to run in pmedlin's interactive desktop session (for tray icon)
+	// Use PsExec to run AS pmedlin in pmedlin's interactive desktop session (for tray icon)
 	// -i = interactive (run in user's session), -d = don't wait, -accepteula = skip EULA prompt
+	// -u/-p = run as pmedlin so we get their drive mappings and network credentials
 	// Dynamically detect pmedlin's session ID using query user
 	cmd := fmt.Sprintf(`
 $py = "C:/Users/pmedlin/AppData/Local/Programs/Python/Python311/pythonw.exe"
 $script = "C:/Users/pmedlin/Documents/kpk-app/%s"
 if (-not (Test-Path $py)) { throw "Python not found at $py" }
 if (-not (Test-Path $script)) { throw "Script not found: $script" }
+
+# Load credentials from .env file
+$envFile = "C:/Users/pmedlin/Documents/kpk-app/.env"
+$psexecUser = $null
+$psexecPass = $null
+if (Test-Path $envFile) {
+    Get-Content $envFile | ForEach-Object {
+        if ($_ -match '^PSEXEC_USER=(.+)$') { $psexecUser = $Matches[1] }
+        if ($_ -match '^PSEXEC_PASS=(.+)$') { $psexecPass = $Matches[1] }
+    }
+}
 
 # Detect pmedlin's session ID dynamically
 $sessionId = $null
@@ -251,8 +263,14 @@ objShell.CurrentDirectory = "C:\Users\pmedlin\Documents\kpk-app"
 objShell.Run """$py"" ""$script""", 0, False
 "@
     Set-Content -Path $vbsPath -Value $vbsContent -Force
-    # -i $sessionId = detected session, -d = detach
-    & $psexec -accepteula -i $sessionId -d wscript.exe $vbsPath 2>&1
+    # -i $sessionId = detected session, -d = detach, -u/-p = run as pmedlin
+    if ($psexecUser -and $psexecPass) {
+        Write-Output "Running as user: $psexecUser"
+        & $psexec -accepteula -i $sessionId -d -u $psexecUser -p $psexecPass wscript.exe $vbsPath 2>&1
+    } else {
+        Write-Output "Warning: PSEXEC_USER/PSEXEC_PASS not found in .env, running without credentials"
+        & $psexec -accepteula -i $sessionId -d wscript.exe $vbsPath 2>&1
+    }
     Write-Output "Started %s via PsExec (interactive session $sessionId)"
 } else {
     Write-Output "PsExec not found, falling back to regular Start-Process..."

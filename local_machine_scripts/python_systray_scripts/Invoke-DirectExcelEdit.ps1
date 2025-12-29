@@ -17,9 +17,6 @@ $global:Workbook = $null
 $global:WordDocument = $null
 $TempWorkbookPath = $null
 
-# Establish network connection - uses credentials from Windows Credential Manager
-net use "\\KinPak-Svr1\users" 2>&1 | Out-Null
-
 $BlendSheetNamingAlertRecipients = if ($env:BLEND_SHEET_NAMING_ALERT_RECIPIENTS -and $env:BLEND_SHEET_NAMING_ALERT_RECIPIENTS.Trim() -ne "") { $env:BLEND_SHEET_NAMING_ALERT_RECIPIENTS } else { "pmedlin@kinpakinc.com,jdavis@kinpakinc.com" }
 
 $BlendSheetFolders = @(
