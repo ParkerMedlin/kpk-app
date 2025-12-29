@@ -17,7 +17,7 @@ Both must stay in sync. The PowerShell version exists to avoid AV false positive
 2. **Update PowerShell module** in `ps/KPK.psm1`
 3. **Update PowerShell CLI wrapper** in `ps/kpk.ps1` (if command structure changes)
 4. **Update documentation**:
-   - `KPK-CLI-REFERENCE.md` (project reference)
+   - `kpk-cli-reference.md` (project reference)
    - `~/.claude/skills/kpk-cli/reference.md` (global Claude skill)
 
 ## File Structure
@@ -30,8 +30,8 @@ control-panel/
 ├── ssh.go               # SSH client wrapper
 ├── ui.go                # Fyne GUI implementation
 ├── build.bat            # Build script
-├── KPK-CLI-REFERENCE.md # User-facing command reference
-├── DEVELOPMENT.md       # This file
+├── kpk-cli-reference.md # User-facing command reference
+├── development.md       # This file
 └── ps/
     ├── KPK.psm1         # PowerShell module (all logic)
     ├── kpk.ps1          # CLI wrapper script
