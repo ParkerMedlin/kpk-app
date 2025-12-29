@@ -60,6 +60,10 @@ class PullStatusConsumer(RedisBackedConsumer, AsyncWebsocketConsumer):
             )
             return
 
+        # Handle heartbeat pings silently
+        if data.get("action") == "ping":
+            return
+
         item_code = data.get("itemCode")
         is_pulled = data.get("isPulled")
 
