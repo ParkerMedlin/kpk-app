@@ -1,5 +1,8 @@
-import urllib.request
-import bs4
+"""
+Tank Leak Detection Service
+Uses Wheeler's Statistical Process Control (XmR charts) to detect anomalous
+tank level changes during non-operation hours.
+"""
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import smtplib
@@ -7,179 +10,458 @@ import schedule
 import time
 import pystray
 from PIL import Image
-import tkinter as tk
 from tkinter import messagebox
 import threading
 import datetime
 import os
 import dotenv
+import psycopg2
+from zoneinfo import ZoneInfo
 
-# Load .env file from two directories up
+# Load environment variables
 dotenv.load_dotenv(os.path.expanduser('~\\Documents\\kpk-app\\.env'))
 JORDAN_ALT_NOTIF_PW = os.getenv('JORDAN_ALT_NOTIF_PW')
-print(JORDAN_ALT_NOTIF_PW)
+DB_HOST = os.getenv('KPKAPP_HOST', 'kpkapp.lan')
+DB_NAME = os.getenv('DB_NAME', 'blendversedb')
+DB_USER = os.getenv('DB_USER', 'postgres')
+DB_PASS = os.getenv('DB_PASS')
 
-# Global variable to store last run time and email status
-last_run = {"glycerin": {"time": None, "email_sent": False}, "pg": {"time": None, "email_sent": False}}
+# Timezone for business hours
+CENTRAL_TZ = ZoneInfo('America/Chicago')
 
-# Global variable for recipient list
-# recipient_list = ['ddavis@kinpakinc.com', 'jdavis@kinpakinc.com', 'pmedlin@kinpakinc.com', 'swheeler@kinpakinc.com']
-recipient_list = ['pmedlin@kinpakinc.com']
+# Leak detection state - tracks alerts per tank
+leak_detection_state = {}
 
-def get_tank_levels_py():
-    fp = urllib.request.urlopen('http://192.168.178.210/fieldDeviceData.htm')
-    html_str = fp.read().decode("utf-8")
-    fp.close()
+# Alert recipients (test mode - only Jordan)
+ALERT_RECIPIENTS = ['jdavis@kinpakinc.com']
 
-    # Parse the HTML string
-    soup = bs4.BeautifulSoup(html_str, 'html.parser')
-    allTableRows = soup.find_all('tr')
 
-    tank_levels = {}
-    for tableRow in allTableRows:
-        tableCells = tableRow.find_all('td')
-        if len(tableCells) > 4:  # Ensure there are enough cells
-            # Extract tank label
-            split_text = tableCells[0].text.split("Tag: ")
-            if len(split_text) > 1:
-                tank_label = split_text[1].split(" ")[0]
-                print(tank_label)
-                # Extract tank level
-                tank_level_str = tableCells[4].text.split("<br>")[0]
-                tank_level = float(''.join(c for c in tank_level_str if c.isdigit() or c == '.') or '0')
-                print(tank_level)
-                tank_levels[tank_label] = tank_level
-    print(f"tank levels {tank_levels}")
-    return tank_levels
+def is_non_operation_hours():
+    """Check if current time is outside business hours (Central Time).
+    Non-op hours: 6pm-3am Mon-Fri, all day Sat/Sun
+    """
+    now = datetime.datetime.now(CENTRAL_TZ)
+    hour = now.hour
+    weekday = now.weekday()  # 0=Monday, 6=Sunday
+    # Weekends
+    if weekday >= 5:
+        return True
+    # Weekday nights: 6pm to 3am
+    if hour >= 18 or hour < 3:
+        return True
+    return False
 
-def check_glycerin_capacity_and_send_email(call_source):
-    print('This is the check_glycerin_capacity_and_send_email function, called from {}'.format(call_source))
-    tank_levels = get_tank_levels_py()
-    tank_glycerin_capacity = 56000 - (tank_levels['02'] + tank_levels['07'])
-    if tank_glycerin_capacity >= 18000:
-        sender_address =  'jdavis@kinpakinc.com'
-        sender_pass =  JORDAN_ALT_NOTIF_PW
-        for recipient in recipient_list:
-            email_message = MIMEMultipart('alternative')
-            email_message['From'] = sender_address
-            email_message['To'] = recipient
-            email_message['Subject'] = 'Storage Tank Direct: Glycerin Railcar can now be unloaded into Glycerin Tanks.'
-            body = f"""<html>
-            <body>
-            <table style="border-collapse: collapse; padding: 10px;">
-            <tr><td style="border: 1px solid black; padding: 5px;">Tank 2 capacity</td><td style="text-align: right; border: 1px solid black; padding: 5px;">{round(28000 - tank_levels["02"])}</td></tr>
-            <tr><td style="border: 1px solid black; padding: 5px;">Tank 7 capacity</td><td style="text-align: right; border: 1px solid black; padding: 5px;">{round(28000 - tank_levels["07"])}</td></tr>
-            <tr><td style="border: 2px solid black; padding: 5px; font-weight: bold;">Total capacity</td><td style="text-align: right; border: 2px solid black; padding: 5px; font-weight: bold;">{round(tank_glycerin_capacity)}</td></tr>
-            </table>
-            </body>
-            </html>"""
-            email_message.attach(MIMEText(body, 'html'))
-            email_message.attach(MIMEText(body, 'plain'))
+
+def get_db_connection():
+    """Connect to the PostgreSQL database."""
+    return psycopg2.connect(
+        host=DB_HOST,
+        port=5432,
+        database=DB_NAME,
+        user=DB_USER,
+        password=DB_PASS
+    )
+
+
+def calculate_control_limits(tank_name, lookback_days=60):
+    """
+    Calculate XmR control limits for a tank based on historical data.
+    Uses Wheeler's method: UCL/LCL = X̄ ± 2.66 * mR̄
+
+    Only uses non-operation hours data (6pm-3am Mon-Fri, all day Sat/Sun).
+    """
+    query = """
+    WITH hourly AS (
+        SELECT
+            date_trunc('hour', timestamp AT TIME ZONE 'America/Chicago') as hour,
+            AVG(filled_gallons::float) as avg_gallons
+        FROM core_tanklevellog
+        WHERE tank_name = %s
+            AND timestamp > NOW() - INTERVAL '%s days'
+            AND (
+                EXTRACT(DOW FROM timestamp AT TIME ZONE 'America/Chicago') IN (0, 6)
+                OR EXTRACT(HOUR FROM timestamp AT TIME ZONE 'America/Chicago') >= 18
+                OR EXTRACT(HOUR FROM timestamp AT TIME ZONE 'America/Chicago') < 3
+            )
+        GROUP BY date_trunc('hour', timestamp AT TIME ZONE 'America/Chicago')
+        ORDER BY hour
+    ),
+    with_lag AS (
+        SELECT
+            hour,
+            avg_gallons,
+            LAG(avg_gallons) OVER (ORDER BY hour) as prev_gallons
+        FROM hourly
+    ),
+    moving_ranges AS (
+        SELECT
+            avg_gallons - prev_gallons as change,
+            ABS(avg_gallons - prev_gallons) as moving_range
+        FROM with_lag
+        WHERE prev_gallons IS NOT NULL
+    )
+    SELECT
+        AVG(change) as avg_change,
+        AVG(moving_range) as avg_mr,
+        COUNT(*) as n_samples
+    FROM moving_ranges;
+    """
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute(query, (tank_name, lookback_days))
+        row = cur.fetchone()
+        cur.close()
+        conn.close()
+
+        if row and row[0] is not None and row[1] is not None:
+            avg_change = float(row[0])
+            avg_mr = float(row[1])
+            n_samples = int(row[2])
+            return {
+                'avg_change': avg_change,
+                'avg_mr': avg_mr,
+                'ucl': avg_change + 2.66 * avg_mr,
+                'lcl': avg_change - 2.66 * avg_mr,
+                'n_samples': n_samples
+            }
+    except Exception as e:
+        print(f"Error calculating control limits for tank {tank_name}: {e}")
+    return None
+
+
+def get_recent_rate_of_change(tank_name, hours=4):
+    """Get the recent rate of change for a tank over the last N hours."""
+    query = """
+    WITH recent AS (
+        SELECT timestamp, filled_gallons::float as gallons
+        FROM core_tanklevellog
+        WHERE tank_name = %s AND timestamp > NOW() - INTERVAL '%s hours'
+        ORDER BY timestamp
+    ),
+    first_last AS (
+        SELECT
+            (SELECT gallons FROM recent ORDER BY timestamp ASC LIMIT 1) as first_gallons,
+            (SELECT gallons FROM recent ORDER BY timestamp DESC LIMIT 1) as last_gallons,
+            (SELECT timestamp FROM recent ORDER BY timestamp ASC LIMIT 1) as first_time,
+            (SELECT timestamp FROM recent ORDER BY timestamp DESC LIMIT 1) as last_time
+    )
+    SELECT
+        first_gallons, last_gallons,
+        last_gallons - first_gallons as total_change,
+        EXTRACT(EPOCH FROM (last_time - first_time)) / 3600 as hours_elapsed
+    FROM first_last;
+    """
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute(query, (tank_name, hours))
+        row = cur.fetchone()
+        cur.close()
+        conn.close()
+
+        if row and row[3] and row[3] > 0:
+            return {
+                'first_gallons': float(row[0]),
+                'last_gallons': float(row[1]),
+                'total_change': float(row[2]),
+                'hours_elapsed': float(row[3]),
+                'rate_per_hour': float(row[2]) / float(row[3])
+            }
+    except Exception as e:
+        print(f"Error getting recent rate for tank {tank_name}: {e}")
+    return None
+
+
+def check_consecutive_decreases(tank_name, periods=6):
+    """Wheeler's Rule: 6+ consecutive points in one direction = signal."""
+    query = """
+    WITH hourly AS (
+        SELECT
+            date_trunc('hour', timestamp) as hour,
+            AVG(filled_gallons::float) as avg_gallons
+        FROM core_tanklevellog
+        WHERE tank_name = %s AND timestamp > NOW() - INTERVAL '%s hours'
+        GROUP BY date_trunc('hour', timestamp)
+        ORDER BY hour DESC
+        LIMIT %s
+    ),
+    with_lag AS (
+        SELECT hour, avg_gallons,
+            LAG(avg_gallons) OVER (ORDER BY hour) as prev_gallons
+        FROM hourly
+    )
+    SELECT COUNT(*) as consecutive_decreases
+    FROM with_lag
+    WHERE prev_gallons IS NOT NULL AND avg_gallons < prev_gallons;
+    """
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute(query, (tank_name, periods + 1, periods + 1))
+        row = cur.fetchone()
+        cur.close()
+        conn.close()
+        if row:
+            return int(row[0]) >= periods
+    except Exception as e:
+        print(f"Error checking consecutive decreases for tank {tank_name}: {e}")
+    return False
+
+
+def get_all_tank_names():
+    """Get list of all tank names from the database."""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT DISTINCT tank_name FROM core_tanklevellog ORDER BY tank_name;")
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+        return [row[0] for row in rows]
+    except Exception as e:
+        print(f"Error getting tank names: {e}")
+    return []
+
+
+def detect_leak(tank_name):
+    """Detect if a tank shows signs of a leak using Wheeler's SPC rules."""
+    limits = calculate_control_limits(tank_name)
+    if not limits:
+        return None
+
+    recent = get_recent_rate_of_change(tank_name, hours=4)
+    if not recent:
+        return None
+
+    rate = recent['rate_per_hour']
+    lcl = limits['lcl']
+
+    detection = {
+        'tank_name': tank_name,
+        'current_rate': rate,
+        'lcl': lcl,
+        'avg_change': limits['avg_change'],
+        'total_change': recent['total_change'],
+        'hours_elapsed': recent['hours_elapsed'],
+        'signals': []
+    }
+
+    # Rule 1: Point below Lower Control Limit (3-sigma)
+    if rate < lcl:
+        detection['signals'].append(f"Rate {rate:.2f} gal/hr below LCL {lcl:.2f}")
+
+    # Rule 2: 6+ consecutive decreases
+    if check_consecutive_decreases(tank_name, periods=6):
+        detection['signals'].append("6+ consecutive hourly decreases")
+
+    if detection['signals']:
+        return detection
+    return None
+
+
+def send_leak_alert_email(detection):
+    """Send email alert for potential tank leak."""
+    tank_name = detection['tank_name']
+    sender_address = 'jdavis@kinpakinc.com'
+    sender_pass = JORDAN_ALT_NOTIF_PW
+    signals_html = "".join(f"<li>{s}</li>" for s in detection['signals'])
+
+    for recipient in ALERT_RECIPIENTS:
+        email_message = MIMEMultipart('alternative')
+        email_message['From'] = sender_address
+        email_message['To'] = recipient
+        email_message['Subject'] = f'ALERT: Potential Leak Detected - Tank {tank_name}'
+        body = f"""<html>
+        <body>
+        <h2 style="color: red;">Potential Leak Detected: Tank {tank_name}</h2>
+        <p>Statistical analysis has detected abnormal tank level changes during non-operation hours.</p>
+        <h3>Detection Signals:</h3>
+        <ul>{signals_html}</ul>
+        <h3>Details:</h3>
+        <table style="border-collapse: collapse; padding: 10px;">
+        <tr><td style="border: 1px solid black; padding: 5px;">Current rate of change</td>
+            <td style="text-align: right; border: 1px solid black; padding: 5px;">{detection['current_rate']:.2f} gal/hr</td></tr>
+        <tr><td style="border: 1px solid black; padding: 5px;">Lower Control Limit</td>
+            <td style="text-align: right; border: 1px solid black; padding: 5px;">{detection['lcl']:.2f} gal/hr</td></tr>
+        <tr><td style="border: 1px solid black; padding: 5px;">Expected avg change</td>
+            <td style="text-align: right; border: 1px solid black; padding: 5px;">{detection['avg_change']:.2f} gal/hr</td></tr>
+        <tr><td style="border: 1px solid black; padding: 5px;">Total change (last {detection['hours_elapsed']:.1f} hrs)</td>
+            <td style="text-align: right; border: 1px solid black; padding: 5px; font-weight: bold;">{detection['total_change']:.0f} gallons</td></tr>
+        </table>
+        <p style="margin-top: 20px;"><strong>Action Required:</strong> Please inspect Tank {tank_name} for potential leaks.</p>
+        <p style="color: gray; font-size: 0.9em;">Generated by Wheeler's Statistical Process Control analysis.</p>
+        </body>
+        </html>"""
+        email_message.attach(MIMEText(body, 'html'))
+        email_message.attach(MIMEText(body, 'plain'))
+        try:
             session = smtplib.SMTP('smtp.office365.com', 587)
             session.starttls()
             session.login(sender_address, sender_pass)
             session.sendmail(sender_address, recipient, email_message.as_string())
             session.quit()
-            last_run["glycerin"]["email_sent"] = True  # Update this based on your condition
-    # Update last run time and email status
-    last_run["glycerin"]["time"] = time.ctime()
+            print(f"Leak alert sent to {recipient} for tank {tank_name}")
+        except Exception as e:
+            print(f"Error sending leak alert email: {e}")
 
-def check_pg_capacity_and_send_email(call_source):
-    print('This is the check_pg_capacity_and_send_email function, called from {}'.format(call_source))
-    tank_levels = get_tank_levels_py()
-    tank_pg_capacity = 78000 - (tank_levels['04'] + tank_levels['05'] + tank_levels['14'])
-    if tank_pg_capacity >= 23000:
-        sender_address =  'jdavis@kinpakinc.com'
-        sender_pass =  JORDAN_ALT_NOTIF_PW
-        for recipient in recipient_list:
-            email_message = MIMEMultipart('alternative')
-            email_message['From'] = sender_address
-            email_message['To'] = recipient
-            email_message['Subject'] = 'Storage Tank Direct: PG Railcar can now be unloaded into PG Tanks.'
-            body = f"""<html>
-            <body>
-            <table style="border-collapse: collapse; padding: 10px;">
-            <tr><td style="border: 1px solid black; padding: 5px;">Tank 4 capacity</td><td style="text-align: right; border: 1px solid black; padding: 5px;">{round(29000 - tank_levels["04"])}</td></tr>
-            <tr><td style="border: 1px solid black; padding: 5px;">Tank 5 capacity</td><td style="text-align: right; border: 1px solid black; padding: 5px;">{round(29000 - tank_levels["05"])}</td></tr>
-            <tr><td style="border: 1px solid black; padding: 5px;">Tank India capacity</td><td style="text-align: right; border: 1px solid black; padding: 5px;">{round(20000 - tank_levels["14"])}</td></tr>
-            <tr><td style="border: 2px solid black; padding: 5px; font-weight: bold;">Total capacity</td><td style="text-align: right; border: 2px solid black; padding: 5px; font-weight: bold;">{round(tank_pg_capacity)}</td></tr>
-            </table>
-            </body>
-            </html>"""
-            email_message.attach(MIMEText(body, 'html'))
-            email_message.attach(MIMEText(body, 'plain'))
-            session = smtplib.SMTP('smtp.office365.com', 587)
-            session.starttls()
-            session.login(sender_address, sender_pass)
-            session.sendmail(sender_address, recipient, email_message.as_string())
-            session.quit()
-            last_run["pg"]["email_sent"] = True
-    last_run["pg"]["time"] = time.ctime()
 
-# this is all the stuff that we want executed at a certain interval
-def job():
-    # Get the current time
-    current_time = datetime.datetime.now()
+def check_all_tanks_for_leaks():
+    """Check all tanks for leaks during non-operation hours."""
+    if not is_non_operation_hours():
+        print("Skipping leak detection - currently in operation hours")
+        return
 
-    # Check if an email has been sent in the last 24 hours
-    for task, data in last_run.items():
-        if data["email_sent"]:
-            last_email_time = datetime.datetime.strptime(data["time"], "%a %b %d %H:%M:%S %Y")
-            if (current_time - last_email_time).total_seconds() < 24 * 60 * 60:
-                print(f"Skipping {task} check because an email was sent in the last 24 hours")
-                continue
+    print(f"Running leak detection at {datetime.datetime.now(CENTRAL_TZ)}")
+    tank_names = get_all_tank_names()
 
-        # Reset email_sent status after 24 hours
-        data["email_sent"] = False
+    for tank_name in tank_names:
+        # Throttle: don't re-alert for same tank within 24 hours
+        if tank_name in leak_detection_state:
+            last_alert = leak_detection_state[tank_name].get('last_alert')
+            if last_alert:
+                hours_since = (datetime.datetime.now(CENTRAL_TZ) - last_alert).total_seconds() / 3600
+                if hours_since < 24:
+                    print(f"Skipping tank {tank_name} - alerted {hours_since:.1f} hours ago")
+                    continue
 
-        if task == "glycerin":
-            check_glycerin_capacity_and_send_email('Tank Perv')
-        elif task == "pg":
-            check_pg_capacity_and_send_email('Tank Perv')
+        detection = detect_leak(tank_name)
+        if detection:
+            print(f"LEAK SIGNAL DETECTED for tank {tank_name}: {detection['signals']}")
+            send_leak_alert_email(detection)
+            leak_detection_state[tank_name] = {
+                'last_alert': datetime.datetime.now(CENTRAL_TZ),
+                'detection': detection
+            }
+        else:
+            print(f"Tank {tank_name}: OK")
 
- 
+
+def leak_detection_job():
+    """Run leak detection check."""
+    try:
+        check_all_tanks_for_leaks()
+    except Exception as e:
+        print(f"Error in leak detection job: {e}")
+
+
 def start_schedule():
-    job()
-    schedule.every(5).minutes.do(job)
+    """Start the scheduled leak detection checks."""
+    leak_detection_job()
+    schedule.every(30).minutes.do(leak_detection_job)
 
     while True:
         schedule.run_pending()
         time.sleep(1)
-        
+
 
 def show_info(icon):
-    info = ""
-    current_time = datetime.datetime.now()
-    for task, data in last_run.items():
-        info += f"Task: {task}\nLast run: {data['time']}\nEmail sent: {data['email_sent']}\n"
-        if data["email_sent"]:
-            last_email_time = datetime.datetime.strptime(data["time"], "%a %b %d %H:%M:%S %Y")
-            if (current_time - last_email_time).total_seconds() < 24 * 60 * 60:
-                info += "Email sending is paused for 24 hours\n\n"
-            else:
-                info += "Email sending is not paused\n\n"
-        else:
-            info += "Email sending is not paused\n\n"
-    messagebox.showinfo("Tank Perv reporting for duty!", info)
+    """Show status info dialog."""
+    current_time = datetime.datetime.now(CENTRAL_TZ)
+    info = "=== LEAK DETECTION STATUS ===\n"
+    info += f"Non-op hours active: {is_non_operation_hours()}\n"
+    info += f"Time (Central): {current_time.strftime('%Y-%m-%d %H:%M')}\n\n"
 
-def create_icon(image_path):
-    image = Image.open(os.path.expanduser('~\\Documents\\kpk-app\\app\\core\\static\\core\\media\\icons\\pystray\\tankperv.png'))
-    menu = (pystray.MenuItem('Show Info', lambda icon, item: threading.Thread(target=show_info, args=(icon,)).start()),
-            pystray.MenuItem('Exit', lambda icon, item: exit_application(icon)))
-    icon = pystray.Icon("name", image, "Tank Perv", menu=pystray.Menu(*menu))
+    if leak_detection_state:
+        for tank, state in leak_detection_state.items():
+            last_alert = state.get('last_alert')
+            if last_alert:
+                info += f"Tank {tank}: Alert {last_alert.strftime('%Y-%m-%d %H:%M')}\n"
+                for signal in state.get('detection', {}).get('signals', []):
+                    info += f"  - {signal}\n"
+    else:
+        info += "No leak alerts in this session\n"
+
+    messagebox.showinfo("Tank Leak Monitor", info)
+
+
+def create_icon():
+    """Create the system tray icon."""
+    image = Image.open(os.path.expanduser(
+        '~\\Documents\\kpk-app\\app\\core\\static\\core\\media\\icons\\pystray\\tankperv.png'))
+    menu = (
+        pystray.MenuItem('Show Status', lambda icon, item: threading.Thread(target=show_info, args=(icon,)).start()),
+        pystray.MenuItem('Run Check Now', lambda icon, item: threading.Thread(target=leak_detection_job).start()),
+        pystray.MenuItem('Exit', lambda icon, item: exit_application(icon))
+    )
+    icon = pystray.Icon("leak_monitor", image, "Tank Leak Monitor", menu=pystray.Menu(*menu))
     icon.run()
 
+
 def exit_application(icon):
-    schedule.clear()  # This will stop all scheduled jobs
-    icon.stop()  # This will stop the system tray ico
+    """Clean exit."""
+    schedule.clear()
+    icon.stop()
     os._exit(0)
 
-def main():
-    # Start the schedule in a separate thread
-    threading.Thread(target=start_schedule).start()
 
-    # Call this function with the path to your icon image
-    create_icon(os.path.expanduser('~\\Documents\\kpk-app\\app\\core\\static\\core\\media\\icons\\pystray\\tankperv.png'))
+def test_leak_detection():
+    """Test mode: Run leak detection diagnostics without sending emails."""
+    print("=" * 60)
+    print("LEAK DETECTION TEST MODE")
+    print("=" * 60)
+    print(f"Current time (Central): {datetime.datetime.now(CENTRAL_TZ)}")
+    print(f"Non-operation hours active: {is_non_operation_hours()}")
+    print()
+
+    print("Testing database connection...")
+    try:
+        conn = get_db_connection()
+        conn.close()
+        print("  Database connection: OK")
+    except Exception as e:
+        print(f"  Database connection: FAILED - {e}")
+        return
+
+    print("\nFetching tank names...")
+    tank_names = get_all_tank_names()
+    print(f"  Found {len(tank_names)} tanks: {', '.join(tank_names)}")
+
+    print("\n" + "=" * 60)
+    print("TANK ANALYSIS (last 60 days non-op hours)")
+    print("=" * 60)
+
+    for tank_name in tank_names:
+        print(f"\n--- Tank {tank_name} ---")
+        limits = calculate_control_limits(tank_name)
+        if limits:
+            print(f"  Samples: {limits['n_samples']}")
+            print(f"  Avg change: {limits['avg_change']:.2f} gal/hr")
+            print(f"  Avg moving range: {limits['avg_mr']:.2f} gal/hr")
+            print(f"  UCL: {limits['ucl']:.2f} gal/hr")
+            print(f"  LCL: {limits['lcl']:.2f} gal/hr")
+        else:
+            print("  Could not calculate control limits")
+            continue
+
+        recent = get_recent_rate_of_change(tank_name, hours=4)
+        if recent:
+            print(f"  Current rate (4hr): {recent['rate_per_hour']:.2f} gal/hr")
+            print(f"  Total change: {recent['total_change']:.1f} gal over {recent['hours_elapsed']:.1f} hrs")
+        else:
+            print("  Could not get recent rate")
+            continue
+
+        detection = detect_leak(tank_name)
+        if detection:
+            print(f"  ** LEAK SIGNALS DETECTED: {detection['signals']}")
+        else:
+            print("  Status: OK (no leak signals)")
+
+    print("\n" + "=" * 60)
+    print("TEST COMPLETE")
+    print("=" * 60)
+
+
+def main():
+    import sys
+    if len(sys.argv) > 1 and sys.argv[1] == '--test':
+        test_leak_detection()
+        return
+
+    threading.Thread(target=start_schedule).start()
+    create_icon()
+
 
 if __name__ == "__main__":
     main()
