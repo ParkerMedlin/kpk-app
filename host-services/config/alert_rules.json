@@ -144,6 +144,17 @@
       "enabled": true
     },
     {
+      "name": "data_sync_restarted",
+      "description": "looper_health detected data_sync was down and restarted it",
+      "pattern": "Detected looper status is 'down'|Action: Starting data_sync|Successfully launched data_sync process",
+      "sources": ["looper_health"],
+      "severity": "warning",
+      "threshold_count": 1,
+      "threshold_window_seconds": 60,
+      "cooldown_seconds": 1800,
+      "enabled": true
+    },
+    {
       "name": "powershell_job_failure",
       "description": "PowerShell job failed in Excel worker",
       "pattern": "PowerShell (failed|timed out)|failed with code 1",
