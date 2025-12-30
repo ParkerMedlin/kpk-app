@@ -764,6 +764,16 @@ def display_excess_blends(request):
         'total_excess_inventory_value': excess_blends['total_excess_inventory_value']
     })
 
+def display_blend_item_status(request):
+    """Display report showing whether blend items are active or dead."""
+    data = get_blend_item_status_data()
+    return render(request, 'core/reports/blenditemstatus.html', {
+        'blend_items': data['rows'],
+        'dead_count': data['dead_count'],
+        'active_count': data['active_count'],
+        'total_count': data['total_count'],
+    })
+
 def display_upcoming_component_counts(request):
     """Render the upcoming component count queue built by the service layer."""
     upcoming_components = build_upcoming_component_counts()
