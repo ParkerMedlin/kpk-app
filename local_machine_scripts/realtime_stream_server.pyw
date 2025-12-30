@@ -122,14 +122,56 @@ class FrameStreamer:
         """Release a soul from our grasp"""
         self.clients.remove(websocket)
         self.log(f"Client disconnected. Total clients: {len(self.clients)}")
-        
+
+    def _find_ffmpeg(self):
+        """Locate ffmpeg executable, checking PATH and common install locations."""
+        import shutil
+        import glob
+
+        # First, try PATH (works if ffmpeg is properly installed)
+        ffmpeg_in_path = shutil.which('ffmpeg')
+        if ffmpeg_in_path and os.path.exists(ffmpeg_in_path):
+            self.log(f"Found ffmpeg in PATH: {ffmpeg_in_path}")
+            return ffmpeg_in_path
+
+        # Check common WinGet installation paths for any user
+        winget_patterns = [
+            os.path.expandvars(r'%LOCALAPPDATA%\Microsoft\WinGet\Packages\Gyan.FFmpeg*\ffmpeg-*\bin\ffmpeg.exe'),
+            r'C:\Users\*\AppData\Local\Microsoft\WinGet\Packages\Gyan.FFmpeg*\ffmpeg-*\bin\ffmpeg.exe',
+        ]
+
+        for pattern in winget_patterns:
+            matches = glob.glob(pattern)
+            if matches:
+                # Sort to get the latest version (higher version numbers sort later)
+                matches.sort(reverse=True)
+                self.log(f"Found ffmpeg via WinGet: {matches[0]}")
+                return matches[0]
+
+        # Check other common locations
+        common_paths = [
+            r'C:\ffmpeg\bin\ffmpeg.exe',
+            r'C:\Program Files\ffmpeg\bin\ffmpeg.exe',
+            r'C:\Program Files (x86)\ffmpeg\bin\ffmpeg.exe',
+        ]
+
+        for path in common_paths:
+            if os.path.exists(path):
+                self.log(f"Found ffmpeg at: {path}")
+                return path
+
+        return None
+
     def start_ffmpeg(self):
         """Summon the frame extraction daemon"""
         if not RTSP_URL:
             logger.error("HIKVISION_RTSP_URL not set; define it in .env at Documents/kpk-app/.env")
             return
-        # Use full path to ffmpeg since PATH may not be available when launched via PsExec/VBS
-        ffmpeg_path = r'C:\Users\pmedlin\AppData\Local\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-7.1.1-full_build\bin\ffmpeg.exe'
+
+        ffmpeg_path = self._find_ffmpeg()
+        if not ffmpeg_path:
+            logger.error("FFmpeg not found. Install via 'winget install ffmpeg' or add to PATH.")
+            return
         command = [
             ffmpeg_path,
             '-hide_banner',
