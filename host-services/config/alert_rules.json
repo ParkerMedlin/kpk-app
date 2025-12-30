@@ -12,6 +12,21 @@
     "kpk-app_ws4kp_1"
   ],
   "container_check_cooldown_seconds": 300,
+  "critical_host_services": [
+    {
+      "name": "excel_worker",
+      "display_name": "Excel Worker",
+      "script": "host-services/workers/excel_worker.py",
+      "process_pattern": "excel_worker"
+    },
+    {
+      "name": "stream_relay",
+      "display_name": "Stream Relay",
+      "script": "host-services/workers/stream_relay.py",
+      "process_pattern": "stream_relay"
+    }
+  ],
+  "host_service_check_cooldown_seconds": 300,
   "log_sources": {
     "data_sync": {
       "type": "file",
