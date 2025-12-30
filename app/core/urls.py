@@ -72,6 +72,7 @@ urlpatterns = [
     path('tank-level-change-report/', web.display_tank_level_change_report, name='tank-level-change-report'),
     path('test-page/', web.display_test_page, name='test-page'),
     path('excess-blends/', web.display_excess_blends, name='excess-blends'),
+    path('blend-item-status/', web.display_blend_item_status, name='blend-item-status'),
     path('tank-usage/<str:tank_identifier>/', web.display_tank_usage_monitor, name='tank-usage-monitor'),
     path('purchasing-aliases/', web.display_all_purchasing_aliases, name='display_all_purchasing_aliases'),
     path('container-classifications/', web.display_container_classifications, name='display_container_classifications'),
