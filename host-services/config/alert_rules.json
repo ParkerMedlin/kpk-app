@@ -157,7 +157,7 @@
     {
       "name": "nginx_restart_loop",
       "description": "Nginx container restarting repeatedly",
-      "pattern": "start worker process|signal process started|nginx/|worker process \\d+ exited",
+      "pattern": "using the .* event method|worker process \\d+ exited on signal|exited with code|nginx: \\[emerg\\]",
       "sources": ["nginx"],
       "severity": "critical",
       "threshold_count": 3,
