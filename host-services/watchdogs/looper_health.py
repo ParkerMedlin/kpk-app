@@ -471,6 +471,8 @@ class AlertConfig:
         self.scan_interval = 30
         self.webhook_url = None
         self.default_cooldown = 300
+        self.critical_containers = []
+        self.container_check_cooldown = 300
         self.load()
 
     def load(self):
@@ -500,7 +502,11 @@ class AlertConfig:
             # Load rules
             self.rules = config.get('rules', [])
 
-            log_and_queue(f"Alert Config: Loaded {len(self.rules)} rules, {len(self.log_sources)} sources")
+            # Load critical containers for health checks
+            self.critical_containers = config.get('critical_containers', [])
+            self.container_check_cooldown = config.get('container_check_cooldown_seconds', 300)
+
+            log_and_queue(f"Alert Config: Loaded {len(self.rules)} rules, {len(self.log_sources)} sources, {len(self.critical_containers)} critical containers")
 
         except FileNotFoundError:
             log_and_queue(f"Alert Config: Config file not found at {self.config_path}", logging.WARNING)
@@ -569,6 +575,97 @@ class AlertStateManager:
         """Update alert history for a rule."""
         with self._lock:
             self.state['alert_history'][rule_name] = history
+
+    def get_container_alert_time(self, container_name: str) -> Optional[str]:
+        """Get last alert time for a container health check."""
+        return self.state.get('container_alerts', {}).get(container_name)
+
+    def set_container_alert_time(self, container_name: str, time_str: str):
+        """Set last alert time for a container health check."""
+        with self._lock:
+            if 'container_alerts' not in self.state:
+                self.state['container_alerts'] = {}
+            self.state['container_alerts'][container_name] = time_str
+
+
+class ContainerHealthChecker:
+    """Checks if critical containers are running."""
+
+    def __init__(self, config: 'AlertConfig', state_manager: AlertStateManager, notifier: Optional['TeamsNotifier']):
+        self.config = config
+        self.state_manager = state_manager
+        self.notifier = notifier
+
+    def check_containers(self) -> list:
+        """Check all critical containers and return alerts for any not running."""
+        alerts = []
+        now = datetime.datetime.now()
+
+        for container in self.config.critical_containers:
+            # Check cooldown
+            last_alert = self.state_manager.get_container_alert_time(container)
+            if last_alert:
+                last_alert_time = datetime.datetime.fromisoformat(last_alert)
+                if (now - last_alert_time).total_seconds() < self.config.container_check_cooldown:
+                    continue
+
+            # Check if container is running
+            is_running, status = self._check_container_status(container)
+
+            if not is_running:
+                alert = Alert(
+                    rule_name='container_not_running',
+                    description=f'Critical container not running: {container}',
+                    severity='critical',
+                    source=container,
+                    match_count=1,
+                    threshold=1,
+                    window_seconds=0,
+                    sample_matches=[f"Container status: {status}"],
+                    timestamp=now
+                )
+                alerts.append(alert)
+
+                # Record alert time
+                self.state_manager.set_container_alert_time(container, now.isoformat())
+
+                log_and_queue(f"Alert Monitor [{ALERT_ORIGIN}]: Container '{container}' is NOT running (status: {status})", logging.ERROR)
+
+        return alerts
+
+    def _check_container_status(self, container: str) -> tuple:
+        """Check if a container is running. Returns (is_running, status_string)."""
+        try:
+            # Hide console window on Windows
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            startupinfo.wShowWindow = 0
+
+            result = subprocess.run(
+                ['docker', 'inspect', '--format', '{{.State.Status}}', container],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                startupinfo=startupinfo,
+                creationflags=subprocess.CREATE_NO_WINDOW
+            )
+
+            if result.returncode != 0:
+                if 'No such object' in result.stderr or 'Error' in result.stderr:
+                    return False, 'not found'
+                return False, f'error: {result.stderr[:100]}'
+
+            status = result.stdout.strip().lower()
+            is_running = status == 'running'
+            return is_running, status
+
+        except subprocess.TimeoutExpired:
+            return False, 'timeout checking status'
+        except FileNotFoundError:
+            log_and_queue("Alert Monitor: Docker not found in PATH", logging.ERROR)
+            return True, 'docker not available'  # Don't alert if docker CLI isn't available
+        except Exception as e:
+            return False, f'error: {str(e)[:100]}'
 
 
 class LogScanner(ABC):
@@ -962,7 +1059,10 @@ def alert_monitor_thread():
             elif source_config.get('type') == 'docker':
                 scanners[source_name] = DockerLogScanner(source_name, source_config, state_manager)
 
-        log_and_queue(f"Alert Monitor: Started on {ALERT_ORIGIN}. Scanning {len(scanners)} sources every {config.scan_interval}s")
+        # Container health checker
+        container_checker = ContainerHealthChecker(config, state_manager, notifier)
+
+        log_and_queue(f"Alert Monitor: Started on {ALERT_ORIGIN}. Scanning {len(scanners)} sources, monitoring {len(config.critical_containers)} critical containers every {config.scan_interval}s")
 
     except Exception as e:
         log_and_queue(f"Alert Monitor: Failed to initialize: {e}", logging.ERROR)
@@ -970,6 +1070,13 @@ def alert_monitor_thread():
 
     while True:
         try:
+            # Check critical container health
+            container_alerts = container_checker.check_containers()
+            for alert in container_alerts:
+                if notifier:
+                    notifier.send_alert(alert)
+
+            # Scan log sources for pattern matches
             for source_name, scanner in scanners.items():
                 try:
                     new_lines = scanner.get_new_lines()
