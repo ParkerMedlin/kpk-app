@@ -8,7 +8,7 @@
     "kpk-app_app_blue_1",
     "kpk-app_redis_1",
     "kpk-app_db_1",
-    "kpk-app_excel_completion_listener"
+    "kpk-app_excel_completion_listener_1"
   ],
   "container_check_cooldown_seconds": 300,
   "log_sources": {
@@ -55,7 +55,7 @@
     },
     "excel": {
       "type": "docker",
-      "container": "kpk-app_excel_completion_listener",
+      "container": "kpk-app_excel_completion_listener_1",
       "tail_lines": 100
     }
   },
