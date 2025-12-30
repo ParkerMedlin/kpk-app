@@ -128,6 +128,11 @@ def get_blend_item_status_data():
     - It has NO transaction history in im_itemtransactionhistory, AND
     - It is NOT a parent item in bill_of_materials
 
+    Excluded from this report:
+    - Items where itemcode starts with '/BLDLAB'
+    - Items where itemcodedesc starts with 'BLEND-Grease '
+    - Specific itemcodes: PK303000.B, 301000.B, 303000.B, 302000.B, 304000.B
+
     Returns:
         dict: {
             'rows': list of row dicts with item_code, item_description, status,
@@ -151,6 +156,9 @@ def get_blend_item_status_data():
         FROM ci_item ci
         LEFT JOIN im_itemtransactionhistory th ON th.itemcode = ci.itemcode
         WHERE ci.itemcodedesc LIKE 'BLEND%'
+            AND ci.itemcode NOT LIKE '/BLDLAB%'
+            AND ci.itemcodedesc NOT LIKE 'BLEND-Grease %'
+            AND ci.itemcode NOT IN ('PK303000.B', '301000.B', '303000.B', '302000.B', '304000.B')
         GROUP BY ci.itemcode, ci.itemcodedesc
         ORDER BY
             CASE
