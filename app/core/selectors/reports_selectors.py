@@ -118,3 +118,68 @@ def get_blend_costing_report_data(item_code_filter=None):
                 'labor_cost': labor_cost,
             })
     return {'rows': rows}
+
+
+def get_blend_item_status_data():
+    """
+    Return blend item status data showing whether each blend item is "dead" or "active".
+
+    A blend item is considered "dead" if:
+    - It has NO transaction history in im_itemtransactionhistory, AND
+    - It is NOT a parent item in bill_of_materials
+
+    Returns:
+        dict: {
+            'rows': list of row dicts with item_code, item_description, status,
+                    last_transaction_date, in_bom
+        }
+    """
+    sql = """
+        SELECT
+            ci.itemcode AS item_code,
+            ci.itemcodedesc AS item_description,
+            MAX(th.transactiondate) AS last_transaction_date,
+            CASE WHEN EXISTS (
+                SELECT 1 FROM bill_of_materials bom WHERE bom.item_code = ci.itemcode
+            ) THEN TRUE ELSE FALSE END AS in_bom,
+            CASE
+                WHEN MAX(th.transactiondate) IS NULL
+                    AND NOT EXISTS (SELECT 1 FROM bill_of_materials bom WHERE bom.item_code = ci.itemcode)
+                THEN 'Dead'
+                ELSE 'Active'
+            END AS status
+        FROM ci_item ci
+        LEFT JOIN im_itemtransactionhistory th ON th.itemcode = ci.itemcode
+        WHERE ci.itemcodedesc LIKE 'BLEND%'
+        GROUP BY ci.itemcode, ci.itemcodedesc
+        ORDER BY
+            CASE
+                WHEN MAX(th.transactiondate) IS NULL
+                    AND NOT EXISTS (SELECT 1 FROM bill_of_materials bom WHERE bom.item_code = ci.itemcode)
+                THEN 0
+                ELSE 1
+            END,
+            ci.itemcode
+    """
+
+    rows = []
+    with connection.cursor() as cursor:
+        cursor.execute(sql)
+        for item_code, item_description, last_transaction_date, in_bom, status in cursor.fetchall():
+            rows.append({
+                'item_code': item_code,
+                'item_description': item_description,
+                'last_transaction_date': last_transaction_date,
+                'in_bom': 'Yes' if in_bom else 'No',
+                'status': status,
+            })
+
+    dead_count = sum(1 for row in rows if row['status'] == 'Dead')
+    active_count = len(rows) - dead_count
+
+    return {
+        'rows': rows,
+        'dead_count': dead_count,
+        'active_count': active_count,
+        'total_count': len(rows),
+    }

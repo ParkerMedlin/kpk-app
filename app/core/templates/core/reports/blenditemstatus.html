@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}<title>Blend Item Status Report</title>{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="page-header">Blend Item Status Report</h1>
+            <p class="lead">Showing blend items and their active/dead status based on transaction history and BOM presence</p>
+        </div>
+    </div>
+    <div class="row align-items-center mt-3">
+        <div class="col-md-8">
+            <span class="badge bg-success me-2">Active: {{ active_count }}</span>
+            <span class="badge bg-danger me-2">Dead: {{ dead_count }}</span>
+            <span class="badge bg-secondary">Total: {{ total_count }}</span>
+        </div>
+    </div>
+    <div class="row mt-3">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0 text-white">Blend Item Status</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover" id="blendItemStatusTable">
+                            <thead>
+                                <tr>
+                                    <th>Item Code</th>
+                                    <th>Description</th>
+                                    <th>Status</th>
+                                    <th>Last Transaction Date</th>
+                                    <th>In BOM</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in blend_items %}
+                                <tr data-item-code="{{ item.item_code }}">
+                                    <td>{{ item.item_code }}</td>
+                                    <td>{{ item.item_description }}</td>
+                                    <td>
+                                        {% if item.status == 'Dead' %}
+                                        <span class="badge bg-danger">Dead</span>
+                                        {% else %}
+                                        <span class="badge bg-success">Active</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ item.last_transaction_date|default:"Never" }}</td>
+                                    <td>{{ item.in_bom }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No blend items found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<link rel="stylesheet" href="{% static 'core/css/thirdPartyLibraries/jquery.dataTables.min.css' %}">
+<link rel="stylesheet" href="{% static 'core/css/thirdPartyLibraries/buttons.dataTables.min.css' %}">
+<script src="{% static 'core/js/thirdPartyLibraries/jszip.min.js' %}"></script>
+<script src="{% static 'core/js/thirdPartyLibraries/pdfmake.min.js' %}"></script>
+<script src="{% static 'core/js/thirdPartyLibraries/vfs_fonts.js' %}"></script>
+<script src="{% static 'core/js/thirdPartyLibraries/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'core/js/thirdPartyLibraries/datatables/dataTables.buttons.min.js' %}"></script>
+<script src="{% static 'core/js/thirdPartyLibraries/datatables/buttons.html5.min.js' %}"></script>
+<script src="{% static 'core/js/thirdPartyLibraries/datatables/buttons.print.min.js' %}"></script>
+<script src="{% static 'core/js/thirdPartyLibraries/datatables/buttons.colVis.min.js' %}"></script>
+<script>
+$(document).ready(function() {
+    $('#blendItemStatusTable').DataTable({
+        pageLength: 50,
+        order: [[2, 'asc'], [0, 'asc']],
+        dom: 'Bfrtip',
+        buttons: [
+            'copy', 'csv', 'excel', 'print'
+        ]
+    });
+});
+</script>
+{% endblock %}
