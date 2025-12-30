@@ -1,15 +1,15 @@
 {
-  "version": "1.1",
+  "version": "1.0",
   "scan_interval_seconds": 30,
   "teams_webhook_env_var": "TEAMS_WEBHOOK_URL",
   "default_cooldown_seconds": 300,
-  "default_docker_tail_lines": 100,
   "critical_containers": [
-    "nginx",
-    "app_blue",
-    "redis",
-    "db",
-    "process_excel_completion_listener"
+    "kpk-app_nginx_1",
+    "kpk-app_app_blue_1",
+    "kpk-app_redis_1",
+    "kpk-app_db_1",
+    "kpk-app_excel_completion_listener_1",
+    "kpk-app_ws4kp_1"
   ],
   "container_check_cooldown_seconds": 300,
   "log_sources": {
@@ -28,6 +28,41 @@
     "looper_health": {
       "type": "file",
       "path": "logs/looper_health.log"
+    },
+    "app_blue": {
+      "type": "docker",
+      "container": "kpk-app_app_blue_1",
+      "tail_lines": 200
+    },
+    "app_green": {
+      "type": "docker",
+      "container": "kpk-app_app_green_1",
+      "tail_lines": 200
+    },
+    "nginx": {
+      "type": "docker",
+      "container": "kpk-app_nginx_1",
+      "tail_lines": 100
+    },
+    "db": {
+      "type": "docker",
+      "container": "kpk-app_db_1",
+      "tail_lines": 100
+    },
+    "redis": {
+      "type": "docker",
+      "container": "kpk-app_redis_1",
+      "tail_lines": 100
+    },
+    "excel": {
+      "type": "docker",
+      "container": "kpk-app_excel_completion_listener_1",
+      "tail_lines": 100
+    },
+    "ws4kp": {
+      "type": "docker",
+      "container": "kpk-app_ws4kp_1",
+      "tail_lines": 100
     }
   },
   "rules": [
@@ -164,10 +199,21 @@
       "enabled": true
     },
     {
-      "name": "excel_listener_restart_loop",
+      "name": "excel_restart_loop",
       "description": "Excel completion listener container restarting repeatedly",
       "pattern": "Starting|Listening|Connected to Redis|Initializing",
-      "sources": ["process_excel_completion_listener"],
+      "sources": ["excel"],
+      "severity": "critical",
+      "threshold_count": 3,
+      "threshold_window_seconds": 300,
+      "cooldown_seconds": 900,
+      "enabled": true
+    },
+    {
+      "name": "ws4kp_restart_loop",
+      "description": "WS4KP container restarting repeatedly",
+      "pattern": "Starting|Listening|Server started|Initializing",
+      "sources": ["ws4kp"],
       "severity": "critical",
       "threshold_count": 3,
       "threshold_window_seconds": 300,
@@ -178,7 +224,7 @@
       "name": "container_fatal_error",
       "description": "Container hit a fatal/unrecoverable error",
       "pattern": "FATAL|Segmentation fault|killed|OOM|out of memory|Cannot allocate memory",
-      "sources": ["nginx", "app_blue", "redis", "db", "process_excel_completion_listener"],
+      "sources": ["nginx", "app_blue", "redis", "db", "excel", "ws4kp"],
       "severity": "critical",
       "threshold_count": 1,
       "threshold_window_seconds": 60,
