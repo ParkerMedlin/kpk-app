@@ -459,6 +459,8 @@ class Alert:
     origin: str = field(default_factory=lambda: ALERT_ORIGIN)
     sample_matches: list = field(default_factory=list)
     timestamp: datetime.datetime = field(default_factory=datetime.datetime.now)
+    remediation_attempted: Optional[str] = None  # Description of auto-fix action taken
+    remediation_success: Optional[bool] = None   # Whether auto-fix succeeded
 
 
 class AlertConfig:
@@ -589,7 +591,7 @@ class AlertStateManager:
 
 
 class ContainerHealthChecker:
-    """Checks if critical containers are running."""
+    """Checks if critical containers are running and attempts auto-restart."""
 
     def __init__(self, config: 'AlertConfig', state_manager: AlertStateManager, notifier: Optional['TeamsNotifier']):
         self.config = config
@@ -597,7 +599,10 @@ class ContainerHealthChecker:
         self.notifier = notifier
 
     def check_containers(self) -> list:
-        """Check all critical containers and return alerts for any not running."""
+        """Check all critical containers and return alerts for any not running.
+
+        If a container is down, attempts to restart it and reports the outcome.
+        """
         alerts = []
         now = datetime.datetime.now()
 
@@ -613,25 +618,75 @@ class ContainerHealthChecker:
             is_running, status = self._check_container_status(container)
 
             if not is_running:
+                log_and_queue(f"Alert Monitor [{ALERT_ORIGIN}]: Container '{container}' is NOT running (status: {status})", logging.ERROR)
+
+                # Attempt to restart the container
+                restart_success, restart_msg = self._attempt_container_start(container)
+
+                # Determine final severity based on restart outcome
+                if restart_success:
+                    severity = 'warning'  # Downgrade since we fixed it
+                    description = f'Container was down, auto-restarted: {container}'
+                    log_and_queue(f"Alert Monitor [{ALERT_ORIGIN}]: Successfully restarted container '{container}'", logging.INFO)
+                else:
+                    severity = 'critical'
+                    description = f'Container down, auto-restart FAILED: {container}'
+                    log_and_queue(f"Alert Monitor [{ALERT_ORIGIN}]: Failed to restart container '{container}': {restart_msg}", logging.ERROR)
+
                 alert = Alert(
                     rule_name='container_not_running',
-                    description=f'Critical container not running: {container}',
-                    severity='critical',
+                    description=description,
+                    severity=severity,
                     source=container,
                     match_count=1,
                     threshold=1,
                     window_seconds=0,
                     sample_matches=[f"Container status: {status}"],
-                    timestamp=now
+                    timestamp=now,
+                    remediation_attempted=f"docker start {container}",
+                    remediation_success=restart_success
                 )
                 alerts.append(alert)
 
                 # Record alert time
                 self.state_manager.set_container_alert_time(container, now.isoformat())
 
-                log_and_queue(f"Alert Monitor [{ALERT_ORIGIN}]: Container '{container}' is NOT running (status: {status})", logging.ERROR)
-
         return alerts
+
+    def _attempt_container_start(self, container: str) -> tuple:
+        """Attempt to start a container. Returns (success: bool, message: str)."""
+        try:
+            # Hide console window on Windows
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            startupinfo.wShowWindow = 0
+
+            result = subprocess.run(
+                ['docker', 'start', container],
+                capture_output=True,
+                text=True,
+                timeout=60,  # Give docker more time to start
+                startupinfo=startupinfo,
+                creationflags=subprocess.CREATE_NO_WINDOW
+            )
+
+            if result.returncode == 0:
+                # Verify it actually started
+                time.sleep(2)  # Brief wait for container to initialize
+                is_running, status = self._check_container_status(container)
+                if is_running:
+                    return True, f"Container started successfully"
+                else:
+                    return False, f"docker start succeeded but container status is: {status}"
+            else:
+                return False, f"docker start failed: {result.stderr[:200]}"
+
+        except subprocess.TimeoutExpired:
+            return False, "docker start command timed out"
+        except FileNotFoundError:
+            return False, "docker not found in PATH"
+        except Exception as e:
+            return False, f"error: {str(e)[:100]}"
 
     def _check_container_status(self, container: str) -> tuple:
         """Check if a container is running. Returns (is_running, status_string)."""
@@ -984,6 +1039,48 @@ class TeamsNotifier:
         if not sample_text:
             sample_text = "(no sample lines available)"
 
+        # Build facts list
+        facts = [
+            {"title": "Origin", "value": alert.origin},
+            {"title": "Rule", "value": alert.rule_name},
+            {"title": "Source", "value": alert.source},
+            {"title": "Matches", "value": f"{alert.match_count} in {alert.window_seconds}s (threshold: {alert.threshold})"},
+            {"title": "Time", "value": alert.timestamp.strftime("%Y-%m-%d %H:%M:%S")}
+        ]
+
+        # Add remediation info if attempted
+        if alert.remediation_attempted:
+            success_indicator = "YES" if alert.remediation_success else "FAILED"
+            facts.append({"title": "Auto-Fix", "value": f"{alert.remediation_attempted} -> {success_indicator}"})
+
+        body = [
+            {
+                "type": "TextBlock",
+                "text": f"{alert.severity.upper()}: {alert.description}",
+                "weight": "Bolder",
+                "size": "Large",
+                "color": severity_color,
+                "wrap": True
+            },
+            {
+                "type": "FactSet",
+                "facts": facts
+            },
+            {
+                "type": "TextBlock",
+                "text": "Recent Matches:",
+                "weight": "Bolder",
+                "separator": True
+            },
+            {
+                "type": "TextBlock",
+                "text": sample_text,
+                "wrap": True,
+                "fontType": "Monospace",
+                "size": "Small"
+            }
+        ]
+
         return {
             "type": "message",
             "attachments": [{
@@ -992,39 +1089,7 @@ class TeamsNotifier:
                     "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
                     "type": "AdaptiveCard",
                     "version": "1.4",
-                    "body": [
-                        {
-                            "type": "TextBlock",
-                            "text": f"{alert.severity.upper()}: {alert.description}",
-                            "weight": "Bolder",
-                            "size": "Large",
-                            "color": severity_color,
-                            "wrap": True
-                        },
-                        {
-                            "type": "FactSet",
-                            "facts": [
-                                {"title": "Origin", "value": alert.origin},
-                                {"title": "Rule", "value": alert.rule_name},
-                                {"title": "Source", "value": alert.source},
-                                {"title": "Matches", "value": f"{alert.match_count} in {alert.window_seconds}s (threshold: {alert.threshold})"},
-                                {"title": "Time", "value": alert.timestamp.strftime("%Y-%m-%d %H:%M:%S")}
-                            ]
-                        },
-                        {
-                            "type": "TextBlock",
-                            "text": "Recent Matches:",
-                            "weight": "Bolder",
-                            "separator": True
-                        },
-                        {
-                            "type": "TextBlock",
-                            "text": sample_text,
-                            "wrap": True,
-                            "fontType": "Monospace",
-                            "size": "Small"
-                        }
-                    ]
+                    "body": body
                 }
             }]
         }
