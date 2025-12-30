@@ -1199,7 +1199,7 @@ class DockerLogScanner(LogScanner):
                     line_content = re.sub(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z\s*', '', line)
                     results.append((timestamp, line_content))
                 else:
-                    results.append((datetime.datetime.now(), line))
+                    results.append((datetime.datetime.utcnow(), line))  # Use UTC to match Docker timestamps
 
             # Update state
             if newest_timestamp:
@@ -1254,7 +1254,7 @@ class AlertEngine:
     def process_lines(self, source_name: str, lines: list) -> list:
         """Match lines against rules for this source. Return alerts to fire."""
         alerts = []
-        now = datetime.datetime.now()
+        now = datetime.datetime.utcnow()  # Use UTC to match Docker log timestamps
 
         for rule in self.config.rules:
             if not rule.get('enabled', True):

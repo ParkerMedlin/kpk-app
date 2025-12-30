@@ -5,7 +5,10 @@ import psycopg2
 import sqlalchemy as sa
 import json
 import datetime as dt
+from zoneinfo import ZoneInfo
 from sqlalchemy.sql import text
+
+CENTRAL_TZ = ZoneInfo('America/Chicago')
 
 def parse_html_to_dataframe(html_str):
     soup = BeautifulSoup(html_str, 'html.parser')
@@ -74,7 +77,7 @@ def log_tank_levels_table():
     cursor_postgres = connection_postgres.cursor()
 
     for index, row in this_df.iterrows():
-        timestamp = dt.datetime.now()
+        timestamp = dt.datetime.now(CENTRAL_TZ)
         cursor_postgres.execute(f"""
             INSERT INTO core_tanklevellog (tank_name, fill_percentage, fill_height_inches, height_capacity_inches, filled_gallons, timestamp)
             VALUES (%s, %s, %s, %s, %s, %s)
