@@ -876,6 +876,187 @@ class HostServiceHealthChecker:
             return False, f"error: {str(e)[:100]}"
 
 
+class Remediator:
+    """Executes remediation actions for log-based alert rules."""
+
+    def __init__(self, config: 'AlertConfig'):
+        self.config = config
+
+    def execute(self, remediation_config: dict, alert_context: dict) -> tuple:
+        """Execute a remediation action. Returns (success: bool, message: str)."""
+        action = remediation_config.get('action')
+
+        if action == 'restart_host_service':
+            return self._restart_host_service(remediation_config)
+        elif action == 'restart_container':
+            return self._restart_container(remediation_config)
+        else:
+            return False, f"Unknown remediation action: {action}"
+
+    def _restart_host_service(self, remediation_config: dict) -> tuple:
+        """Terminate and restart a host service (like data_sync)."""
+        service_name = remediation_config.get('service')
+        if not service_name:
+            return False, "No service specified in remediation config"
+
+        # Find service config
+        service_config = None
+        for svc in self.config.critical_host_services:
+            if svc['name'] == service_name:
+                service_config = svc
+                break
+
+        # Special handling for data_sync since it may not be in critical_host_services
+        if not service_config and service_name == 'data_sync':
+            service_config = {
+                'name': 'data_sync',
+                'display_name': 'Data Sync',
+                'script': 'host-services/workers/data_sync.py',
+                'process_pattern': 'data_sync'
+            }
+
+        if not service_config:
+            return False, f"Service '{service_name}' not found in config"
+
+        process_pattern = service_config['process_pattern']
+        script_path = os.path.join(KPK_APP_ROOT, service_config['script'])
+        display_name = service_config.get('display_name', service_name)
+
+        log_and_queue(f"Remediator: Attempting to restart {display_name}", logging.WARNING)
+
+        # Step 1: Terminate existing process
+        try:
+            terminate_success = self._terminate_process(process_pattern)
+            if terminate_success:
+                log_and_queue(f"Remediator: Terminated existing {display_name} process", logging.INFO)
+            else:
+                log_and_queue(f"Remediator: No existing {display_name} process found to terminate", logging.INFO)
+        except Exception as e:
+            log_and_queue(f"Remediator: Error terminating {display_name}: {e}", logging.ERROR)
+
+        # Step 2: Wait briefly for cleanup
+        time.sleep(2)
+
+        # Step 3: Start new process
+        try:
+            if not os.path.exists(script_path):
+                return False, f"Script not found: {script_path}"
+
+            # Hide console window on Windows
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            startupinfo.wShowWindow = 0
+
+            process = subprocess.Popen(
+                ['pythonw', script_path],
+                cwd=KPK_APP_ROOT,
+                startupinfo=startupinfo,
+                creationflags=subprocess.CREATE_NO_WINDOW
+            )
+
+            # Wait and verify it started
+            time.sleep(3)
+
+            # Check if running
+            startupinfo2 = subprocess.STARTUPINFO()
+            startupinfo2.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            startupinfo2.wShowWindow = 0
+
+            result = subprocess.run(
+                ['powershell', '-Command',
+                 f"wmic process where \"name like '%python%' and commandline like '%{process_pattern}%'\" get ProcessId /format:csv 2>$null | Select-String '\\d+' | ForEach-Object {{ ($_ -split ',')[-1].Trim() }}"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                startupinfo=startupinfo2,
+                creationflags=subprocess.CREATE_NO_WINDOW
+            )
+            pids = [p.strip() for p in result.stdout.strip().split('\n') if p.strip().isdigit()]
+
+            if len(pids) > 0:
+                log_and_queue(f"Remediator: Successfully restarted {display_name} (PID: {pids[0]})", logging.INFO)
+                return True, f"Restarted {display_name}"
+            else:
+                return False, f"Process started but not found running after 3s"
+
+        except FileNotFoundError:
+            return False, "pythonw not found in PATH"
+        except Exception as e:
+            return False, f"Error starting service: {str(e)[:100]}"
+
+    def _terminate_process(self, process_pattern: str) -> bool:
+        """Terminate processes matching the pattern. Returns True if any were terminated."""
+        try:
+            # Hide console window
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            startupinfo.wShowWindow = 0
+
+            # Find PIDs
+            result = subprocess.run(
+                ['powershell', '-Command',
+                 f"wmic process where \"name like '%python%' and commandline like '%{process_pattern}%'\" get ProcessId /format:csv 2>$null | Select-String '\\d+' | ForEach-Object {{ ($_ -split ',')[-1].Trim() }}"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                startupinfo=startupinfo,
+                creationflags=subprocess.CREATE_NO_WINDOW
+            )
+            pids = [p.strip() for p in result.stdout.strip().split('\n') if p.strip().isdigit()]
+
+            if not pids:
+                return False
+
+            # Terminate each PID
+            for pid in pids:
+                subprocess.run(
+                    ['taskkill', '/PID', pid, '/F'],
+                    capture_output=True,
+                    timeout=10,
+                    startupinfo=startupinfo,
+                    creationflags=subprocess.CREATE_NO_WINDOW
+                )
+
+            return True
+
+        except Exception as e:
+            log_and_queue(f"Remediator: Error terminating process: {e}", logging.ERROR)
+            return False
+
+    def _restart_container(self, remediation_config: dict) -> tuple:
+        """Restart a Docker container."""
+        container = remediation_config.get('container')
+        if not container:
+            return False, "No container specified in remediation config"
+
+        try:
+            # Hide console window
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            startupinfo.wShowWindow = 0
+
+            # Restart the container
+            result = subprocess.run(
+                ['docker', 'restart', container],
+                capture_output=True,
+                text=True,
+                timeout=60,
+                startupinfo=startupinfo,
+                creationflags=subprocess.CREATE_NO_WINDOW
+            )
+
+            if result.returncode == 0:
+                log_and_queue(f"Remediator: Successfully restarted container {container}", logging.INFO)
+                return True, f"Restarted container {container}"
+            else:
+                return False, f"docker restart failed: {result.stderr[:200]}"
+
+        except subprocess.TimeoutExpired:
+            return False, "docker restart timed out"
+        except Exception as e:
+            return False, f"Error: {str(e)[:100]}"
+
+
 class LogScanner(ABC):
     """Base class for scanning log sources."""
 
@@ -1052,9 +1233,10 @@ class DockerLogScanner(LogScanner):
 class AlertEngine:
     """Pattern matching, threshold tracking, deduplication."""
 
-    def __init__(self, config: AlertConfig, state_manager: AlertStateManager):
+    def __init__(self, config: AlertConfig, state_manager: AlertStateManager, remediator: Optional[Remediator] = None):
         self.config = config
         self.state_manager = state_manager
+        self.remediator = remediator
         self.compiled_patterns = {}
         self._compile_patterns()
 
@@ -1116,17 +1298,43 @@ class AlertEngine:
                         in_cooldown = True
 
                 if not in_cooldown:
+                    # Check for remediation config
+                    remediation_attempted = None
+                    remediation_success = None
+                    remediation_config = rule.get('remediation')
+
+                    if remediation_config and self.remediator:
+                        # Execute remediation before creating alert
+                        action = remediation_config.get('action', 'unknown')
+                        service = remediation_config.get('service', remediation_config.get('container', 'unknown'))
+                        remediation_attempted = f"{action}: {service}"
+
+                        log_and_queue(f"Alert Engine: Rule '{rule['name']}' triggered remediation: {action}", logging.WARNING)
+
+                        success, message = self.remediator.execute(
+                            remediation_config,
+                            {'rule_name': rule['name'], 'source': source_name}
+                        )
+                        remediation_success = success
+
+                        if success:
+                            log_and_queue(f"Alert Engine: Remediation succeeded: {message}", logging.INFO)
+                        else:
+                            log_and_queue(f"Alert Engine: Remediation failed: {message}", logging.ERROR)
+
                     # Create alert
                     alert = Alert(
                         rule_name=rule['name'],
                         description=rule.get('description', rule['name']),
-                        severity=rule.get('severity', 'warning'),
+                        severity=rule.get('severity', 'warning') if not remediation_success else 'warning',
                         source=source_name,
                         match_count=len(recent_matches),
                         threshold=threshold_count,
                         window_seconds=window_seconds,
                         sample_matches=[m['line'] for m in recent_matches[-5:]],
-                        timestamp=now
+                        timestamp=now,
+                        remediation_attempted=remediation_attempted,
+                        remediation_success=remediation_success
                     )
                     alerts.append(alert)
 
@@ -1279,7 +1487,8 @@ def alert_monitor_thread():
             notifier = TeamsNotifier(config.webhook_url)
             log_and_queue("Alert Monitor: Teams notifications enabled.")
 
-        alert_engine = AlertEngine(config, state_manager)
+        remediator = Remediator(config)
+        alert_engine = AlertEngine(config, state_manager, remediator)
 
         # Build scanners for each source
         scanners = {}

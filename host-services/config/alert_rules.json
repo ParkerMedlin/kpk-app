@@ -233,7 +233,11 @@
       "threshold_count": 1,
       "threshold_window_seconds": 60,
       "cooldown_seconds": 600,
-      "enabled": true
+      "enabled": true,
+      "remediation": {
+        "action": "restart_host_service",
+        "service": "data_sync"
+      }
     },
     {
       "name": "sharepoint_auth_failure",
