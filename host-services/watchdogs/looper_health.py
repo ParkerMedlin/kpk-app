@@ -602,18 +602,12 @@ class ContainerHealthChecker:
         """Check all critical containers and return alerts for any not running.
 
         If a container is down, attempts to restart it and reports the outcome.
+        Cooldown only affects Teams notification, not the restart attempt.
         """
         alerts = []
         now = datetime.datetime.now()
 
         for container in self.config.critical_containers:
-            # Check cooldown
-            last_alert = self.state_manager.get_container_alert_time(container)
-            if last_alert:
-                last_alert_time = datetime.datetime.fromisoformat(last_alert)
-                if (now - last_alert_time).total_seconds() < self.config.container_check_cooldown:
-                    continue
-
             # Check if container is running
             is_running, status = self._check_container_status(container)
 
@@ -633,23 +627,33 @@ class ContainerHealthChecker:
                     description = f'Container down, auto-restart FAILED: {container}'
                     log_and_queue(f"Alert Monitor [{ALERT_ORIGIN}]: Failed to restart container '{container}': {restart_msg}", logging.ERROR)
 
-                alert = Alert(
-                    rule_name='container_not_running',
-                    description=description,
-                    severity=severity,
-                    source=container,
-                    match_count=1,
-                    threshold=1,
-                    window_seconds=0,
-                    sample_matches=[f"Container status: {status}"],
-                    timestamp=now,
-                    remediation_attempted=f"docker start {container}",
-                    remediation_success=restart_success
-                )
-                alerts.append(alert)
+                # Check cooldown - only affects whether we send Teams notification
+                in_cooldown = False
+                last_alert = self.state_manager.get_container_alert_time(container)
+                if last_alert:
+                    last_alert_time = datetime.datetime.fromisoformat(last_alert)
+                    if (now - last_alert_time).total_seconds() < self.config.container_check_cooldown:
+                        in_cooldown = True
+                        log_and_queue(f"Alert Monitor [{ALERT_ORIGIN}]: Suppressing Teams notification for '{container}' (cooldown)", logging.DEBUG)
 
-                # Record alert time
-                self.state_manager.set_container_alert_time(container, now.isoformat())
+                if not in_cooldown:
+                    alert = Alert(
+                        rule_name='container_not_running',
+                        description=description,
+                        severity=severity,
+                        source=container,
+                        match_count=1,
+                        threshold=1,
+                        window_seconds=0,
+                        sample_matches=[f"Container status: {status}"],
+                        timestamp=now,
+                        remediation_attempted=f"docker start {container}",
+                        remediation_success=restart_success
+                    )
+                    alerts.append(alert)
+
+                    # Record alert time only when we actually send
+                    self.state_manager.set_container_alert_time(container, now.isoformat())
 
         return alerts
 
