@@ -89,6 +89,10 @@ else:
 LOOPER_STATUS_URL = f"{KPKAPP_BASE_URL}/core/get-refresh-status/"
 STATUS_CHECK_INTERVAL_SECONDS = 300  # 5 minutes
 
+# --- Alert Origin Identification ---
+# Use KPKAPP_HOST if set, otherwise fall back to machine hostname
+ALERT_ORIGIN = os.environ.get("KPKAPP_HOST", DEFAULT_KPKAPP_HOST)
+
 # --- SSL Certificate Paths ---
 CERT_BASE_DIR = os.path.join(KPK_APP_ROOT, 'nginx', 'ssl')
 CERT_FILE = os.path.normpath(os.path.join(CERT_BASE_DIR, 'kpkapp.lan.pem'))
@@ -452,6 +456,7 @@ class Alert:
     match_count: int
     threshold: int
     window_seconds: int
+    origin: str = field(default_factory=lambda: ALERT_ORIGIN)
     sample_matches: list = field(default_factory=list)
     timestamp: datetime.datetime = field(default_factory=datetime.datetime.now)
 
@@ -895,6 +900,7 @@ class TeamsNotifier:
                         {
                             "type": "FactSet",
                             "facts": [
+                                {"title": "Origin", "value": alert.origin},
                                 {"title": "Rule", "value": alert.rule_name},
                                 {"title": "Source", "value": alert.source},
                                 {"title": "Matches", "value": f"{alert.match_count} in {alert.window_seconds}s (threshold: {alert.threshold})"},
@@ -949,7 +955,7 @@ def alert_monitor_thread():
             elif source_config.get('type') == 'docker':
                 scanners[source_name] = DockerLogScanner(source_name, source_config, state_manager)
 
-        log_and_queue(f"Alert Monitor: Started. Scanning {len(scanners)} sources every {config.scan_interval}s")
+        log_and_queue(f"Alert Monitor: Started on {ALERT_ORIGIN}. Scanning {len(scanners)} sources every {config.scan_interval}s")
 
     except Exception as e:
         log_and_queue(f"Alert Monitor: Failed to initialize: {e}", logging.ERROR)
@@ -963,7 +969,7 @@ def alert_monitor_thread():
                     if new_lines:
                         alerts = alert_engine.process_lines(source_name, new_lines)
                         for alert in alerts:
-                            log_and_queue(f"Alert Monitor: Firing alert '{alert.rule_name}' from {alert.source}", logging.WARNING)
+                            log_and_queue(f"Alert Monitor [{ALERT_ORIGIN}]: Firing alert '{alert.rule_name}' from {alert.source}", logging.WARNING)
                             if notifier:
                                 notifier.send_alert(alert)
                 except Exception as e:
