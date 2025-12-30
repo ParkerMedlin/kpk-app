@@ -3,6 +3,14 @@
   "scan_interval_seconds": 30,
   "teams_webhook_env_var": "TEAMS_WEBHOOK_URL",
   "default_cooldown_seconds": 300,
+  "critical_containers": [
+    "kpk-app_nginx_1",
+    "kpk-app_app_blue_1",
+    "kpk-app_redis_1",
+    "kpk-app_db_1",
+    "kpk-app_excel_completion_listener"
+  ],
+  "container_check_cooldown_seconds": 300,
   "log_sources": {
     "data_sync": {
       "type": "file",
