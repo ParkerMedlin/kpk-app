@@ -667,11 +667,18 @@ class DockerLogScanner(LogScanner):
             # Build docker command
             cmd = ['docker', 'logs', '--tail', str(tail_lines), '--timestamps', container]
 
+            # Hide console window on Windows
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            startupinfo.wShowWindow = 0  # SW_HIDE
+
             result = subprocess.run(
                 cmd,
                 capture_output=True,
                 text=True,
-                timeout=30
+                timeout=30,
+                startupinfo=startupinfo,
+                creationflags=subprocess.CREATE_NO_WINDOW
             )
 
             if result.returncode != 0:
