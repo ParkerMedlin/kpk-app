@@ -1,0 +1,342 @@
+{
+  "version": "1.0",
+  "scan_interval_seconds": 30,
+  "teams_webhook_env_var": "TEAMS_WEBHOOK_URL",
+  "default_cooldown_seconds": 300,
+  "critical_containers": [
+    "kpk-app_nginx_1",
+    "kpk-app_app_blue_1",
+    "kpk-app_redis_1",
+    "kpk-app_db_1",
+    "kpk-app_excel_completion_listener_1",
+    "kpk-app_ws4kp_1"
+  ],
+  "container_check_cooldown_seconds": 300,
+  "critical_host_services": [
+    {
+      "name": "excel_worker",
+      "display_name": "Excel Worker",
+      "script": "host-services/workers/excel_worker.py",
+      "process_pattern": "excel_worker"
+    },
+    {
+      "name": "stream_relay",
+      "display_name": "Stream Relay",
+      "script": "host-services/workers/stream_relay.py",
+      "process_pattern": "stream_relay"
+    }
+  ],
+  "host_service_check_cooldown_seconds": 300,
+  "log_sources": {
+    "data_sync": {
+      "type": "file",
+      "path": "logs/data_sync.log"
+    },
+    "excel_worker": {
+      "type": "file",
+      "path": "logs/excel_worker.log"
+    },
+    "stream_relay": {
+      "type": "file",
+      "path": "logs/stream_relay.log"
+    },
+    "looper_health": {
+      "type": "file",
+      "path": "logs/looper_health.log"
+    },
+    "app_blue": {
+      "type": "docker",
+      "container": "kpk-app_app_blue_1",
+      "tail_lines": 200
+    },
+    "app_green": {
+      "type": "docker",
+      "container": "kpk-app_app_green_1",
+      "tail_lines": 200
+    },
+    "nginx": {
+      "type": "docker",
+      "container": "kpk-app_nginx_1",
+      "tail_lines": 100
+    },
+    "db": {
+      "type": "docker",
+      "container": "kpk-app_db_1",
+      "tail_lines": 100
+    },
+    "redis": {
+      "type": "docker",
+      "container": "kpk-app_redis_1",
+      "tail_lines": 100
+    },
+    "excel": {
+      "type": "docker",
+      "container": "kpk-app_excel_completion_listener_1",
+      "tail_lines": 100
+    },
+    "ws4kp": {
+      "type": "docker",
+      "container": "kpk-app_ws4kp_1",
+      "tail_lines": 100
+    }
+  },
+  "rules": [
+    {
+      "name": "incomplete_websocket_payload",
+      "description": "WebSocket consumer received incomplete payload data",
+      "pattern": "Incomplete (carton print|pull status) payload received.*=None",
+      "sources": ["app_blue", "app_green"],
+      "severity": "warning",
+      "threshold_count": 50,
+      "threshold_window_seconds": 300,
+      "cooldown_seconds": 1800,
+      "enabled": true
+    },
+    {
+      "name": "network_share_access_failure",
+      "description": "Failed to access network share (SharePoint/file server)",
+      "pattern": "UnauthorizedAccessException|System error 1223|Access is denied",
+      "sources": ["excel_worker"],
+      "severity": "error",
+      "threshold_count": 3,
+      "threshold_window_seconds": 300,
+      "cooldown_seconds": 900,
+      "enabled": true
+    },
+    {
+      "name": "stream_relay_crash_loop",
+      "description": "Stream relay server repeatedly crashing and restarting",
+      "pattern": "exited with code \\d+.*Restarting",
+      "sources": ["stream_relay"],
+      "severity": "error",
+      "threshold_count": 5,
+      "threshold_window_seconds": 300,
+      "cooldown_seconds": 1800,
+      "enabled": true
+    },
+    {
+      "name": "database_connection_error",
+      "description": "Failed to connect to PostgreSQL database",
+      "pattern": "could not connect to server|connection refused|OperationalError.*postgres|psycopg2\\.OperationalError",
+      "sources": ["app_blue", "app_green", "data_sync", "db"],
+      "severity": "critical",
+      "threshold_count": 1,
+      "threshold_window_seconds": 60,
+      "cooldown_seconds": 300,
+      "enabled": true
+    },
+    {
+      "name": "redis_connection_error",
+      "description": "Failed to connect to Redis",
+      "pattern": "Redis.*(unavailable|Connection (lost|failed|error|refused))|ConnectionError.*redis",
+      "sources": ["app_blue", "app_green", "excel_worker"],
+      "severity": "error",
+      "threshold_count": 3,
+      "threshold_window_seconds": 120,
+      "cooldown_seconds": 600,
+      "enabled": true
+    },
+    {
+      "name": "etl_function_failure",
+      "description": "ETL loop function failed with error",
+      "pattern": "Function.*failed:|ERROR.*Exception|Traceback \\(most recent call last\\)",
+      "sources": ["data_sync"],
+      "severity": "warning",
+      "threshold_count": 5,
+      "threshold_window_seconds": 600,
+      "cooldown_seconds": 1800,
+      "enabled": true
+    },
+    {
+      "name": "etl_exception_limit",
+      "description": "ETL loop hit exception limit - may be stopping",
+      "pattern": "Too many exceptions|Exception limit reached",
+      "sources": ["data_sync"],
+      "severity": "critical",
+      "threshold_count": 1,
+      "threshold_window_seconds": 60,
+      "cooldown_seconds": 3600,
+      "enabled": true
+    },
+    {
+      "name": "data_sync_restarted",
+      "description": "looper_health detected data_sync was down and restarted it",
+      "pattern": "Detected looper status is 'down'|Action: Starting data_sync|Successfully launched data_sync process",
+      "sources": ["looper_health"],
+      "severity": "warning",
+      "threshold_count": 1,
+      "threshold_window_seconds": 60,
+      "cooldown_seconds": 1800,
+      "enabled": true
+    },
+    {
+      "name": "powershell_job_failure",
+      "description": "PowerShell job failed in Excel worker",
+      "pattern": "PowerShell (failed|timed out)|failed with code 1",
+      "sources": ["excel_worker"],
+      "severity": "warning",
+      "threshold_count": 3,
+      "threshold_window_seconds": 300,
+      "cooldown_seconds": 900,
+      "enabled": true
+    },
+    {
+      "name": "nginx_error",
+      "description": "Nginx configuration or runtime error",
+      "pattern": "nginx: \\[emerg\\]|nginx: \\[crit\\]|nginx: \\[alert\\]",
+      "sources": ["nginx"],
+      "severity": "critical",
+      "threshold_count": 1,
+      "threshold_window_seconds": 60,
+      "cooldown_seconds": 900,
+      "enabled": true
+    },
+    {
+      "name": "container_oom",
+      "description": "Container hit out-of-memory error",
+      "pattern": "OOM|out of memory|Cannot allocate memory|Killed process",
+      "sources": ["nginx", "app_blue", "redis", "db", "excel", "ws4kp"],
+      "severity": "critical",
+      "threshold_count": 1,
+      "threshold_window_seconds": 60,
+      "cooldown_seconds": 600,
+      "enabled": true
+    },
+    {
+      "name": "container_segfault",
+      "description": "Container hit segmentation fault",
+      "pattern": "Segmentation fault|SIGSEGV",
+      "sources": ["nginx", "app_blue", "redis", "db", "excel", "ws4kp"],
+      "severity": "critical",
+      "threshold_count": 1,
+      "threshold_window_seconds": 60,
+      "cooldown_seconds": 600,
+      "enabled": true
+    },
+    {
+      "name": "sage_odbc_failure",
+      "description": "Sage 100 ODBC connection failed - data sync will be stale",
+      "pattern": "pyodbc\\.Error|ODBC.*error|Login timeout|Communication link failure|Data source name not found",
+      "sources": ["data_sync"],
+      "severity": "critical",
+      "threshold_count": 3,
+      "threshold_window_seconds": 300,
+      "cooldown_seconds": 900,
+      "enabled": true
+    },
+    {
+      "name": "sage_sync_silent_failure",
+      "description": "Critical Sage table completing suspiciously fast (<1s) - likely silent connection failure",
+      "pattern": "Sage table (CI_Item|IM_ItemCost|IM_ItemTransactionHistory): Completed in 0\\.\\d+s",
+      "sources": ["data_sync"],
+      "severity": "critical",
+      "threshold_count": 1,
+      "threshold_window_seconds": 60,
+      "cooldown_seconds": 600,
+      "enabled": true,
+      "remediation": {
+        "action": "restart_host_service",
+        "service": "data_sync"
+      }
+    },
+    {
+      "name": "sharepoint_auth_failure",
+      "description": "SharePoint/Azure AD authentication failed - schedule imports broken",
+      "pattern": "Azure.*authentication|token.*expired|ClientSecretCredential.*failed|AADSTS|InvalidAuthenticationToken|AuthenticationError",
+      "sources": ["data_sync"],
+      "severity": "critical",
+      "threshold_count": 2,
+      "threshold_window_seconds": 300,
+      "cooldown_seconds": 900,
+      "enabled": true
+    },
+    {
+      "name": "nginx_upstream_error",
+      "description": "Nginx cannot reach Django backend - app unreachable",
+      "pattern": "upstream.*failed|502 Bad Gateway|503 Service|504 Gateway|connect\\(\\) failed.*upstream|no live upstreams",
+      "sources": ["nginx"],
+      "severity": "critical",
+      "threshold_count": 3,
+      "threshold_window_seconds": 60,
+      "cooldown_seconds": 300,
+      "enabled": true
+    },
+    {
+      "name": "excel_job_timeout",
+      "description": "Excel macro job timed out or COM error",
+      "pattern": "Job.*timed out|Excel.*timeout|COM.*timeout|RPC.*server.*unavailable|Excel.*not responding|macro.*failed",
+      "sources": ["excel_worker"],
+      "severity": "error",
+      "threshold_count": 2,
+      "threshold_window_seconds": 300,
+      "cooldown_seconds": 600,
+      "enabled": true
+    },
+    {
+      "name": "websocket_channel_error",
+      "description": "Django Channels/WebSocket layer error - real-time features broken",
+      "pattern": "Channel layer.*error|WebSocket.*handshake.*failed|channels.*ConnectionError|Could not connect to Redis.*channel",
+      "sources": ["app_blue", "app_green"],
+      "severity": "error",
+      "threshold_count": 5,
+      "threshold_window_seconds": 300,
+      "cooldown_seconds": 600,
+      "enabled": true
+    },
+    {
+      "name": "daphne_worker_crash",
+      "description": "Daphne ASGI worker crashed or unhandled exception",
+      "pattern": "Worker.*died|Unhandled exception in|Application instance.*raised|ASGI.*exception|Traceback.*daphne",
+      "sources": ["app_blue", "app_green"],
+      "severity": "error",
+      "threshold_count": 3,
+      "threshold_window_seconds": 300,
+      "cooldown_seconds": 600,
+      "enabled": true
+    },
+    {
+      "name": "tank_sensor_failure",
+      "description": "IOT tank level sensor connection failed",
+      "pattern": "Tank.*connection.*failed|Sensor.*timeout|Invalid.*tank.*reading|tank_level.*error|Could not read tank|urllib.*URLError.*tank",
+      "sources": ["data_sync"],
+      "severity": "warning",
+      "threshold_count": 5,
+      "threshold_window_seconds": 600,
+      "cooldown_seconds": 1800,
+      "enabled": true
+    },
+    {
+      "name": "ssl_handshake_error",
+      "description": "SSL/TLS certificate or handshake error",
+      "pattern": "SSL.*handshake.*failed|certificate.*expired|SSL_ERROR|CERTIFICATE_VERIFY_FAILED|ssl\\.SSLError",
+      "sources": ["nginx", "app_blue", "app_green", "data_sync"],
+      "severity": "error",
+      "threshold_count": 3,
+      "threshold_window_seconds": 300,
+      "cooldown_seconds": 900,
+      "enabled": true
+    },
+    {
+      "name": "function_toggle_disabled",
+      "description": "ETL function was disabled via toggle - data may be stale",
+      "pattern": "Function.*disabled|toggle.*off|Skipping.*function.*disabled",
+      "sources": ["data_sync"],
+      "severity": "warning",
+      "threshold_count": 1,
+      "threshold_window_seconds": 60,
+      "cooldown_seconds": 3600,
+      "enabled": true
+    },
+    {
+      "name": "sage_sync_slow",
+      "description": "Sage sync taking unusually long - possible performance issue",
+      "pattern": "Sage sync took \\d{3,}|ODBC query.*slow|clone_sage.*exceeded|Sync duration.*minutes",
+      "sources": ["data_sync"],
+      "severity": "warning",
+      "threshold_count": 2,
+      "threshold_window_seconds": 600,
+      "cooldown_seconds": 1800,
+      "enabled": true
+    }
+  ]
+}
