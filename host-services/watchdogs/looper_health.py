@@ -1210,12 +1210,19 @@ def is_data_sync_running():
     unlike Get-WmiObject which may only see the current session.
     """
     try:
+        # Hide console window on Windows
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        startupinfo.wShowWindow = 0  # SW_HIDE
+
         result = subprocess.run(
             ['powershell', '-Command',
              "wmic process where \"name like '%python%' and commandline like '%data_sync%'\" get ProcessId /format:csv 2>$null | Select-String '\\d+' | ForEach-Object { ($_ -split ',')[-1].Trim() }"],
             capture_output=True,
             text=True,
-            timeout=10
+            timeout=10,
+            startupinfo=startupinfo,
+            creationflags=subprocess.CREATE_NO_WINDOW
         )
         # If we got any PIDs, it's running
         pids = [p.strip() for p in result.stdout.strip().split('\n') if p.strip().isdigit()]
