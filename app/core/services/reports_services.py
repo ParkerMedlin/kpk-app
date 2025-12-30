@@ -200,6 +200,14 @@ _MISC_REPORT_DEFINITIONS = [
         'requires_start_time': False,
         'direct_url': '/core/blend-costing-report/',
     },
+    {
+        'slug': 'Blend-Item-Status',
+        'label': 'Blend Item Status (Dead vs Active)',
+        'requires_item': False,
+        'requires_quantity': False,
+        'requires_start_time': False,
+        'direct_url': '/core/blend-item-status/',
+    },
 ]
 
 def get_active_blends_missing_blend_protection():
