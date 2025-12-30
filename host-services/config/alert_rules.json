@@ -313,6 +313,17 @@
       "enabled": true
     },
     {
+      "name": "sage_sync_suspiciously_fast",
+      "description": "Sage table sync completed too fast - likely ODBC connection failed silently",
+      "pattern": "Sage table (CI_Item|IM_ItemWarehouse|IM_ItemCost|IM_ItemTransactionHistory|BM_BillHeader|BM_BillDetail|PO_PurchaseOrderHeader|PO_PurchaseOrderDetail|SO_SalesOrderDetail).*Completed in 0\\.\\d+s",
+      "sources": ["data_sync"],
+      "severity": "critical",
+      "threshold_count": 3,
+      "threshold_window_seconds": 300,
+      "cooldown_seconds": 600,
+      "enabled": true
+    },
+    {
       "name": "sage_sync_slow",
       "description": "Sage sync taking unusually long - possible performance issue",
       "pattern": "Sage sync took \\d{3,}|ODBC query.*slow|clone_sage.*exceeded|Sync duration.*minutes",
