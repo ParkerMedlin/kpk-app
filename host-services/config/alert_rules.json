@@ -44,6 +44,11 @@
       "type": "docker",
       "container": "kpk-app_redis_1",
       "tail_lines": 100
+    },
+    "excel": {
+      "type": "docker",
+      "container": "kpk-app_excel_completion_listener",
+      "tail_lines": 100
     }
   },
   "rules": [
@@ -133,6 +138,72 @@
       "threshold_count": 3,
       "threshold_window_seconds": 300,
       "cooldown_seconds": 900,
+      "enabled": true
+    },
+    {
+      "name": "nginx_restart_loop",
+      "description": "Nginx container restarting repeatedly",
+      "pattern": "start worker process|signal process started|nginx/|worker process \\d+ exited",
+      "sources": ["nginx"],
+      "severity": "critical",
+      "threshold_count": 3,
+      "threshold_window_seconds": 300,
+      "cooldown_seconds": 900,
+      "enabled": true
+    },
+    {
+      "name": "app_blue_restart_loop",
+      "description": "App Blue (Django/Daphne) container restarting repeatedly",
+      "pattern": "Starting server at|Application startup complete|Configuring endpoint|Starting Daphne",
+      "sources": ["app_blue"],
+      "severity": "critical",
+      "threshold_count": 3,
+      "threshold_window_seconds": 300,
+      "cooldown_seconds": 900,
+      "enabled": true
+    },
+    {
+      "name": "redis_restart_loop",
+      "description": "Redis container restarting repeatedly",
+      "pattern": "Ready to accept connections|Server initialized|oO0OoO0OoO0Oo Redis",
+      "sources": ["redis"],
+      "severity": "critical",
+      "threshold_count": 3,
+      "threshold_window_seconds": 300,
+      "cooldown_seconds": 900,
+      "enabled": true
+    },
+    {
+      "name": "db_restart_loop",
+      "description": "PostgreSQL container restarting repeatedly",
+      "pattern": "database system is ready to accept connections|PostgreSQL init process complete|starting PostgreSQL",
+      "sources": ["db"],
+      "severity": "critical",
+      "threshold_count": 3,
+      "threshold_window_seconds": 300,
+      "cooldown_seconds": 900,
+      "enabled": true
+    },
+    {
+      "name": "excel_restart_loop",
+      "description": "Excel completion listener container restarting repeatedly",
+      "pattern": "Starting|Listening|Connected to Redis|Initializing",
+      "sources": ["excel"],
+      "severity": "critical",
+      "threshold_count": 3,
+      "threshold_window_seconds": 300,
+      "cooldown_seconds": 900,
+      "enabled": true
+    },
+    {
+      "name": "container_fatal_error",
+      "description": "Container hit a fatal/unrecoverable error",
+      "pattern": "FATAL|Segmentation fault|killed|OOM|out of memory|Cannot allocate memory",
+      "sources": ["nginx", "app_blue", "redis", "db", "excel"],
+      "severity": "critical",
+      "threshold_count": 1,
+      "threshold_window_seconds": 60,
+      "cooldown_seconds": 600,
       "enabled": true
     }
   ]
