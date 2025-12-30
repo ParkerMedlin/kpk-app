@@ -475,6 +475,8 @@ class AlertConfig:
         self.default_cooldown = 300
         self.critical_containers = []
         self.container_check_cooldown = 300
+        self.critical_host_services = []
+        self.host_service_check_cooldown = 300
         self.load()
 
     def load(self):
@@ -508,7 +510,11 @@ class AlertConfig:
             self.critical_containers = config.get('critical_containers', [])
             self.container_check_cooldown = config.get('container_check_cooldown_seconds', 300)
 
-            log_and_queue(f"Alert Config: Loaded {len(self.rules)} rules, {len(self.log_sources)} sources, {len(self.critical_containers)} critical containers")
+            # Load critical host services for health checks
+            self.critical_host_services = config.get('critical_host_services', [])
+            self.host_service_check_cooldown = config.get('host_service_check_cooldown_seconds', 300)
+
+            log_and_queue(f"Alert Config: Loaded {len(self.rules)} rules, {len(self.log_sources)} sources, {len(self.critical_containers)} containers, {len(self.critical_host_services)} host services")
 
         except FileNotFoundError:
             log_and_queue(f"Alert Config: Config file not found at {self.config_path}", logging.WARNING)
@@ -588,6 +594,17 @@ class AlertStateManager:
             if 'container_alerts' not in self.state:
                 self.state['container_alerts'] = {}
             self.state['container_alerts'][container_name] = time_str
+
+    def get_host_service_alert_time(self, service_name: str) -> Optional[str]:
+        """Get last alert time for a host service health check."""
+        return self.state.get('host_service_alerts', {}).get(service_name)
+
+    def set_host_service_alert_time(self, service_name: str, time_str: str):
+        """Set last alert time for a host service health check."""
+        with self._lock:
+            if 'host_service_alerts' not in self.state:
+                self.state['host_service_alerts'] = {}
+            self.state['host_service_alerts'][service_name] = time_str
 
 
 class ContainerHealthChecker:
@@ -725,6 +742,138 @@ class ContainerHealthChecker:
             return True, 'docker not available'  # Don't alert if docker CLI isn't available
         except Exception as e:
             return False, f'error: {str(e)[:100]}'
+
+
+class HostServiceHealthChecker:
+    """Checks if critical host services (Python processes) are running and attempts auto-restart."""
+
+    def __init__(self, config: 'AlertConfig', state_manager: AlertStateManager, notifier: Optional['TeamsNotifier']):
+        self.config = config
+        self.state_manager = state_manager
+        self.notifier = notifier
+
+    def check_services(self) -> list:
+        """Check all critical host services and return alerts for any not running.
+
+        If a service is down, attempts to restart it and reports the outcome.
+        Cooldown only affects Teams notification, not the restart attempt.
+        """
+        alerts = []
+        now = datetime.datetime.now()
+
+        for service in self.config.critical_host_services:
+            service_name = service['name']
+            display_name = service.get('display_name', service_name)
+            process_pattern = service['process_pattern']
+            script_path = os.path.join(KPK_APP_ROOT, service['script'])
+
+            # Check if service is running
+            is_running = self._is_service_running(process_pattern)
+
+            if not is_running:
+                log_and_queue(f"Alert Monitor [{ALERT_ORIGIN}]: Host service '{display_name}' is NOT running", logging.ERROR)
+
+                # Attempt to restart the service
+                restart_success, restart_msg = self._attempt_service_start(script_path, service_name)
+
+                # Determine final severity based on restart outcome
+                if restart_success:
+                    severity = 'warning'  # Downgrade since we fixed it
+                    description = f'Host service was down, auto-restarted: {display_name}'
+                    log_and_queue(f"Alert Monitor [{ALERT_ORIGIN}]: Successfully restarted host service '{display_name}'", logging.INFO)
+                else:
+                    severity = 'critical'
+                    description = f'Host service down, auto-restart FAILED: {display_name}'
+                    log_and_queue(f"Alert Monitor [{ALERT_ORIGIN}]: Failed to restart host service '{display_name}': {restart_msg}", logging.ERROR)
+
+                # Check cooldown - only affects whether we send Teams notification
+                in_cooldown = False
+                last_alert = self.state_manager.get_host_service_alert_time(service_name)
+                if last_alert:
+                    last_alert_time = datetime.datetime.fromisoformat(last_alert)
+                    if (now - last_alert_time).total_seconds() < self.config.host_service_check_cooldown:
+                        in_cooldown = True
+                        log_and_queue(f"Alert Monitor [{ALERT_ORIGIN}]: Suppressing Teams notification for '{display_name}' (cooldown)", logging.DEBUG)
+
+                if not in_cooldown:
+                    alert = Alert(
+                        rule_name='host_service_not_running',
+                        description=description,
+                        severity=severity,
+                        source=display_name,
+                        match_count=1,
+                        threshold=1,
+                        window_seconds=0,
+                        sample_matches=[f"Process pattern: {process_pattern}"],
+                        timestamp=now,
+                        remediation_attempted=f"pythonw {service['script']}",
+                        remediation_success=restart_success
+                    )
+                    alerts.append(alert)
+
+                    # Record alert time only when we actually send
+                    self.state_manager.set_host_service_alert_time(service_name, now.isoformat())
+
+        return alerts
+
+    def _is_service_running(self, process_pattern: str) -> bool:
+        """Check if a host service is running by looking for its process pattern."""
+        try:
+            # Hide console window on Windows
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            startupinfo.wShowWindow = 0
+
+            result = subprocess.run(
+                ['powershell', '-Command',
+                 f"wmic process where \"name like '%python%' and commandline like '%{process_pattern}%'\" get ProcessId /format:csv 2>$null | Select-String '\\d+' | ForEach-Object {{ ($_ -split ',')[-1].Trim() }}"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                startupinfo=startupinfo,
+                creationflags=subprocess.CREATE_NO_WINDOW
+            )
+            # If we got any PIDs, it's running
+            pids = [p.strip() for p in result.stdout.strip().split('\n') if p.strip().isdigit()]
+            return len(pids) > 0
+        except Exception:
+            return False
+
+    def _attempt_service_start(self, script_path: str, service_name: str) -> tuple:
+        """Attempt to start a host service. Returns (success: bool, message: str)."""
+        try:
+            if not os.path.exists(script_path):
+                return False, f"Script not found: {script_path}"
+
+            # Hide console window on Windows
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            startupinfo.wShowWindow = 0
+
+            # Start with pythonw (no console window)
+            process = subprocess.Popen(
+                ['pythonw', script_path],
+                cwd=KPK_APP_ROOT,
+                startupinfo=startupinfo,
+                creationflags=subprocess.CREATE_NO_WINDOW
+            )
+
+            # Wait briefly and verify it started
+            time.sleep(3)
+
+            # Get the process pattern from the script name
+            process_pattern = os.path.basename(script_path).replace('.py', '')
+            is_running = self._is_service_running(process_pattern)
+
+            if is_running:
+                return True, f"Service started successfully (PID: {process.pid})"
+            else:
+                return False, f"Process started but not found running after 3s"
+
+        except FileNotFoundError:
+            return False, "pythonw not found in PATH"
+        except Exception as e:
+            return False, f"error: {str(e)[:100]}"
 
 
 class LogScanner(ABC):
@@ -1054,16 +1203,28 @@ class TeamsNotifier:
 
         # Add remediation info if attempted
         if alert.remediation_attempted:
-            success_indicator = "YES" if alert.remediation_success else "FAILED"
-            facts.append({"title": "Auto-Fix", "value": f"{alert.remediation_attempted} -> {success_indicator}"})
+            if alert.remediation_success:
+                facts.append({"title": "Auto-Fix", "value": f"{alert.remediation_attempted}"})
+                facts.append({"title": "Status", "value": "RESOLVED"})
+            else:
+                facts.append({"title": "Auto-Fix", "value": f"{alert.remediation_attempted}"})
+                facts.append({"title": "Status", "value": "FAILED - Manual intervention required"})
+
+        # Determine header text and color based on remediation outcome
+        if alert.remediation_attempted and alert.remediation_success:
+            header_text = f"RESOLVED: {alert.description}"
+            header_color = "Good"  # Green in Teams
+        else:
+            header_text = f"{alert.severity.upper()}: {alert.description}"
+            header_color = severity_color
 
         body = [
             {
                 "type": "TextBlock",
-                "text": f"{alert.severity.upper()}: {alert.description}",
+                "text": header_text,
                 "weight": "Bolder",
                 "size": "Large",
-                "color": severity_color,
+                "color": header_color,
                 "wrap": True
             },
             {
@@ -1072,7 +1233,7 @@ class TeamsNotifier:
             },
             {
                 "type": "TextBlock",
-                "text": "Recent Matches:",
+                "text": "Details:",
                 "weight": "Bolder",
                 "separator": True
             },
@@ -1131,7 +1292,10 @@ def alert_monitor_thread():
         # Container health checker
         container_checker = ContainerHealthChecker(config, state_manager, notifier)
 
-        log_and_queue(f"Alert Monitor: Started on {ALERT_ORIGIN}. Scanning {len(scanners)} sources, monitoring {len(config.critical_containers)} critical containers every {config.scan_interval}s")
+        # Host service health checker
+        host_service_checker = HostServiceHealthChecker(config, state_manager, notifier)
+
+        log_and_queue(f"Alert Monitor: Started on {ALERT_ORIGIN}. Scanning {len(scanners)} sources, monitoring {len(config.critical_containers)} containers, {len(config.critical_host_services)} host services every {config.scan_interval}s")
 
     except Exception as e:
         log_and_queue(f"Alert Monitor: Failed to initialize: {e}", logging.ERROR)
@@ -1142,6 +1306,12 @@ def alert_monitor_thread():
             # Check critical container health
             container_alerts = container_checker.check_containers()
             for alert in container_alerts:
+                if notifier:
+                    notifier.send_alert(alert)
+
+            # Check critical host service health
+            host_service_alerts = host_service_checker.check_services()
+            for alert in host_service_alerts:
                 if notifier:
                     notifier.send_alert(alert)
 
