@@ -40,6 +40,12 @@ from dataclasses import dataclass, field
 from typing import Optional
 from abc import ABC, abstractmethod
 
+try:
+    import yaml
+    HAS_YAML = True
+except ImportError:
+    HAS_YAML = False
+
 # --- Path Configuration ---
 # Calculate kpk-app root from this file's location (host-services/watchdogs/)
 KPK_APP_ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -92,6 +98,56 @@ STATUS_CHECK_INTERVAL_SECONDS = 300  # 5 minutes
 # --- Alert Origin Identification ---
 # Use KPKAPP_HOST if set, otherwise fall back to machine hostname
 ALERT_ORIGIN = os.environ.get("KPKAPP_HOST", DEFAULT_KPKAPP_HOST)
+
+# --- Docker Compose Configuration ---
+DOCKER_COMPOSE_PATH = os.path.join(KPK_APP_ROOT, 'docker-compose-PROD.yml')
+
+
+def get_containers_from_compose() -> dict:
+    """
+    Parse docker-compose-PROD.yml and extract service names and container names.
+    Returns dict: {service_name: container_name}
+    """
+    containers = {}
+
+    if not os.path.exists(DOCKER_COMPOSE_PATH):
+        log_and_queue(f"Docker Compose: File not found at {DOCKER_COMPOSE_PATH}", logging.WARNING)
+        return containers
+
+    try:
+        with open(DOCKER_COMPOSE_PATH, 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        if HAS_YAML:
+            # Use PyYAML for proper parsing
+            compose = yaml.safe_load(content)
+            services = compose.get('services', {})
+            for service_name, service_config in services.items():
+                if isinstance(service_config, dict):
+                    container_name = service_config.get('container_name')
+                    if container_name:
+                        containers[service_name] = container_name
+        else:
+            # Fallback: regex parsing for container_name directives
+            # Pattern matches: container_name: kpk-app_xxx_1
+            pattern = r'^\s+(\w+):\s*$.*?container_name:\s*([^\s\n]+)'
+            # Simpler approach: just find all container_name lines
+            for line in content.splitlines():
+                match = re.match(r'\s+container_name:\s*([^\s#]+)', line)
+                if match:
+                    container_name = match.group(1).strip()
+                    # Derive service name from container name (e.g., kpk-app_db_1 -> db)
+                    parts = container_name.replace('kpk-app_', '').rsplit('_', 1)
+                    service_name = parts[0] if parts else container_name
+                    containers[service_name] = container_name
+
+        log_and_queue(f"Docker Compose: Found {len(containers)} containers: {list(containers.keys())}", logging.DEBUG)
+
+    except Exception as e:
+        log_and_queue(f"Docker Compose: Error parsing file: {e}", logging.ERROR)
+
+    return containers
+
 
 # --- SSL Certificate Paths ---
 CERT_BASE_DIR = os.path.join(KPK_APP_ROOT, 'nginx', 'ssl')
@@ -476,7 +532,7 @@ class AlertConfig:
         self.load()
 
     def load(self):
-        """Load config from JSON file, validate schema."""
+        """Load config from JSON file and docker-compose-PROD.yml."""
         try:
             with open(self.config_path, 'r', encoding='utf-8') as f:
                 config = json.load(f)
@@ -488,7 +544,11 @@ class AlertConfig:
             webhook_env_var = config.get('teams_webhook_env_var', 'TEAMS_WEBHOOK_URL')
             self.webhook_url = os.getenv(webhook_env_var)
 
-            # Load log sources with path resolution
+            # Get containers from docker-compose-PROD.yml (single source of truth)
+            compose_containers = get_containers_from_compose()
+            self._compose_containers = compose_containers  # Store for reference
+
+            # Load file-based log sources from JSON config
             self.log_sources = {}
             for name, source_config in config.get('log_sources', {}).items():
                 if source_config.get('type') == 'file':
@@ -497,16 +557,37 @@ class AlertConfig:
                         HOST_SERVICES_ROOT,
                         source_config['path']
                     )
-                self.log_sources[name] = source_config
+                    self.log_sources[name] = source_config
+                # Skip docker sources from JSON - we'll get them from compose file
+
+            # Auto-add docker log sources from compose file
+            default_tail_lines = config.get('default_docker_tail_lines', 100)
+            for service_name, container_name in compose_containers.items():
+                self.log_sources[service_name] = {
+                    'type': 'docker',
+                    'container': container_name,
+                    'tail_lines': default_tail_lines
+                }
 
             # Load rules
             self.rules = config.get('rules', [])
 
-            # Load critical containers for health checks
-            self.critical_containers = config.get('critical_containers', [])
+            # Load critical containers - resolve service names to container names
+            critical_services = config.get('critical_containers', [])
+            self.critical_containers = []
+            for name in critical_services:
+                if name in compose_containers:
+                    # It's a service name, resolve to container name
+                    self.critical_containers.append(compose_containers[name])
+                elif name.startswith('kpk-app_'):
+                    # It's already a container name
+                    self.critical_containers.append(name)
+                else:
+                    log_and_queue(f"Alert Config: Unknown critical container '{name}', skipping", logging.WARNING)
+
             self.container_check_cooldown = config.get('container_check_cooldown_seconds', 300)
 
-            log_and_queue(f"Alert Config: Loaded {len(self.rules)} rules, {len(self.log_sources)} sources, {len(self.critical_containers)} critical containers")
+            log_and_queue(f"Alert Config: Loaded {len(self.rules)} rules, {len(self.log_sources)} sources ({len(compose_containers)} from compose), {len(self.critical_containers)} critical containers")
 
         except FileNotFoundError:
             log_and_queue(f"Alert Config: Config file not found at {self.config_path}", logging.WARNING)
