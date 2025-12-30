@@ -1395,8 +1395,8 @@ class TeamsNotifier:
         """Build Microsoft Teams Adaptive Card payload for Workflows."""
         severity_color = self.SEVERITY_COLORS.get(alert.severity, 'Default')
 
-        # Format sample matches for display
-        sample_text = "\n".join(f"- {line[:200]}" for line in alert.sample_matches[-3:])
+        # Format sample matches for display (500 chars to show full file paths/errors)
+        sample_text = "\n".join(f"- {line[:500]}" for line in alert.sample_matches[-3:])
         if not sample_text:
             sample_text = "(no sample lines available)"
 
