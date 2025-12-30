@@ -226,12 +226,12 @@
     },
     {
       "name": "sage_sync_silent_failure",
-      "description": "Sage sync completing suspiciously fast (<1s) - likely silent connection failure",
-      "pattern": "Sage table.*: Completed in 0\\.\\d+s",
+      "description": "Critical Sage table completing suspiciously fast (<1s) - likely silent connection failure",
+      "pattern": "Sage table (CI_Item|IM_ItemCost|IM_ItemTransactionHistory): Completed in 0\\.\\d+s",
       "sources": ["data_sync"],
       "severity": "critical",
-      "threshold_count": 3,
-      "threshold_window_seconds": 120,
+      "threshold_count": 1,
+      "threshold_window_seconds": 60,
       "cooldown_seconds": 600,
       "enabled": true
     },
