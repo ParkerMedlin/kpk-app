@@ -476,12 +476,19 @@ def get_blend_costing_report_data(item_code_filter=None):
     return {'rows': rows}
 
 
-def get_blend_item_status_data():
+def get_transaction_history_table_name(use_deeptime=False):
+    """Return the appropriate transaction history table name for raw SQL queries."""
+    if use_deeptime:
+        return 'im_itemtransactionhistory_deeptime'
+    return 'im_itemtransactionhistory'
+
+
+def get_blend_item_status_data(use_deeptime=False):
     """
     Return blend item status data showing whether each blend item is "dead" or "active".
 
     A blend item is considered "dead" if:
-    - It has NO transaction history in im_itemtransactionhistory, AND
+    - It has NO transaction history in the selected transaction history table, AND
     - It is NOT a parent item in bill_of_materials
 
     Excluded from this report:
@@ -489,13 +496,19 @@ def get_blend_item_status_data():
     - Items where itemcodedesc starts with 'BLEND-Grease '
     - Specific itemcodes: PK303000.B, 301000.B, 303000.B, 302000.B, 304000.B
 
+    Args:
+        use_deeptime: If True, use im_itemtransactionhistory_deeptime (full history).
+                     If False, use im_itemtransactionhistory (rolling 1-year, default).
+
     Returns:
         dict: {
             'rows': list of row dicts with item_code, item_description, status,
                     last_transaction_date, in_bom
+            'use_deeptime': boolean indicating which table was used
         }
     """
-    sql = """
+    table_name = get_transaction_history_table_name(use_deeptime)
+    sql = f"""
         SELECT
             ci.itemcode AS item_code,
             ci.itemcodedesc AS item_description,
@@ -510,7 +523,7 @@ def get_blend_item_status_data():
                 ELSE 'Active'
             END AS status
         FROM ci_item ci
-        LEFT JOIN im_itemtransactionhistory th ON th.itemcode = ci.itemcode
+        LEFT JOIN {table_name} th ON th.itemcode = ci.itemcode
         WHERE ci.itemcodedesc LIKE 'BLEND%'
             AND ci.itemcode NOT LIKE '/BLDLAB%'
             AND ci.itemcodedesc NOT LIKE 'BLEND-Grease %'
@@ -546,4 +559,5 @@ def get_blend_item_status_data():
         'dead_count': dead_count,
         'active_count': active_count,
         'total_count': len(rows),
+        'use_deeptime': use_deeptime,
     }
