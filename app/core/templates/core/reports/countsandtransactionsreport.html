@@ -7,6 +7,7 @@
 
 <link rel="stylesheet" type="text/css" href="{% static 'core/css/countsAndTransactions.css' %}">
 <div class='text-center'><a href='/core/reports/'>Return to the Reports Page</a></div>
+{% include 'core/partials/deeptime_toggle.html' %}
 <div class='text-center'>
     <h1>Physical Count and Transaction History for:</h1>
     <h2>{{ item_info.item_code }} {{ item_info.item_description }}</h2> Current Onhand Quantity: {{ current_onhand_quantity }}

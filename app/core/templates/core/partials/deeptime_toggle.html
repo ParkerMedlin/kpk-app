@@ -1,0 +1,71 @@
+{% comment %}
+Deeptime Toggle Snippet
+=======================
+Include this in any report template that supports the deeptime option.
+Requires `use_deeptime` boolean in the template context.
+
+Usage:
+    {% include 'core/partials/deeptime_toggle.html' %}
+{% endcomment %}
+
+<div class="deeptime-toggle-container mb-3">
+    <div class="d-flex align-items-center justify-content-center gap-2">
+        <span class="deeptime-label {% if not use_deeptime %}fw-bold{% endif %}">Rolling 1-Year</span>
+        <button type="button"
+                class="btn btn-sm deeptime-toggle-btn {% if use_deeptime %}btn-primary{% else %}btn-outline-secondary{% endif %}"
+                id="deeptimeToggle"
+                data-deeptime-active="{% if use_deeptime %}true{% else %}false{% endif %}"
+                title="{% if use_deeptime %}Currently showing full history. Click to show rolling 1-year data.{% else %}Currently showing rolling 1-year data. Click to show full history.{% endif %}">
+            {% if use_deeptime %}
+                <i class="bi bi-clock-history"></i> Full History
+            {% else %}
+                <i class="bi bi-clock"></i> Switch to Full History
+            {% endif %}
+        </button>
+        <span class="deeptime-label {% if use_deeptime %}fw-bold{% endif %}">Full History</span>
+    </div>
+    {% if use_deeptime %}
+    <div class="text-center mt-1">
+        <small class="text-muted">Showing all historical transactions (deeptime mode)</small>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.deeptime-toggle-container {
+    padding: 0.5rem;
+}
+.deeptime-toggle-btn {
+    min-width: 180px;
+}
+.deeptime-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+.deeptime-label.fw-bold {
+    color: #212529;
+}
+</style>
+
+<script>
+(function() {
+    const toggleBtn = document.getElementById('deeptimeToggle');
+    if (!toggleBtn) return;
+
+    toggleBtn.addEventListener('click', function() {
+        const isCurrentlyActive = this.dataset.deeptimeActive === 'true';
+        const url = new URL(window.location.href);
+
+        if (isCurrentlyActive) {
+            // Turn off deeptime - remove the parameter
+            url.searchParams.delete('deeptime');
+        } else {
+            // Turn on deeptime - add/set the parameter
+            url.searchParams.set('deeptime', 'true');
+        }
+
+        // Navigate to the new URL
+        window.location.href = url.toString();
+    });
+})();
+</script>
