@@ -71,9 +71,19 @@ func findRepoRoot() string {
 
 // NewCommands creates a new Commands instance
 func NewCommands(exec Executor) *Commands {
+	// Determine the repo root based on executor type
+	var repoRoot string
+	if _, ok := exec.(*SSHClient); ok {
+		// SSH connection - always use the remote path
+		repoRoot = "C:/Users/pmedlin/Documents/kpk-app"
+	} else {
+		// Local execution - find the local repo
+		repoRoot = findRepoRoot()
+	}
+
 	return &Commands{
 		exec:     exec,
-		repoRoot: findRepoRoot(),
+		repoRoot: repoRoot,
 	}
 }
 
