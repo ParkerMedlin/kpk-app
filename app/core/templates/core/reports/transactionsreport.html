@@ -5,7 +5,7 @@
 {% block content %}
 <div class='text-center'><a href='/core/reports/'>Return to the Reports Page</a></div>
 <link rel="stylesheet" type="text/css" href="{% static 'core/css/transactionsReport.css' %}">
-{% include 'core/partials/deeptime_toggle.html' %}
+
     {% if no_transactions_found %}
         <div class='text-center'>
             {% if applied_transaction_codes %}
@@ -21,6 +21,9 @@
                 <p class="mt-2">Filtered by transaction codes: {{ applied_transaction_codes|join:", " }}</p>
             {% endif %}
         </div>
+
+        {% include 'core/partials/deeptime_toggle.html' %}
+        
         <div class="table-responsive-sm">
             <table class="table text-left table-bordered">
                 <thead class="thead-dark">

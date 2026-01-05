@@ -156,7 +156,8 @@ def sync_transaction_history_tables():
 def backfill_deeptime_from_itemtransactionhistory():
     """
     Backfills im_itemtransactionhistory_deeptime with any rows from im_itemtransactionhistory
-    that are missing. Useful for catching up the deeptime table after initial setup.
+    that are missing. ONLY used for catching up the deeptime table after initial setup. 
+    DO NOT USE THIS FUNCTION FOR REGULAR MAINTENANCE BIOIIITCH. lookin at you, 
     """
     try:
         connection_postgres = psycopg2.connect(DB_CONNECTION_STRING)
