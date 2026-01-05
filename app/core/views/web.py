@@ -766,12 +766,14 @@ def display_excess_blends(request):
 
 def display_blend_item_status(request):
     """Display report showing whether blend items are active or dead."""
-    data = get_blend_item_status_data()
+    use_deeptime = request.GET.get('deeptime', '').lower() in ('true', '1', 'yes')
+    data = get_blend_item_status_data(use_deeptime=use_deeptime)
     return render(request, 'core/reports/blenditemstatus.html', {
         'blend_items': data['rows'],
         'dead_count': data['dead_count'],
         'active_count': data['active_count'],
         'total_count': data['total_count'],
+        'use_deeptime': use_deeptime,
     })
 
 

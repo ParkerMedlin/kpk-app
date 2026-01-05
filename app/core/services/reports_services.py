@@ -28,6 +28,7 @@ from core.models import (
     DeskOneSchedule,
     DeskTwoSchedule,
     ImItemTransactionHistory,
+    ImItemTransactionHistoryDeeptime,
     ImItemWarehouse,
     LotNumRecord,
     PoPurchaseOrderDetail,
@@ -60,6 +61,7 @@ _MISC_REPORT_DEFINITIONS = [
         'requires_item': True,
         'requires_quantity': False,
         'requires_start_time': False,
+        'supports_deeptime': True,
     },
     {
         'slug': 'Lot-Numbers',
@@ -95,6 +97,7 @@ _MISC_REPORT_DEFINITIONS = [
         'requires_item': True,
         'requires_quantity': False,
         'requires_start_time': False,
+        'supports_deeptime': True,
     },
     {
         'slug': 'Where-Used',
@@ -207,6 +210,7 @@ _MISC_REPORT_DEFINITIONS = [
         'requires_quantity': False,
         'requires_start_time': False,
         'direct_url': '/core/blend-item-status/',
+        'supports_deeptime': True,
     },
     {
         'slug': 'XmR-Tank-Control-Limits',
@@ -217,6 +221,23 @@ _MISC_REPORT_DEFINITIONS = [
         'direct_url': '/core/xmr-tank-control-limits/',
     },
 ]
+
+
+def get_transaction_history_model(use_deeptime=False):
+    """
+    Return the appropriate transaction history model based on the deeptime flag.
+
+    Args:
+        use_deeptime: If True, returns the deeptime model (full history).
+                     If False, returns the rolling 1-year model (default).
+
+    Returns:
+        Model class for transaction history queries.
+    """
+    if use_deeptime:
+        return ImItemTransactionHistoryDeeptime
+    return ImItemTransactionHistory
+
 
 def get_active_blends_missing_blend_protection():
     """
@@ -387,7 +408,7 @@ def generate_startron_runs_report():
         }
         return render_payload
 
-def generate_transaction_history_report(request, item_code):
+def generate_transaction_history_report(request, item_code, use_deeptime=False):
     try:
         transaction_codes_param = request.GET.get('transactionCodes') if request else None
         entry_no_param = request.GET.get('entryNo') if request else None
@@ -403,7 +424,8 @@ def generate_transaction_history_report(request, item_code):
         item_description = ci_item.itemcodedesc if ci_item else ''
 
         no_transactions_found = False
-        transactions_qs = ImItemTransactionHistory.objects.filter(itemcode__iexact=item_code)
+        TransactionModel = get_transaction_history_model(use_deeptime)
+        transactions_qs = TransactionModel.objects.filter(itemcode__iexact=item_code)
 
         if transaction_code_filters:
             transactions_qs = transactions_qs.filter(transactioncode__in=transaction_code_filters)
@@ -430,6 +452,7 @@ def generate_transaction_history_report(request, item_code):
                 'transactions_list' : transactions_list,
                 'item_info': item_info,
                 'applied_transaction_codes': transaction_code_filters,
+                'use_deeptime': use_deeptime,
             }
         }
         return render_payload
@@ -476,11 +499,11 @@ def generate_count_history_report(item_code):
         }
         return render_payload
 
-def generate_counts_and_transactions_report(item_code):
+def generate_counts_and_transactions_report(item_code, use_deeptime=False):
     try:
         item_description = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().component_item_description
         current_onhand_quantity = ImItemWarehouse.objects.filter(itemcode__iexact=item_code).filter(warehousecode__iexact='MTG').first().quantityonhand
-        
+
         if BlendCountRecord.objects.filter(item_code__iexact=item_code).exists():
             count_records = BlendCountRecord.objects.filter(item_code__iexact=item_code).order_by('-counted_date')
             standard_uom = BillOfMaterials.objects.filter(component_item_code__iexact=item_code).first().standard_uom
@@ -499,8 +522,10 @@ def generate_counts_and_transactions_report(item_code):
         else:
             counts_not_found = True
             count_records = {}
-        if ImItemTransactionHistory.objects.filter(itemcode__iexact=item_code).exists():
-            transactions_list = ImItemTransactionHistory.objects.filter(itemcode__iexact=item_code).order_by('-transactiondate')
+
+        TransactionModel = get_transaction_history_model(use_deeptime)
+        if TransactionModel.objects.filter(itemcode__iexact=item_code).exists():
+            transactions_list = TransactionModel.objects.filter(itemcode__iexact=item_code).order_by('-transactiondate')
             for order, count in enumerate(transactions_list):
                 count.transaction_order = str(order) + "txns"
         else:
@@ -529,7 +554,8 @@ def generate_counts_and_transactions_report(item_code):
                     }
         context = {'counts_and_transactions_list' : counts_and_transactions_list,
             'item_info' : item_info,
-            'current_onhand_quantity' : current_onhand_quantity
+            'current_onhand_quantity' : current_onhand_quantity,
+            'use_deeptime': use_deeptime,
         }
         render_payload = {
             'template_string' : 'core/reports/countsandtransactionsreport.html',
@@ -1670,22 +1696,26 @@ def generate_transaction_mismatches_report(item_code):
         }
         return render_payload
 
-def create_report(request, which_report, item_code):
+def create_report(request, which_report, item_code, use_deeptime=None):
 
     """
     Creates a report based on the specified report type and item code.
-    
+
     Decodes base64-encoded item code from request and generates either:
     - Lot number report showing lot numbers and quantities for an item
     - Upcoming runs report showing scheduled production runs using an item
-    
+
     Args:
         request: HTTP request object containing encoded item code
         which_report (str): Type of report to generate ('Lot-Numbers' or 'All-Upcoming-Runs')
-        
+        use_deeptime: If True, use full transaction history. If None, read from request.
+
     Returns:
         Rendered template for requested report type
     """
+    # Determine deeptime setting from request if not explicitly provided
+    if use_deeptime is None and request:
+        use_deeptime = request.GET.get('deeptime', '').lower() in ('true', '1', 'yes')
 
     if which_report=="Lot-Numbers":
         render_payload = generate_lot_numbers_report(request, item_code)
@@ -1697,13 +1727,13 @@ def create_report(request, which_report, item_code):
         render_payload = generate_startron_runs_report()
 
     elif which_report=="Transaction-History":
-        render_payload = generate_transaction_history_report(request, item_code)
-        
+        render_payload = generate_transaction_history_report(request, item_code, use_deeptime=use_deeptime)
+
     elif which_report=="Count-History":
         render_payload = generate_count_history_report(item_code)
 
     elif which_report=="Counts-And-Transactions":
-        render_payload = generate_counts_and_transactions_report(item_code)
+        render_payload = generate_counts_and_transactions_report(item_code, use_deeptime=use_deeptime)
     
     elif which_report=="Where-Used":
         render_payload = generate_where_used_report(item_code)

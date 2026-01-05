@@ -671,6 +671,56 @@ class ImItemTransactionHistory(models.Model):
         managed = False
         db_table = 'im_itemtransactionhistory'
 
+
+class ImItemTransactionHistoryDeeptime(models.Model):
+    """Full transaction history archive - contains all historical transactions."""
+    id = models.IntegerField(primary_key=True)
+    itemcode = models.TextField(blank=True, null=True)
+    warehousecode = models.TextField(blank=True, null=True)
+    transactiondate = models.DateField(blank=True, null=True)
+    transactioncode = models.TextField(blank=True, null=True)
+    entryno = models.TextField(blank=True, null=True)
+    sequenceno = models.TextField(blank=True, null=True)
+    imtransactionentrycomment = models.TextField(blank=True, null=True)
+    apdivisionno = models.TextField(blank=True, null=True)
+    vendorno = models.TextField(blank=True, null=True)
+    ardivisionno = models.TextField(blank=True, null=True)
+    customerno = models.TextField(blank=True, null=True)
+    referencedate = models.DateField(blank=True, null=True)
+    fiscalcalyear = models.TextField(blank=True, null=True)
+    fiscalcalperiod = models.TextField(blank=True, null=True)
+    shiptocode = models.TextField(blank=True, null=True)
+    invoicetype = models.TextField(blank=True, null=True)
+    transactionqty = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
+    unitcost = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
+    allocatedcost = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
+    unitprice = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
+    extendedprice = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
+    extendedcost = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
+    extendedstandardcost = models.DecimalField(max_digits=50, decimal_places=5, blank=True, null=True)
+    dateupdated = models.DateField(blank=True, null=True)
+    timeupdated = models.TextField(blank=True, null=True)
+    userupdatedkey = models.TextField(blank=True, null=True)
+    invoicehistoryheaderseqno = models.TextField(blank=True, null=True)
+    receipthistoryheaderseqno = models.TextField(blank=True, null=True)
+    receipthistorypurchaseorderno = models.TextField(blank=True, null=True)
+    sourcejournal = models.TextField(blank=True, null=True)
+    journalnoglbatchno = models.TextField(blank=True, null=True)
+    workticketkey = models.TextField(blank=True, null=True)
+    workticketno = models.TextField(blank=True, null=True)
+    workticketdesc = models.TextField(blank=True, null=True)
+    workticketlinekey = models.TextField(blank=True, null=True)
+    workticketstepno = models.TextField(blank=True, null=True)
+    workticketclasscode = models.TextField(blank=True, null=True)
+    activitycode = models.TextField(blank=True, null=True)
+    workcenter = models.TextField(blank=True, null=True)
+    toolcode = models.TextField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'im_itemtransactionhistory_deeptime'
+
+
 # Sage table
 class ImItemWarehouse(models.Model):
     id = models.IntegerField(primary_key=True)
