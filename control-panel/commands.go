@@ -3,6 +3,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -38,12 +40,41 @@ type GitStatus struct {
 
 // Commands encapsulates all remote command operations
 type Commands struct {
-	exec Executor
+	exec     Executor
+	repoRoot string // Path to kpk-app repo root (works locally and via SSH)
+}
+
+// findRepoRoot determines the kpk-app repo root from executable location
+func findRepoRoot() string {
+	// Try to find repo root from executable location
+	if exe, err := os.Executable(); err == nil {
+		exeDir := filepath.Dir(exe)
+		// Executable could be in control-panel/ or control-panel/bin/
+		// Go up until we find local_machine_scripts/ (confirms repo root)
+		candidates := []string{
+			filepath.Join(exeDir, ".."),          // control-panel/kpk.exe -> kpk-app/
+			filepath.Join(exeDir, "..", ".."),    // control-panel/bin/kpk.exe -> kpk-app/
+			filepath.Join(exeDir, "..", "..", ".."), // control-panel/dev/kpk.exe -> kpk-app/
+		}
+		for _, candidate := range candidates {
+			checkPath := filepath.Join(candidate, "local_machine_scripts")
+			if _, err := os.Stat(checkPath); err == nil {
+				// Found it - convert to forward slashes for PowerShell compatibility
+				absPath, _ := filepath.Abs(candidate)
+				return filepath.ToSlash(absPath)
+			}
+		}
+	}
+	// Fallback to hardcoded path (for SSH where executable location doesn't matter)
+	return "C:/Users/pmedlin/Documents/kpk-app"
 }
 
 // NewCommands creates a new Commands instance
 func NewCommands(exec Executor) *Commands {
-	return &Commands{exec: exec}
+	return &Commands{
+		exec:     exec,
+		repoRoot: findRepoRoot(),
+	}
 }
 
 // --- Docker Commands ---
@@ -209,8 +240,8 @@ func (c *Commands) StartHostServiceWithOutput(serviceName string) (string, error
 	// Credentials loaded from .env (PSEXEC_USER, PSEXEC_PASS)
 	cmd := fmt.Sprintf(`
 $ErrorActionPreference = 'SilentlyContinue'
-$root = "C:/Users/pmedlin/Documents/kpk-app"
-$py = "C:/Users/pmedlin/AppData/Local/Programs/Python/Python311/pythonw.exe"
+$root = "%s"
+$py = "$root/../AppData/Local/Programs/Python/Python311/pythonw.exe"`, c.repoRoot) + fmt.Sprintf(`
 $script = "$root/%s"
 
 # Load PSEXEC_USER/PSEXEC_PASS from .env
@@ -231,10 +262,11 @@ if (!(Test-Path $px)) { $px = "C:/SysinternalsSuite/PsExec.exe" }
 
 # Create VBS launcher
 $vbs = "$root/host-services/launcher.vbs"
+$userHome = Split-Path (Split-Path $root -Parent) -Parent  # e.g., C:\Users\pmedlin from C:\Users\pmedlin\Documents\kpk-app
 @"
 Set s=CreateObject("WScript.Shell")
-s.Environment("Process")("USERPROFILE")="C:\Users\pmedlin"
-s.Environment("Process")("HOME")="C:\Users\pmedlin"
+s.Environment("Process")("USERPROFILE")="$userHome"
+s.Environment("Process")("HOME")="$userHome"
 s.CurrentDirectory="$root"
 s.Run """$py"" ""$script""",0,False
 "@ | Set-Content $vbs -Force
@@ -284,10 +316,9 @@ func (c *Commands) GetHostServiceLogs(serviceName string, lines int) (string, er
 	}
 
 	// Check if file exists first, return friendly message if not
-	// Use hardcoded path since logs always live in pmedlin's profile, regardless of SSH user
 	// Use Join-Path to normalize slashes properly
 	cmd := fmt.Sprintf(`
-		$appRoot = "C:/Users/pmedlin/Documents/kpk-app"
+		$appRoot = "%s"
 		$path = Join-Path $appRoot "%s"
 		if (Test-Path $path) {
 			Get-Content -Path $path -Tail %d
@@ -297,7 +328,7 @@ func (c *Commands) GetHostServiceLogs(serviceName string, lines int) (string, er
 			Write-Output "Checking dir exists: $(Test-Path $appRoot)"
 			Get-ChildItem $appRoot -ErrorAction SilentlyContinue | Select-Object -First 5
 		}
-	`, logFile, lines)
+	`, c.repoRoot, logFile, lines)
 	return c.exec.RunCommand(cmd)
 }
 
@@ -305,10 +336,10 @@ func (c *Commands) GetHostServiceLogs(serviceName string, lines int) (string, er
 
 // CreateBackup creates a database backup
 func (c *Commands) CreateBackup() (string, error) {
-	// Run the backup script (hardcoded path - scripts always in pmedlin's profile)
+	// Run the backup script
 	// Use cmd /c to run batch file and capture both stdout and stderr
-	cmd := `
-$batFile = "C:/Users/pmedlin/Documents/kpk-app/local_machine_scripts/batch_scripts/backup_and_copy.bat"
+	cmd := fmt.Sprintf(`
+$batFile = "%s/local_machine_scripts/batch_scripts/backup_and_copy.bat"
 if (-not (Test-Path $batFile)) {
     Write-Output "ERROR: Batch file not found at $batFile"
     exit 1
@@ -317,7 +348,7 @@ Write-Output "Running: $batFile"
 $output = cmd /c $batFile 2>&1
 Write-Output $output
 exit $LASTEXITCODE
-`
+`, c.repoRoot)
 	return c.exec.RunCommand(cmd)
 }
 
@@ -346,7 +377,7 @@ func (c *Commands) RestoreBackup(backupName string) (string, error) {
 	// Run restore script with backup name parameter
 	// Use cmd /c to run batch file and capture output
 	cmd := fmt.Sprintf(`
-$batFile = "C:/Users/pmedlin/Documents/kpk-app/local_machine_scripts/batch_scripts/helper_scripts/db_restore_latest_backup.bat"
+$batFile = "%s/local_machine_scripts/batch_scripts/helper_scripts/db_restore_latest_backup.bat"
 if (-not (Test-Path $batFile)) {
     Write-Output "ERROR: Batch file not found at $batFile"
     exit 1
@@ -355,7 +386,7 @@ Write-Output "Running restore for: %s"
 $output = cmd /c $batFile "%s" 2>&1
 Write-Output $output
 exit $LASTEXITCODE
-`, backupName, backupName)
+`, c.repoRoot, backupName, backupName)
 	return c.exec.RunCommand(cmd)
 }
 
@@ -371,8 +402,7 @@ func (c *Commands) SwitchBlueGreen() error {
 // ReloadNginxConfig copies the local nginx.conf into the nginx container and restarts it
 func (c *Commands) ReloadNginxConfig() error {
 	// Copy local nginx.conf to the container (goes to conf.d directory)
-	// Use hardcoded path - nginx.conf always in pmedlin's profile regardless of SSH user
-	copyCmd := `docker cp "C:/Users/pmedlin/Documents/kpk-app/nginx/nginx.conf" kpk-app_nginx_1:/etc/nginx/conf.d/nginx.conf`
+	copyCmd := fmt.Sprintf(`docker cp "%s/nginx/nginx.conf" kpk-app_nginx_1:/etc/nginx/conf.d/nginx.conf`, c.repoRoot)
 	if _, err := c.exec.RunCommand(copyCmd); err != nil {
 		return fmt.Errorf("failed to copy nginx.conf: %v", err)
 	}
@@ -413,8 +443,8 @@ func (c *Commands) ColdStart() error {
 		return fmt.Errorf("failed to start Docker: %v", err)
 	}
 
-	// 2. Start Docker containers (hardcoded path - always in pmedlin's profile)
-	cmd := `Set-Location "C:/Users/pmedlin/Documents/kpk-app"; docker compose -f docker-compose-PROD.yml up -d`
+	// 2. Start Docker containers
+	cmd := fmt.Sprintf(`Set-Location "%s"; docker compose -f docker-compose-PROD.yml up -d`, c.repoRoot)
 	if _, err := c.exec.RunCommand(cmd); err != nil {
 		return fmt.Errorf("failed to start containers: %v", err)
 	}
@@ -441,8 +471,8 @@ func (c *Commands) StopAll() error {
 		c.StopHostService(svc) // Ignore errors, some might not be running
 	}
 
-	// 2. Stop Docker containers (hardcoded path - always in pmedlin's profile)
-	cmd := `Set-Location "C:/Users/pmedlin/Documents/kpk-app"; docker compose -f docker-compose-PROD.yml down`
+	// 2. Stop Docker containers
+	cmd := fmt.Sprintf(`Set-Location "%s"; docker compose -f docker-compose-PROD.yml down`, c.repoRoot)
 	_, err := c.exec.RunCommand(cmd)
 	return err
 }
@@ -545,11 +575,9 @@ func (c *Commands) StartMissing() error {
 
 // --- Git Commands ---
 
-const gitRepoPath = "C:/Users/pmedlin/Documents/kpk-app"
-
 // ensureGitSafeDirectory adds the repo to git's safe.directory list (needed when SSH user differs from repo owner)
 func (c *Commands) ensureGitSafeDirectory() error {
-	cmd := fmt.Sprintf(`git config --global --add safe.directory "%s" 2>$null; $true`, gitRepoPath)
+	cmd := fmt.Sprintf(`git config --global --add safe.directory "%s" 2>$null; $true`, c.repoRoot)
 	_, err := c.exec.RunCommand(cmd)
 	return err
 }
@@ -579,7 +607,7 @@ func (c *Commands) GetGitStatus() (GitStatus, error) {
 	status := GitStatus{}
 
 	// Get current branch
-	branchCmd := fmt.Sprintf(`git -C "%s" rev-parse --abbrev-ref HEAD`, gitRepoPath)
+	branchCmd := fmt.Sprintf(`git -C "%s" rev-parse --abbrev-ref HEAD`, c.repoRoot)
 	branch, err := c.exec.RunCommand(branchCmd)
 	if err != nil {
 		return status, fmt.Errorf("failed to get branch: %v", err)
@@ -587,7 +615,7 @@ func (c *Commands) GetGitStatus() (GitStatus, error) {
 	status.Branch = strings.TrimSpace(branch)
 
 	// Get latest commit hash and message
-	logCmd := fmt.Sprintf(`git -C "%s" log -1 --format="%%h %%s"`, gitRepoPath)
+	logCmd := fmt.Sprintf(`git -C "%s" log -1 --format="%%h %%s"`, c.repoRoot)
 	logOutput, err := c.exec.RunCommand(logCmd)
 	if err != nil {
 		return status, fmt.Errorf("failed to get commit info: %v", err)
@@ -601,18 +629,18 @@ func (c *Commands) GetGitStatus() (GitStatus, error) {
 	}
 
 	// Check for uncommitted changes
-	statusCmd := fmt.Sprintf(`git -C "%s" status --porcelain`, gitRepoPath)
+	statusCmd := fmt.Sprintf(`git -C "%s" status --porcelain`, c.repoRoot)
 	statusOutput, _ := c.exec.RunCommand(statusCmd)
 	status.HasChanges = strings.TrimSpace(statusOutput) != ""
 
 	// Get ahead/behind counts (requires fetch first, but don't fail if remote unavailable)
-	behindCmd := fmt.Sprintf(`git -C "%s" rev-list --count HEAD..origin/%s 2>$null`, gitRepoPath, status.Branch)
+	behindCmd := fmt.Sprintf(`git -C "%s" rev-list --count HEAD..origin/%s 2>$null`, c.repoRoot, status.Branch)
 	behindOutput, _ := c.exec.RunCommand(behindCmd)
 	if behindOutput = strings.TrimSpace(behindOutput); behindOutput != "" {
 		fmt.Sscanf(behindOutput, "%d", &status.Behind)
 	}
 
-	aheadCmd := fmt.Sprintf(`git -C "%s" rev-list --count origin/%s..HEAD 2>$null`, gitRepoPath, status.Branch)
+	aheadCmd := fmt.Sprintf(`git -C "%s" rev-list --count origin/%s..HEAD 2>$null`, c.repoRoot, status.Branch)
 	aheadOutput, _ := c.exec.RunCommand(aheadCmd)
 	if aheadOutput = strings.TrimSpace(aheadOutput); aheadOutput != "" {
 		fmt.Sscanf(aheadOutput, "%d", &status.Ahead)
@@ -631,13 +659,15 @@ func (c *Commands) GitFetch() (string, error) {
 	cmd := fmt.Sprintf(`
 $ErrorActionPreference = 'SilentlyContinue'
 $env:GIT_TERMINAL_PROMPT=0
-$env:GIT_SSH_COMMAND="ssh -i C:/Users/pmedlin/.ssh/id_ed25519 -o IdentitiesOnly=yes"
+$userHome = Split-Path (Split-Path "%s" -Parent) -Parent
+$sshKey = "$userHome/.ssh/id_ed25519"
+$env:GIT_SSH_COMMAND="ssh -i $sshKey -o IdentitiesOnly=yes"
 $output = git -C "%s" fetch origin 2>&1 | Out-String
 $exitCode = $LASTEXITCODE
 $ErrorActionPreference = 'Continue'
 Write-Output $output.Trim()
 if ($exitCode -ne 0) { exit $exitCode }
-`, gitRepoPath)
+`, c.repoRoot, c.repoRoot)
 	return c.exec.RunCommand(cmd)
 }
 
@@ -651,13 +681,15 @@ func (c *Commands) GitPull() (string, error) {
 	cmd := fmt.Sprintf(`
 $ErrorActionPreference = 'SilentlyContinue'
 $env:GIT_TERMINAL_PROMPT=0
-$env:GIT_SSH_COMMAND="ssh -i C:/Users/pmedlin/.ssh/id_ed25519 -o IdentitiesOnly=yes"
+$userHome = Split-Path (Split-Path "%s" -Parent) -Parent
+$sshKey = "$userHome/.ssh/id_ed25519"
+$env:GIT_SSH_COMMAND="ssh -i $sshKey -o IdentitiesOnly=yes"
 $output = git -C "%s" pull origin main 2>&1 | Out-String
 $exitCode = $LASTEXITCODE
 $ErrorActionPreference = 'Continue'
 Write-Output $output.Trim()
 if ($exitCode -ne 0) { exit $exitCode }
-`, gitRepoPath)
+`, c.repoRoot, c.repoRoot)
 	return c.exec.RunCommand(cmd)
 }
 
