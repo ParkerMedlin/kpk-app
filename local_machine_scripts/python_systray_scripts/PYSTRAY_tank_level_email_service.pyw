@@ -114,6 +114,8 @@ def calculate_control_limits(tank_name, lookback_days=60):
     Uses Wheeler's method: UCL/LCL = X̄ ± 2.66 * mR̄
 
     Only uses non-operation hours data (6pm-3am Mon-Fri, all day Sat/Sun).
+    Only compares CONSECUTIVE hours within the same non-op period to avoid
+    inflated control limits from period transitions (e.g., 6pm vs previous 3am).
     """
     query = """
     WITH hourly AS (
@@ -135,7 +137,8 @@ def calculate_control_limits(tank_name, lookback_days=60):
         SELECT
             hour,
             avg_gallons,
-            LAG(avg_gallons) OVER (ORDER BY hour) as prev_gallons
+            LAG(avg_gallons) OVER (ORDER BY hour) as prev_gallons,
+            LAG(hour) OVER (ORDER BY hour) as prev_hour
         FROM hourly
     ),
     moving_ranges AS (
@@ -144,6 +147,9 @@ def calculate_control_limits(tank_name, lookback_days=60):
             ABS(avg_gallons - prev_gallons) as moving_range
         FROM with_lag
         WHERE prev_gallons IS NOT NULL
+          -- Only include consecutive hours (1 hour apart)
+          -- Excludes transitions like 3am->6pm (15 hours) or weekend gaps
+          AND EXTRACT(EPOCH FROM (hour - prev_hour)) / 3600 = 1
     )
     SELECT
         AVG(change) as avg_change,
