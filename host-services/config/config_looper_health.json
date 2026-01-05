@@ -44,6 +44,10 @@
       "type": "file",
       "path": "logs/looper_health.log"
     },
+    "tank_leak_detector": {
+      "type": "file",
+      "path": "logs/tank_leak_detector.log"
+    },
     "app_blue": {
       "type": "docker",
       "container": "kpk-app_app_blue_1",

@@ -107,7 +107,7 @@ function Show-Help {
     Write-Host "  ws4kp, websocket     -> kpk-app_ws4kp_1"
     Write-Host ""
     Write-Host "HOST SERVICES:" -ForegroundColor Yellow
-    Write-Host "  data_sync, excel_worker, stream_relay, looper_health"
+    Write-Host "  data_sync, excel_worker, stream_relay, looper_health, tank_leak_detector"
 }
 
 # Main command dispatch
