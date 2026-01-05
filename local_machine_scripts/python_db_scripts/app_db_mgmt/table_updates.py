@@ -126,3 +126,47 @@ def sync_transaction_history_tables():
 
     except Exception as e:
         print(f'{dt.datetime.now()} :: table_updates.py :: sync_transaction_history_tables :: {str(e)}')
+
+
+def backfill_deeptime_from_itemtransactionhistory():
+    """
+    Backfills im_itemtransactionhistory_deeptime with any rows from im_itemtransactionhistory
+    that are missing. Useful for catching up the deeptime table after initial setup.
+    """
+    try:
+        connection_postgres = psycopg2.connect(DB_CONNECTION_STRING)
+        cursor_postgres = connection_postgres.cursor()
+
+        # Get column names from the rolling table (excluding 'id')
+        cursor_postgres.execute("""
+            SELECT column_name FROM information_schema.columns
+            WHERE table_name = 'im_itemtransactionhistory'
+            AND column_name != 'id'
+            ORDER BY ordinal_position
+        """)
+        columns = [row[0] for row in cursor_postgres.fetchall()]
+        column_list = ', '.join(columns)
+
+        # Insert rows from rolling table that don't exist in deeptime
+        cursor_postgres.execute(f"""
+            INSERT INTO im_itemtransactionhistory_deeptime ({column_list})
+            SELECT {column_list} FROM im_itemtransactionhistory r
+            WHERE NOT EXISTS (
+                SELECT 1 FROM im_itemtransactionhistory_deeptime d
+                WHERE d.itemcode = r.itemcode
+                  AND d.transactiondate = r.transactiondate
+                  AND d.transactioncode = r.transactioncode
+                  AND d.transactionqty = r.transactionqty
+            )
+        """)
+        rows_inserted = cursor_postgres.rowcount
+
+        connection_postgres.commit()
+        cursor_postgres.close()
+        connection_postgres.close()
+
+        print(f'{dt.datetime.now()} :: table_updates.py :: backfill_deeptime_from_itemtransactionhistory :: '
+              f'Inserted {rows_inserted} missing rows into deeptime table')
+
+    except Exception as e:
+        print(f'{dt.datetime.now()} :: table_updates.py :: backfill_deeptime_from_itemtransactionhistory :: {str(e)}')
