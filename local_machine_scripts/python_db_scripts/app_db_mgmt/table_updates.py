@@ -74,11 +74,15 @@ def sync_transaction_history_tables():
         cursor_postgres.execute("""
             SELECT column_name FROM information_schema.columns
             WHERE table_name = 'im_itemtransactionhistory_daily'
-            AND column_name != 'id'
+            AND LOWER(column_name) != 'id'
             ORDER BY ordinal_position
         """)
         columns = [row[0] for row in cursor_postgres.fetchall()]
+        # Double-check id is excluded (case-insensitive)
+        columns = [c for c in columns if c.lower() != 'id']
         column_list = ', '.join(columns)
+        print(f'{dt.datetime.now()} :: DEBUG :: columns: {columns}')
+        print(f'{dt.datetime.now()} :: DEBUG :: column_list: {column_list}')
 
         # 1. Append new rows to im_itemtransactionhistory (rolling 1-year)
         cursor_postgres.execute(f"""
@@ -141,10 +145,12 @@ def backfill_deeptime_from_itemtransactionhistory():
         cursor_postgres.execute("""
             SELECT column_name FROM information_schema.columns
             WHERE table_name = 'im_itemtransactionhistory'
-            AND column_name != 'id'
+            AND LOWER(column_name) != 'id'
             ORDER BY ordinal_position
         """)
         columns = [row[0] for row in cursor_postgres.fetchall()]
+        # Double-check id is excluded (case-insensitive)
+        columns = [c for c in columns if c.lower() != 'id']
         column_list = ', '.join(columns)
 
         # Insert rows from rolling table that don't exist in deeptime
