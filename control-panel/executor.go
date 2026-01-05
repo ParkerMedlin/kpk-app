@@ -37,10 +37,7 @@ func NewLocalExecutor() *LocalExecutor {
 
 // RunCommand executes a command locally
 func (l *LocalExecutor) RunCommand(cmdStr string) (string, error) {
-	// Use PowerShell to run the command, hidden (no window)
 	cmd := exec.Command("powershell", "-NoProfile", "-WindowStyle", "Hidden", "-Command", cmdStr)
-
-	// Hide the console window on Windows
 	hideConsoleWindow(cmd)
 
 	var stdout, stderr bytes.Buffer
@@ -48,11 +45,20 @@ func (l *LocalExecutor) RunCommand(cmdStr string) (string, error) {
 	cmd.Stderr = &stderr
 
 	err := cmd.Run()
-	if err != nil {
-		return stderr.String(), fmt.Errorf("command failed: %v - %s", err, stderr.String())
+
+	// Combine stdout and stderr (matches SSHClient behavior)
+	output := stdout.String()
+	if stderr.Len() > 0 {
+		if output != "" {
+			output += "\n"
+		}
+		output += stderr.String()
 	}
 
-	return stdout.String(), nil
+	if err != nil {
+		return output, fmt.Errorf("command failed: %v", err)
+	}
+	return output, nil
 }
 
 // RunCommandWithOutput executes a command and returns both stdout and stderr

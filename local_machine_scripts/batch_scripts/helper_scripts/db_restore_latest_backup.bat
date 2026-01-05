@@ -1,7 +1,12 @@
 @echo off
 SETLOCAL ENABLEDELAYEDEXPANSION
 
-set "BACKUP_ROOT=\\KinPak-Svr1\apps\kpkapp\backups"
+:: %1 = backup name (optional), %2 = backup root (optional)
+IF "%~2"=="" (
+    set "BACKUP_ROOT=\\KinPak-Svr1\apps\kpkapp\backups"
+) ELSE (
+    set "BACKUP_ROOT=%~2"
+)
 set "REDIS_CONTAINER=kpk-app_redis_1"
 
 :: Check if backup name was provided as parameter
