@@ -79,7 +79,7 @@ from app_db_mgmt import tank_level_reading
     # Append the results of each function run to the dataframe
 
 start = time.time()
-update_tables_pg.sync_transaction_history_tables()
+update_tables_pg.backfill_deeptime_from_itemtransactionhistory()
 end = time.time()
 print('time elapsed: ' + str(end - start))
 

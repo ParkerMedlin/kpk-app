@@ -54,6 +54,24 @@ def update_lot_number_desks():
         print(f'{dt.datetime.now()} :: table_updates.py :: update_lot_number_desks :: {str(e)}')
 
 
+def _reset_table_sequence(table_name):
+    """
+    Resets the id sequence for a given table to MAX(id).
+    Automatically finds the sequence name using pg_get_serial_sequence.
+    """
+    connection_postgres = psycopg2.connect(DB_CONNECTION_STRING)
+    cursor_postgres = connection_postgres.cursor()
+    cursor_postgres.execute(f"""
+        SELECT setval(
+            pg_get_serial_sequence('{table_name}', 'id'),
+            (SELECT COALESCE(MAX(id), 1) FROM {table_name}),
+            true
+        );
+    """)
+    connection_postgres.commit()
+    cursor_postgres.close()
+    connection_postgres.close()
+
 def sync_transaction_history_tables():
     """
     Syncs im_itemtransactionhistory_daily to both im_itemtransactionhistory (rolling 1-year)
@@ -69,6 +87,10 @@ def sync_transaction_history_tables():
     try:
         connection_postgres = psycopg2.connect(DB_CONNECTION_STRING)
         cursor_postgres = connection_postgres.cursor()
+
+        # Reset sequences to avoid duplicate key errors
+        _reset_table_sequence('im_itemtransactionhistory')
+        _reset_table_sequence('im_itemtransactionhistory_deeptime')
 
         # Get column names from the daily table (excluding 'id')
         cursor_postgres.execute("""
@@ -131,7 +153,6 @@ def sync_transaction_history_tables():
     except Exception as e:
         print(f'{dt.datetime.now()} :: table_updates.py :: sync_transaction_history_tables :: {str(e)}')
 
-
 def backfill_deeptime_from_itemtransactionhistory():
     """
     Backfills im_itemtransactionhistory_deeptime with any rows from im_itemtransactionhistory
@@ -140,6 +161,8 @@ def backfill_deeptime_from_itemtransactionhistory():
     try:
         connection_postgres = psycopg2.connect(DB_CONNECTION_STRING)
         cursor_postgres = connection_postgres.cursor()
+
+        _reset_table_sequence('im_itemtransactionhistory_deeptime')
 
         # Get column names from the rolling table (excluding 'id')
         cursor_postgres.execute("""
