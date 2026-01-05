@@ -1263,6 +1263,50 @@ class TankUsageLog(models.Model):
     class Meta:
         ordering = ['-start_time']
 
+
+class TankControlLimits(models.Model):
+    """
+    Stores XmR (Wheeler's) statistical process control limits for tank leak detection.
+    These limits are calculated from historical non-operation hours data and used
+    to detect anomalous tank level changes that may indicate leaks.
+
+    Control limit formulas (Wheeler's method):
+    - UCL = avg_change + 2.66 * avg_moving_range
+    - LCL = avg_change - 2.66 * avg_moving_range
+    """
+    tank_name = models.TextField(db_index=True)
+    calculated_at = models.DateTimeField(auto_now_add=True)
+    lookback_days = models.IntegerField(default=60, help_text="Days of historical data used")
+    n_samples = models.IntegerField(help_text="Number of hourly samples used in calculation")
+    avg_change = models.DecimalField(
+        max_digits=12, decimal_places=4,
+        help_text="Average hourly change in gallons during non-op hours"
+    )
+    avg_moving_range = models.DecimalField(
+        max_digits=12, decimal_places=4,
+        help_text="Average moving range (volatility measure)"
+    )
+    upper_control_limit = models.DecimalField(
+        max_digits=12, decimal_places=4,
+        help_text="UCL = avg_change + 2.66 * avg_mr"
+    )
+    lower_control_limit = models.DecimalField(
+        max_digits=12, decimal_places=4,
+        help_text="LCL = avg_change - 2.66 * avg_mr (leak threshold)"
+    )
+
+    def __str__(self):
+        return f"{self.tank_name} limits @ {self.calculated_at.strftime('%Y-%m-%d %H:%M')}"
+
+    class Meta:
+        ordering = ['-calculated_at']
+        verbose_name = "Tank Control Limit"
+        verbose_name_plural = "Tank Control Limits"
+        indexes = [
+            models.Index(fields=['tank_name', '-calculated_at']),
+        ]
+
+
 class FormulaChangeAlert(models.Model):
     parent_item_codes = models.JSONField(default=list, help_text="A list of item codes for blends whose formula is changing.")
     ingredient_item_code = models.TextField(blank=False, null=False, unique=True, help_text="The ingredient that is changing in the formula.")

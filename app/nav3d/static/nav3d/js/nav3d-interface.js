@@ -2511,6 +2511,7 @@ function createDefaultNavigationLinks(navigationLinks) {
             submenus: [
                 { label: 'Component Shortages', url: '/core/subcomponent-shortages' },
                 { label: 'Tank Levels', url: '/core/tank-levels' },
+                { label: 'XmR Tank Control Limits', url: '/core/xmr-tank-control-limits' },
                 { label: 'Lot Numbers', url: '/core/lot-num-records?recordType=blend' },
                 { label: 'Blend Shortages', url: '/core/blend-shortages?recordType=blend' },
                 { label: 'All Scheduled Blends', url: '/core/blend-schedule?blend-area=all' },

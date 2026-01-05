@@ -208,6 +208,14 @@ _MISC_REPORT_DEFINITIONS = [
         'requires_start_time': False,
         'direct_url': '/core/blend-item-status/',
     },
+    {
+        'slug': 'XmR-Tank-Control-Limits',
+        'label': 'XmR Tank Control Limits (Leak Detection)',
+        'requires_item': False,
+        'requires_quantity': False,
+        'requires_start_time': False,
+        'direct_url': '/core/xmr-tank-control-limits/',
+    },
 ]
 
 def get_active_blends_missing_blend_protection():
