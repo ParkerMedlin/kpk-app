@@ -774,6 +774,39 @@ def display_blend_item_status(request):
         'total_count': data['total_count'],
     })
 
+
+@login_required
+def display_xmr_tank_control_limits(request):
+    """
+    Display XmR (Wheeler's) statistical process control limits for tank leak detection.
+
+    Shows a table of current control limits for each tank plus XmR charts
+    visualizing recent tank level changes against control limits.
+    """
+    # Handle recalculation request
+    if request.method == 'POST' and request.POST.get('action') == 'recalculate':
+        result = recalculate_and_store_control_limits(lookback_days=60)
+        messages.success(
+            request,
+            f"Recalculated control limits: {result['updated']} tanks updated, {result['skipped']} skipped."
+        )
+        return redirect('xmr-tank-control-limits')
+
+    # Get current limits and chart data
+    limits = get_current_control_limits()
+    all_tank_data = get_all_tanks_xmr_data()
+
+    # Prepare chart data as JSON for JavaScript (just the tanks dict)
+    chart_data_json = json.dumps(all_tank_data['tanks'], cls=DjangoJSONEncoder)
+
+    return render(request, 'core/reports/xmr_tank_control_limits.html', {
+        'limits': limits,
+        'chart_data_json': chart_data_json,
+        'period_label': all_tank_data['period_label'],
+        'tank_count': len(limits),
+    })
+
+
 def display_upcoming_component_counts(request):
     """Render the upcoming component count queue built by the service layer."""
     upcoming_components = build_upcoming_component_counts()
