@@ -442,7 +442,7 @@ def check_looper_status():
 # =============================================================================
 
 # --- Alert Configuration Paths ---
-ALERT_CONFIG_PATH = os.path.join(HOST_SERVICES_ROOT, 'config', 'alert_rules.json')
+ALERT_CONFIG_PATH = os.path.join(HOST_SERVICES_ROOT, 'config', 'config_looper_health.json')
 ALERT_STATE_PATH = os.path.join(HOST_SERVICES_ROOT, 'config', 'alert_state.json')
 
 
@@ -464,7 +464,7 @@ class Alert:
 
 
 class AlertConfig:
-    """Loads and validates alert_rules.json configuration."""
+    """Loads and validates config_looper_health.json configuration."""
 
     def __init__(self, config_path: str):
         self.config_path = config_path

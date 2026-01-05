@@ -28,6 +28,7 @@ $script:HostServices = @{
     "excel_worker" = "host-services/workers/excel_worker.py"
     "stream_relay" = "host-services/workers/stream_relay.py"
     "looper_health" = "host-services/watchdogs/looper_health.py"
+    "tank_leak_detector" = "host-services/watchdogs/tank_leak_detector.py"
 }
 
 $script:HostServiceLogs = @{
@@ -35,6 +36,7 @@ $script:HostServiceLogs = @{
     "excel_worker" = "host-services/logs/excel_worker.log"
     "stream_relay" = "host-services/logs/stream_relay.log"
     "looper_health" = "host-services/logs/looper_health.log"
+    "tank_leak_detector" = "host-services/logs/tank_leak_detector.log"
 }
 
 $script:GitRepoPath = "C:/Users/pmedlin/Documents/kpk-app"

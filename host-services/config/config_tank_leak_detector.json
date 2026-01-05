@@ -1,0 +1,7 @@
+{
+  "alert_recipients": ["jdavis@kinpakinc.com"],
+  "check_interval_minutes": 30,
+  "min_hours_into_non_op": 1,
+  "lookback_days": 60,
+  "consecutive_decrease_periods": 6
+}
