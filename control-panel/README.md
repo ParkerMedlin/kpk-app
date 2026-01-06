@@ -286,6 +286,7 @@ SSH User (jdavis) ──► SSH to server ──► PowerShell via SSH
 | excel_worker | `host-services/workers/excel_worker.py` | Processes Excel automation tasks |
 | stream_relay | `host-services/workers/stream_relay.py` | Relays RTSP streams |
 | looper_health | `host-services/watchdogs/looper_health.py` | Monitors data_sync health, provides restart endpoints |
+| backup_health | `host-services/watchdogs/backup_health.py` | Checks for daily backup at 5:30 PM, alerts via Teams |
 
 ## Git Control
 
