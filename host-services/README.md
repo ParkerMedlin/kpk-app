@@ -11,7 +11,8 @@ host-services/
 │   ├── excel_worker.py    # Excel macro trigger service (blend sheets, GHS labels)
 │   └── stream_relay.py    # Hikvision camera stream relay
 ├── watchdogs/         # Health monitoring and auto-recovery services
-│   └── looper_health.py   # Monitors data_sync, triggers restarts
+│   ├── looper_health.py   # Monitors data_sync, triggers restarts
+│   └── backup_health.py   # Monitors daily backup existence
 ├── logs/              # Centralized log directory for all host services
 └── README.md
 ```
@@ -31,6 +32,7 @@ host-services/
 | Service | Port | Description |
 |---------|------|-------------|
 | `looper_health.py` | 9999 (HTTPS) | Monitors data_sync health. Can trigger restarts via email command, HTTPS endpoint, or automatic detection. |
+| `backup_health.py` | N/A | Checks for daily backup at 5:30 PM. Alerts via Teams if backup folder missing. |
 
 ## Starting Services
 
@@ -50,6 +52,9 @@ pythonw host-services/workers/stream_relay.py
 
 # Health watchdog (recommended)
 pythonw host-services/watchdogs/looper_health.py
+
+# Backup watchdog (recommended)
+pythonw host-services/watchdogs/backup_health.py
 ```
 
 > **Note:** Use `pythonw` for services that should run without a console window.
@@ -93,6 +98,7 @@ All services log to `host-services/logs/`:
 | excel_worker.py | `excel_worker.log` |
 | stream_relay.py | `stream_relay.log` |
 | looper_health.py | `looper_health.log` |
+| backup_health.py | `backup_health.log` |
 
 ## Dependencies
 
