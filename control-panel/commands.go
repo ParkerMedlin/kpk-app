@@ -40,8 +40,9 @@ type GitStatus struct {
 
 // Commands encapsulates all remote command operations
 type Commands struct {
-	exec     Executor
-	repoRoot string // Path to kpk-app repo root (works locally and via SSH)
+	exec       Executor
+	repoRoot   string // Path to kpk-app repo root (works locally and via SSH)
+	backupRoot string // Path to backup directory (UNC for SSH, local for LocalExecutor)
 }
 
 // findRepoRoot determines the kpk-app repo root from executable location
@@ -71,19 +72,17 @@ func findRepoRoot() string {
 
 // NewCommands creates a new Commands instance
 func NewCommands(exec Executor) *Commands {
-	// Determine the repo root based on executor type
 	var repoRoot string
 	if _, ok := exec.(*SSHClient); ok {
-		// SSH connection - always use the remote path
 		repoRoot = "C:/Users/pmedlin/Documents/kpk-app"
 	} else {
-		// Local execution - find the local repo
 		repoRoot = findRepoRoot()
 	}
 
 	return &Commands{
-		exec:     exec,
-		repoRoot: repoRoot,
+		exec:       exec,
+		repoRoot:   repoRoot,
+		backupRoot: `\\KinPak-Svr1\apps\kpkapp\backups`,
 	}
 }
 
@@ -349,57 +348,48 @@ func (c *Commands) GetHostServiceLogs(serviceName string, lines int) (string, er
 
 // CreateBackup creates a database backup
 func (c *Commands) CreateBackup() (string, error) {
-	// Run the backup script
-	// Use cmd /c to run batch file and capture both stdout and stderr
 	cmd := fmt.Sprintf(`
 $batFile = "%s/local_machine_scripts/batch_scripts/backup_and_copy.bat"
-if (-not (Test-Path $batFile)) {
-    Write-Output "ERROR: Batch file not found at $batFile"
-    exit 1
-}
-Write-Output "Running: $batFile"
-$output = cmd /c $batFile 2>&1
+if (-not (Test-Path $batFile)) { Write-Output "ERROR: Batch file not found"; exit 1 }
+$output = cmd /c $batFile "%s" 2>&1
 Write-Output $output
 exit $LASTEXITCODE
-`, c.repoRoot)
+`, c.repoRoot, c.backupRoot)
 	return c.exec.RunCommand(cmd)
 }
 
 // ListBackups returns available backups
 func (c *Commands) ListBackups() ([]string, error) {
-	// Use cmd /c dir for UNC paths - PowerShell Get-ChildItem has auth issues over SSH
-	cmd := `cmd /c "dir /b /ad /o-d \\KinPak-Svr1\apps\kpkapp\backups 2>nul" | Select-Object -First 10`
-	output, err := c.exec.RunCommand(cmd)
-	if err != nil {
-		return nil, err
-	}
+	// Use cmd /c dir - works for both UNC paths (SSH) and local paths
+	cmd := fmt.Sprintf(`cmd /c "dir /b /ad /o-d %s" 2>&1 | Select-Object -First 10`, c.backupRoot)
+	output, _ := c.exec.RunCommand(cmd) // Ignore exit code - dir returns 1 on some success cases
 
-	lines := strings.Split(strings.TrimSpace(output), "\n")
 	var backups []string
-	for _, line := range lines {
+	for _, line := range strings.Split(strings.TrimSpace(output), "\n") {
 		line = strings.TrimSpace(line)
-		if line != "" {
+		// Skip empty lines and error messages
+		if line != "" && strings.Contains(line, "-backup") {
 			backups = append(backups, line)
 		}
+	}
+
+	if len(backups) == 0 {
+		return nil, fmt.Errorf("no backups found at %s (output: %s)", c.backupRoot, strings.TrimSpace(output))
 	}
 	return backups, nil
 }
 
 // RestoreBackup restores from a specific backup
 func (c *Commands) RestoreBackup(backupName string) (string, error) {
-	// Run restore script with backup name parameter
-	// Use cmd /c to run batch file and capture output
+	// Pass backup name and backup root to batch file
 	cmd := fmt.Sprintf(`
 $batFile = "%s/local_machine_scripts/batch_scripts/helper_scripts/db_restore_latest_backup.bat"
-if (-not (Test-Path $batFile)) {
-    Write-Output "ERROR: Batch file not found at $batFile"
-    exit 1
-}
-Write-Output "Running restore for: %s"
-$output = cmd /c $batFile "%s" 2>&1
+if (-not (Test-Path $batFile)) { Write-Output "ERROR: Batch file not found"; exit 1 }
+Write-Output "Restoring: %s"
+$output = cmd /c $batFile "%s" "%s" 2>&1
 Write-Output $output
 exit $LASTEXITCODE
-`, c.repoRoot, backupName, backupName)
+`, c.repoRoot, backupName, backupName, c.backupRoot)
 	return c.exec.RunCommand(cmd)
 }
 
