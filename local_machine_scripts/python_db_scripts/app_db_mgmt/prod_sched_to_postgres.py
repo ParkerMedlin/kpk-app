@@ -1,10 +1,11 @@
-import pandas as pd 
+import pandas as pd
 import datetime as dt
 import os
+from io import StringIO
 import psycopg2
 import pyexcel as pe
 import csv
-from .sharepoint_download import download_to_temp
+from .sharepoint_download import download_to_temp, download_to_memory
 import time
 import warnings
 warnings.filterwarnings("ignore")
@@ -364,3 +365,223 @@ def get_starbrite_item_quantities():
         #     f.write('ERROR COPYING FOAMFACTOR: ' + str(dt.datetime.now()))
         #     f.write('\n')
         #     print('BLENDVERSE DB ERROR: ' + str(e))
+
+
+def sync_production_schedule(file_buffer=None):
+    """
+    Unified production schedule sync - uses in-memory buffer, then runs
+    the EXACT same ETL logic as get_prod_schedule() + get_starbrite_item_quantities().
+
+    Args:
+        file_buffer: Optional BytesIO buffer containing ProductionSchedule.xlsb.
+                     If None, downloads fresh from SharePoint.
+    """
+    sheet = None  # Initialize so exception handler can reference it
+    print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: sync_production_schedule :: Starting...')
+    time_start = time.perf_counter()
+
+    # === GET FILE BUFFER (download if not provided) ===
+    if file_buffer is None:
+        file_buffer = download_to_memory("ProductionSchedule")
+        download_time = time.perf_counter() - time_start
+        print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: sync_production_schedule :: Downloaded in {download_time:.1f}s')
+    else:
+        print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: sync_production_schedule :: Using provided buffer')
+
+    # ==================== PROD SCHEDULE LOGIC (from get_prod_schedule) ====================
+    try:
+        header_name_list = ["billno", "po", "description", "blendPN", "case_size", "qty", "bottle", "cap", "runtime", "carton","starttime","line"]
+        prodmerge_temp_csv_path = os.path.expanduser('~\\Documents')+"\\kpk-app\\db_imports\\prodmerge1.csv"
+        with open(prodmerge_temp_csv_path, 'w', encoding="utf-8") as my_new_csv:
+            writer = csv.writer(my_new_csv)
+            writer.writerow(header_name_list)
+        sheet_name_list = ["BLISTER", "INLINE", "JB LINE", "KITS", "OIL LINE", "PD LINE"]
+        for sheet in sheet_name_list:
+            try:
+                file_buffer.seek(0)
+                sheet_df = pd.read_excel(file_buffer, sheet, skiprows = 2, usecols = 'C:L')
+                sheet_df["ID2"] = np.arange(len(sheet_df))+4
+                sheet_df = sheet_df.dropna(axis=0, how='any', subset=['Runtime'])
+                sheet_df = sheet_df[pd.to_numeric(sheet_df["Runtime"], errors='coerce').notna()]
+                sheet_df = sheet_df[sheet_df["Product"].astype(str).str.contains("0x2a", na=False) == False]
+                sheet_df["Start_time"] = sheet_df["Runtime"].cumsum()
+                sheet_df = sheet_df.reset_index(drop=True)
+                sheet_df["Start_time"] = sheet_df["Start_time"].shift(1, fill_value=0)
+                sheet_df["prod_line"] = sheet
+                sheet_df = sheet_df[sheet_df["Qty"] != "."]
+                sheet_df.to_csv(prodmerge_temp_csv_path, mode='a', header=False, index=False)
+            except Exception as e:
+                print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: sync_production_schedule :: ERROR processing sheet: {sheet}')
+                print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: sync_production_schedule :: {str(e)}')
+                try:
+                    for i, row in sheet_df.iterrows():
+                        try:
+                            float(row['Runtime'])
+                        except (ValueError, TypeError):
+                            print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: sync_production_schedule :: Problematic row in sheet {sheet} at index {i}:')
+                            print(row)
+                            break
+                except NameError:
+                    print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: sync_production_schedule :: sheet_df not defined, error likely during read_excel.')
+                continue
+
+        unscheduled_sheet_name_list = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER']
+        starttime_running_total = 300
+        now = dt.datetime.now()
+        current_month = now.month
+        current_year = now.year
+        month_dict = {month: i+1 for i, month in enumerate(unscheduled_sheet_name_list)}
+        sheets_with_dates = []
+        for sheet in unscheduled_sheet_name_list:
+            month_num = month_dict[sheet]
+            year = current_year if month_num >= current_month else current_year + 1
+            date = dt.datetime(year, month_num, 1)
+            sheets_with_dates.append((sheet, date))
+        sheets_with_dates.sort(key=lambda x: x[1])
+
+        for sheet, _ in sheets_with_dates:
+            try:
+                file_buffer.seek(0)
+                sheet_df = pd.read_excel(file_buffer, sheet, skiprows = 3, usecols = 'C:L')
+                sheet_df["ID2"] = np.arange(len(sheet_df))+5
+                sheet_df = sheet_df.dropna(axis=0, how='any', subset=['Runtime'])
+                sheet_df = sheet_df[sheet_df["Runtime"].astype(str).str.contains(" ", na=False) == False]
+                sheet_df = sheet_df[sheet_df["Product"].astype(str).str.contains("0x2a", na=False) == False]
+                sheet_df = sheet_df[sheet_df["Runtime"].astype(str).str.contains("SchEnd", na=False) == False]
+                sheet_df["start_time"] = sheet_df["Runtime"].cumsum() + starttime_running_total
+                sheet_df = sheet_df.reset_index(drop=True)
+                sheet_df["start_time"] = sheet_df["start_time"].shift(1, fill_value=starttime_running_total)
+                sheet_df["prod_line"] = f'UNSCHEDULED: {sheet}'
+                sheet_df = sheet_df[sheet_df["Qty"] != "."]
+                if sheet_df.empty:
+                    print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: sync_production_schedule :: Skipping sheet {sheet} because no rows remain after cleaning.')
+                    continue
+                sheet_df.to_csv(prodmerge_temp_csv_path, mode='a', header=False, index=False)
+                last_start_time = sheet_df["start_time"].iloc[-1]
+                starttime_running_total = starttime_running_total + last_start_time
+            except (ValueError, IndexError) as e:
+                print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: sync_production_schedule :: Skipping sheet {sheet} due to error: {e}')
+                continue
+            except Exception as e:
+                print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: sync_production_schedule :: An unexpected error occurred in sheet {sheet}: {e}')
+                try:
+                    for i, row in sheet_df.iterrows():
+                        try:
+                            float(row['Runtime'])
+                        except (ValueError, TypeError):
+                            print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: sync_production_schedule :: Problematic row in sheet {sheet} at index {i}:')
+                            print(row)
+                            break
+                except NameError:
+                    print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: sync_production_schedule :: sheet_df not defined, error likely during read_excel.')
+                continue
+
+        prodmerge_csv_path  = (os.path.expanduser('~\\Documents')
+                                +"\\kpk-app\\db_imports\\prodmerge.csv")
+        with open(prodmerge_temp_csv_path, newline='', encoding="utf-8") as in_file:
+            with open(prodmerge_csv_path, 'w', newline='', encoding="utf-8") as out_file:
+                writer = csv.writer(out_file)
+                for row in csv.reader(in_file):
+                    if row:
+                        writer.writerow(row)
+
+        os.remove(prodmerge_temp_csv_path)
+
+        sql_columns_with_types = '''(
+                    item_code text,
+                    po_number text,
+                    Product text,
+                    Blend text,
+                    Case_Size text,
+                    item_run_qty numeric,
+                    Bottle text,
+                    Cap text,
+                    run_time numeric,
+                    Carton text,
+                    ID2 numeric,
+                    start_time numeric,
+                    prod_line text
+                    )'''
+
+        connection_postgres = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
+        cursor_postgres = connection_postgres.cursor()
+        cursor_postgres.execute("CREATE TABLE prodmerge_run_data_TEMP" + sql_columns_with_types)
+        copy_sql = "COPY prodmerge_run_data_TEMP FROM stdin WITH CSV HEADER DELIMITER as ','"
+
+        with open(prodmerge_csv_path, 'r', encoding='utf-8') as f:
+            cursor_postgres.copy_expert(sql=copy_sql, file=f)
+        cursor_postgres.execute("""alter table prodmerge_run_data_TEMP drop column Product;
+                                    alter table prodmerge_run_data_TEMP drop column Blend;
+                                    alter table prodmerge_run_data_TEMP drop column Case_Size;
+                                    alter table prodmerge_run_data_TEMP drop column Bottle;
+                                    alter table prodmerge_run_data_TEMP drop column Cap;
+                                    alter table prodmerge_run_data_TEMP drop column Carton;
+                                    alter table prodmerge_run_data_TEMP add item_description text;
+                                    update prodmerge_run_data_TEMP set item_description=(
+                                        select bill_of_materials.item_description
+                                        from bill_of_materials
+                                        where bill_of_materials.item_code=prodmerge_run_data_TEMP.item_code limit 1);
+                                    alter table prodmerge_run_data_TEMP add id serial primary key;
+                                    """)
+        cursor_postgres.execute("DROP TABLE IF EXISTS prodmerge_run_data")
+        cursor_postgres.execute("alter table prodmerge_run_data_TEMP rename to prodmerge_run_data")
+        connection_postgres.commit()
+        cursor_postgres.close()
+        connection_postgres.close()
+        print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: sync_production_schedule :: prodmerge_run_data updated')
+
+    except Exception as e:
+        print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: sync_production_schedule :: PROD SCHEDULE ERROR')
+        print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: sync_production_schedule :: sheet: {sheet}')
+        print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: sync_production_schedule :: {str(e)}')
+        raise
+
+    # ==================== STARBRITE QUANTITIES LOGIC (from get_starbrite_item_quantities) ====================
+    try:
+        header_name_list = ["quantity", "item_code"]
+        starbrite_item_quantities_temp_csv_path = os.path.expanduser('~\\Documents')+"\\kpk-app\\db_imports\\starbrite_item_quantities1.csv"
+        with open(starbrite_item_quantities_temp_csv_path, 'w', encoding="utf-8") as my_new_csv:
+            writer = csv.writer(my_new_csv)
+            writer.writerow(header_name_list)
+        sheet_name = "REWORK"
+        file_buffer.seek(0)
+        sheet_df = pd.read_excel(file_buffer, sheet_name, usecols = 'C:D', skiprows = 2, nrows = 50)
+        sheet_df = sheet_df.dropna(how='any', axis=0)
+        sheet_df = sheet_df[~sheet_df.apply(lambda row: row.astype(str).str.contains('# CS ON HAND').any(), axis=1)]
+        sheet_df = sheet_df[~sheet_df.apply(lambda row: row.astype(str).str.contains('P/N').any(), axis=1)]
+
+        sheet_df["id"] = np.arange(len(sheet_df))
+        sheet_df.to_csv(starbrite_item_quantities_temp_csv_path, mode='a', header=False, index=False)
+        starbrite_item_quantities_csv_path  = (os.path.expanduser('~\\Documents')
+                            +"\\kpk-app\\db_imports\\starbrite_item_quantities.csv")
+        with open(starbrite_item_quantities_temp_csv_path, newline='', encoding="utf-8") as in_file:
+            with open(starbrite_item_quantities_csv_path, 'w', newline='', encoding="utf-8") as out_file:
+                writer = csv.writer(out_file)
+                for row in csv.reader(in_file):
+                    if row:
+                        writer.writerow(row)
+
+        os.remove(starbrite_item_quantities_temp_csv_path)
+
+        sql_columns_with_types = '''(quantity numeric,
+                    item_code text,
+                    id serial primary key)'''
+        connection_postgres = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
+        cursor_postgres = connection_postgres.cursor()
+        cursor_postgres.execute("CREATE TABLE starbrite_item_quantities_TEMP" + sql_columns_with_types)
+        copy_sql = "COPY starbrite_item_quantities_TEMP FROM stdin WITH CSV HEADER DELIMITER as ','"
+        with open(starbrite_item_quantities_csv_path, 'r', encoding='utf-8') as f:
+            cursor_postgres.copy_expert(sql=copy_sql, file=f)
+        cursor_postgres.execute("DROP TABLE IF EXISTS starbrite_item_quantities")
+        cursor_postgres.execute("alter table starbrite_item_quantities_TEMP rename to starbrite_item_quantities")
+        connection_postgres.commit()
+        cursor_postgres.close()
+        connection_postgres.close()
+        print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: sync_production_schedule :: starbrite_item_quantities updated')
+
+    except Exception as e:
+        print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: sync_production_schedule :: STARBRITE ERROR: {str(e)}')
+        raise
+
+    total_time = time.perf_counter() - time_start
+    print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: sync_production_schedule :: Complete in {total_time:.1f}s')
