@@ -1,7 +1,7 @@
-import pandas as pd 
+import pandas as pd
 import os
 import psycopg2
-from .sharepoint_download import download_to_temp
+from .sharepoint_download import download_to_temp, download_to_memory
 import time
 import warnings
 import numpy as np
@@ -20,13 +20,22 @@ def floatHourToTime(fh):
         int(seconds * 60),
     )
 
-def get_horix_line_blends(use_dev=False):
+def get_horix_line_blends(file_buffer=None, use_dev=False):
+    """
+    Args:
+        file_buffer: Optional BytesIO buffer containing ProductionSchedule.xlsb.
+                     If None, downloads fresh from SharePoint.
+        use_dev: If True and file_buffer is None, downloads DEV version.
+    """
     try:
-        source_file_path = download_to_temp("ProductionSchedule" if not use_dev else "ProductionScheduleDEV")
-        if source_file_path=='Error Encountered':
-            print(f'{dt.datetime.now()} :: horix_sched_to_postgres.py :: get_horix_line_blends :: File not downloaded because of an error in the Sharepoint download function')
-            return
-        sheet_df = pd.read_excel(source_file_path, 'Horix Line', usecols = 'C:K')
+        if file_buffer is None:
+            source = download_to_memory("ProductionSchedule" if not use_dev else "ProductionScheduleDEV")
+            print(f'{dt.datetime.now()} :: horix_sched_to_postgres.py :: get_horix_line_blends :: Downloaded to memory')
+        else:
+            source = file_buffer
+            source.seek(0)  # Reset buffer position
+            print(f'{dt.datetime.now()} :: horix_sched_to_postgres.py :: get_horix_line_blends :: Using provided buffer')
+        sheet_df = pd.read_excel(source, 'Horix Line', usecols = 'C:K')
         sheet_df = sheet_df.iloc[2:] # take out first two rows of the table body
         sheet_df.columns = ['item_code','po_number','item_description','amt','blend','dye','Case Size','item_run_qty','run_date']
 
