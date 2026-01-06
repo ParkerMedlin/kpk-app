@@ -745,7 +745,11 @@ class ContainerHealthChecker:
 
 
 class HostServiceHealthChecker:
-    """Checks if critical host services (Python processes) are running and attempts auto-restart."""
+    """Checks if critical host services (Python processes) are running and attempts auto-restart.
+
+    Also detects and terminates duplicate process instances ("Looper mode"),
+    keeping only the oldest instance of each service.
+    """
 
     def __init__(self, config: 'AlertConfig', state_manager: AlertStateManager, notifier: Optional['TeamsNotifier']):
         self.config = config
@@ -755,12 +759,22 @@ class HostServiceHealthChecker:
     def check_services(self) -> list:
         """Check all critical host services and return alerts for any not running.
 
-        If a service is down, attempts to restart it and reports the outcome.
+        First runs "Looper mode" to detect and kill duplicate instances,
+        then checks if services are down and attempts restart if needed.
         Cooldown only affects Teams notification, not the restart attempt.
         """
         alerts = []
         now = datetime.datetime.now()
 
+        # Looper mode: detect and terminate duplicate instances
+        for service in self.config.critical_host_services:
+            process_pattern = service['process_pattern']
+            display_name = service.get('display_name', service['name'])
+            looped_count = self._loop_duplicates(process_pattern, display_name)
+            if looped_count > 0:
+                log_and_queue(f"Looper [{ALERT_ORIGIN}]: Terminated {looped_count} duplicate {display_name} process(es)", logging.WARNING)
+
+        # Now check if services are running (after cleaning up duplicates)
         for service in self.config.critical_host_services:
             service_name = service['name']
             display_name = service.get('display_name', service_name)
@@ -838,6 +852,110 @@ class HostServiceHealthChecker:
             return len(pids) > 0
         except Exception:
             return False
+
+    def _get_process_instances(self, process_pattern: str) -> list:
+        """Get all process instances matching pattern with their PIDs and creation times.
+
+        Returns list of tuples: [(pid, creation_time_str), ...] sorted by creation time (oldest first).
+        """
+        try:
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            startupinfo.wShowWindow = 0
+
+            # Get PIDs and CreationDates for matching processes
+            result = subprocess.run(
+                ['wmic', 'process', 'where',
+                 f"name like '%python%' and commandline like '%{process_pattern}%'",
+                 'get', 'ProcessId,CreationDate', '/format:csv'],
+                capture_output=True,
+                text=True,
+                timeout=15,
+                startupinfo=startupinfo,
+                creationflags=subprocess.CREATE_NO_WINDOW
+            )
+
+            if result.returncode != 0:
+                return []
+
+            instances = []
+            for line in result.stdout.strip().split('\n'):
+                line = line.strip()
+                if not line or line.startswith('Node'):
+                    continue
+                # Format: HOSTNAME,CreationDate,ProcessId
+                parts = line.split(',')
+                if len(parts) >= 3:
+                    try:
+                        creation_date = parts[1].strip()
+                        pid = parts[2].strip()
+                        if pid.isdigit() and creation_date:
+                            instances.append((pid, creation_date))
+                    except (IndexError, ValueError):
+                        continue
+
+            # Sort by creation date (oldest first) - wmic format: 20260106112122.277742-360
+            instances.sort(key=lambda x: x[1])
+            return instances
+
+        except subprocess.TimeoutExpired:
+            log_and_queue(f"Looper: Timeout getting process instances for {process_pattern}", logging.WARNING)
+            return []
+        except Exception as e:
+            log_and_queue(f"Looper: Error getting process instances: {e}", logging.ERROR)
+            return []
+
+    def _loop_duplicates(self, process_pattern: str, display_name: str) -> int:
+        """Detect and terminate duplicate process instances (Looper mode).
+
+        Keeps the oldest instance (by CreationDate) and kills all newer duplicates.
+        Named after the 2012 film where Bruce Willis terminates his younger self.
+
+        Returns: Number of duplicate processes terminated.
+        """
+        instances = self._get_process_instances(process_pattern)
+
+        if len(instances) <= 1:
+            # No duplicates to loop
+            return 0
+
+        # Keep the oldest (first in sorted list), terminate the rest
+        keeper_pid, keeper_time = instances[0]
+        duplicates = instances[1:]
+
+        killed_count = 0
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        startupinfo.wShowWindow = 0
+
+        for dup_pid, dup_time in duplicates:
+            try:
+                log_and_queue(
+                    f"Looper [{ALERT_ORIGIN}]: Terminating duplicate {display_name} "
+                    f"(PID {dup_pid}, created {dup_time}). Keeping PID {keeper_pid}.",
+                    logging.WARNING
+                )
+                result = subprocess.run(
+                    ['taskkill', '/PID', dup_pid, '/F'],
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
+                    startupinfo=startupinfo,
+                    creationflags=subprocess.CREATE_NO_WINDOW
+                )
+                if result.returncode == 0:
+                    killed_count += 1
+                else:
+                    log_and_queue(
+                        f"Looper [{ALERT_ORIGIN}]: Failed to terminate PID {dup_pid}: {result.stderr[:100]}",
+                        logging.ERROR
+                    )
+            except subprocess.TimeoutExpired:
+                log_and_queue(f"Looper [{ALERT_ORIGIN}]: Timeout terminating PID {dup_pid}", logging.ERROR)
+            except Exception as e:
+                log_and_queue(f"Looper [{ALERT_ORIGIN}]: Error terminating PID {dup_pid}: {e}", logging.ERROR)
+
+        return killed_count
 
     def _attempt_service_start(self, script_path: str, service_name: str) -> tuple:
         """Attempt to start a host service. Returns (success: bool, message: str)."""

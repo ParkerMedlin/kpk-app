@@ -14,6 +14,12 @@
   "container_check_cooldown_seconds": 300,
   "critical_host_services": [
     {
+      "name": "data_sync",
+      "display_name": "Data Sync",
+      "script": "host-services/workers/data_sync.py",
+      "process_pattern": "data_sync"
+    },
+    {
       "name": "excel_worker",
       "display_name": "Excel Worker",
       "script": "host-services/workers/excel_worker.py",
@@ -24,6 +30,12 @@
       "display_name": "Stream Relay",
       "script": "host-services/workers/stream_relay.py",
       "process_pattern": "stream_relay"
+    },
+    {
+      "name": "tank_leak_detector",
+      "display_name": "Tank Leak Detector",
+      "script": "host-services/watchdogs/tank_leak_detector.py",
+      "process_pattern": "tank_leak_detector"
     }
   ],
   "host_service_check_cooldown_seconds": 300,
