@@ -4,12 +4,19 @@ setlocal
 set backupdir=%date:~-10,2%-%date:~7,2%-%date:~-4,4%-%time:~0,2%-%time:~3,2%-%time:~6,2%-backup
 set backupdir=%backupdir: =0%
 
+REM %1 = backup root (optional)
+IF "%~1"=="" (
+    set "BACKUP_ROOT=\\KinPak-Svr1\apps\kpkapp\backups"
+) ELSE (
+    set "BACKUP_ROOT=%~1"
+)
+
 REM Use temp folder relative to repo instead of USERPROFILE
 set "REPO_ROOT=%~dp0..\.."
 set "TEMP_DIR=%REPO_ROOT%\temp_backup"
 set "SQL_DUMP=%TEMP_DIR%\full_db_dump.sql"
 set "REDIS_DUMP=%TEMP_DIR%\redis_dump.rdb"
-set "FINAL_DIR=\\KinPak-Svr1\apps\kpkapp\backups\%backupdir%"
+set "FINAL_DIR=%BACKUP_ROOT%\%backupdir%"
 
 REM Locate .env relative to script location (script is in local_machine_scripts/batch_scripts/)
 set "ENV_FILE=%~dp0..\..\.env"
