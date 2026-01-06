@@ -179,6 +179,20 @@ def clone_sage_tables():
                     logger.warning(f'Exceptions thrown so far: {len(exception_list)}')
                     update_table_status(f'get_sage_table({item})', 'Failure')
                     continue
+
+            # Sync daily transactions and update rolling/deeptime tables
+            try:
+                table_start = dt.datetime.now()
+                logger.info('Daily transactions: Starting sync...')
+                sage_pg.get_sage_daily_transactions()
+                update_tables_pg.sync_transaction_history_tables()
+                table_elapsed = dt.datetime.now() - table_start
+                logger.info(f'Daily transactions: Completed in {table_elapsed.total_seconds():.1f}s')
+                update_table_status('sync_transaction_history_tables', 'Success')
+            except Exception as e:
+                logger.error(f'Daily transactions sync failed: {str(e)}')
+                exception_list.append(e)
+                update_table_status('sync_transaction_history_tables', 'Failure')
         else:
             logger.error("Too many exceptions in Sage sync. Shutting down the loop now.")
             email_sender.send_email_error(exception_list, 'pmedlin@kinpakinc.com,jdavis@kinpakinc.com')

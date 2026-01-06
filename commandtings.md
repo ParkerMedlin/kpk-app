@@ -55,3 +55,9 @@ do `python manage.py shell`
 ## Delete the Redis cache
 `docker-compose -p kpk-app -f docker-compose-PROD.yml exec redis sh -c "redis-cli --scan --pattern 'blend_schedule:*' | xargs -n 100 redis-cli DEL"`
  
+ ## reset index of a table
+`SELECT setval(
+  'public.<id_seq_name>',
+  (SELECT MAX(id) FROM public.<table_name>),
+  true
+);`
