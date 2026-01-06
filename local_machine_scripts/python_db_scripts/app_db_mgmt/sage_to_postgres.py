@@ -334,3 +334,99 @@ def get_all_transactions():
         #     f.write('SAGE ERROR: ' + str(dt.datetime.now()))
         #     f.write('\n')
         #     f.write(str(e))
+
+
+def get_sage_daily_transactions():
+    """
+    Fetches today's transactions from Sage and populates im_itemtransactionhistory_daily.
+    This table is used as a staging area for incremental updates to the rolling and deeptime tables.
+    """
+    try:
+        table_name = "IM_ItemTransactionHistory"
+        target_table = "im_itemtransactionhistory_daily"
+        csv_path = os.path.expanduser('~\\Documents') + '\\kpk-app\\db_imports\\' + target_table + '.csv'
+        columns_with_types_path = os.path.expanduser('~\\Documents') + '\\kpk-app\\db_imports\\sql_columns_with_types\\' + table_name + '.txt'
+
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        env_path = os.path.join(current_dir, '..', '..', '.env')
+        load_dotenv(dotenv_path=env_path)
+
+        SAGE_USER = os.getenv('SAGE_USER')
+        SAGE_PW = os.getenv('SAGE_PW')
+
+        if not SAGE_USER or not SAGE_PW:
+            raise ValueError("Sage credentials not found in environment variables.")
+
+        connection_MAS90 = pyodbc.connect(r"Driver={MAS 90 4.0 ODBC Driver}; " + f"UID={SAGE_USER}; PWD={SAGE_PW}; " +
+                                                r"""Directory=\\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90;
+                                                Prefix=\\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90\SY\,
+                                                \\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90\==\;
+                                                ViewDLL=\\Kinpak-Svr1\Apps\Sage 100 ERP\MAS90\HOME; Company=KPK;
+                                                LogFile=\PVXODBC.LOG; CacheSize=0; DirtyReads=1; BurstMode=1;
+                                                StripTrailingSpaces=1;""", autocommit=True)
+        cursor_MAS90 = connection_MAS90.cursor()
+
+        # Query for TODAY's transactions only
+        today_date = str(dt.date.today())
+        cursor_MAS90.execute("SELECT * FROM " + table_name + " WHERE IM_ItemTransactionHistory.TransactionDate >= {d '%s'}" % today_date + " ORDER BY TRANSACTIONDATE DESC")
+        print(f'{dt.datetime.now()} :: sage_to_postgres.py :: get_sage_daily_transactions :: Fetching transactions for {today_date}')
+
+        table_contents = list(cursor_MAS90.fetchall())
+        data_headers = cursor_MAS90.description
+
+        sql_columns_with_types = '(id serial primary key, '
+        type_mapping = {
+            "<class 'str'>": 'text',
+            "<class 'datetime.date'>": 'date',
+            "<class 'decimal.Decimal'>": 'decimal'
+        }
+        column_definitions = [
+            f"{column[0]} {type_mapping[str(column[1])]}"
+            for column in data_headers
+        ]
+        sql_columns_with_types += ', '.join(column_definitions) + ')'
+        column_names_only_string = ''
+        with open(columns_with_types_path, 'w', encoding="utf-8") as f:
+            f.write(sql_columns_with_types)
+
+        column_names_only_string = ', '.join(column[0] for column in data_headers)
+        column_list = column_names_only_string.split(",")
+        cursor_MAS90.close()
+        connection_MAS90.close()
+
+        table_dataframe = pd.DataFrame.from_records(table_contents, index=None, exclude=None, columns=column_list, coerce_float=False, nrows=None)
+        table_dataframe.to_csv(path_or_buf=csv_path, header=column_list, encoding='utf-8')
+
+        with open(columns_with_types_path, encoding="utf-8") as file:
+            sql_columns_list = file.readlines()
+        sql_columns_with_types = sql_columns_list[0]
+
+        connection_postgres = psycopg2.connect('postgresql://postgres:REDACTED_DB_PASSWORD@localhost:5432/blendversedb')
+        cursor_postgres = connection_postgres.cursor()
+        cursor_postgres.execute("drop table if exists " + target_table + "_TEMP")
+        cursor_postgres.execute("create table " + target_table + "_TEMP" + sql_columns_with_types)
+        copy_sql = "copy " + target_table + "_TEMP from stdin with csv header delimiter as ','"
+        with open(csv_path, 'r', encoding='utf-8') as f:
+            cursor_postgres.copy_expert(sql=copy_sql, file=f)
+
+        # Create indexes on composite key columns
+        cursor_postgres.execute("""DROP INDEX if exists im_itemtxnhist_daily_itemcode_idx;
+                                CREATE INDEX im_itemtxnhist_daily_itemcode_idx ON im_itemtransactionhistory_daily_TEMP (itemcode);
+                                DROP INDEX if exists im_itemtxnhist_daily_transactiondate_idx;
+                                CREATE INDEX im_itemtxnhist_daily_transactiondate_idx ON im_itemtransactionhistory_daily_TEMP (transactiondate);
+                                DROP INDEX if exists im_itemtxnhist_daily_transactioncode_idx;
+                                CREATE INDEX im_itemtxnhist_daily_transactioncode_idx ON im_itemtransactionhistory_daily_TEMP (transactioncode);
+                                DROP INDEX if exists im_itemtxnhist_daily_transactionqty_idx;
+                                CREATE INDEX im_itemtxnhist_daily_transactionqty_idx ON im_itemtransactionhistory_daily_TEMP (transactionqty);""")
+
+        cursor_postgres.execute("drop table if exists " + target_table)
+        cursor_postgres.execute("alter table " + target_table + "_TEMP rename to " + target_table)
+        connection_postgres.commit()
+        cursor_postgres.close()
+        connection_postgres.close()
+
+        print(f'{dt.datetime.now()} :: sage_to_postgres.py :: get_sage_daily_transactions :: {len(table_contents)} transactions loaded to {target_table}')
+        return target_table
+
+    except Exception as e:
+        print(f'{dt.datetime.now()} :: sage_to_postgres.py :: get_sage_daily_transactions :: ERROR: {str(e)}')

@@ -1,0 +1,49 @@
+{% comment %}
+Deeptime Toggle Snippet
+=======================
+Include this in any report template that supports the deeptime option.
+Requires `use_deeptime` boolean in the template context.
+
+Usage:
+    {% include 'core/partials/deeptime_toggle.html' %}
+{% endcomment %}
+
+<div class="deeptime-toggle-container mb-3">
+    <div class="d-flex align-items-center justify-content-center gap-1">
+        <button type="button"
+                class="btn btn-sm {% if not use_deeptime %}btn-primary{% else %}btn-outline-secondary{% endif %}"
+                id="rollingBtn"
+                {% if not use_deeptime %}disabled{% endif %}>
+            Rolling 1-Year
+        </button>
+        <button type="button"
+                class="btn btn-sm {% if use_deeptime %}btn-primary{% else %}btn-outline-secondary{% endif %}"
+                id="deeptimeBtn"
+                {% if use_deeptime %}disabled{% endif %}>
+            Full History
+        </button>
+    </div>
+</div>
+
+<script>
+(function() {
+    const rollingBtn = document.getElementById('rollingBtn');
+    const deeptimeBtn = document.getElementById('deeptimeBtn');
+
+    if (rollingBtn) {
+        rollingBtn.addEventListener('click', function() {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('deeptime');
+            window.location.href = url.toString();
+        });
+    }
+
+    if (deeptimeBtn) {
+        deeptimeBtn.addEventListener('click', function() {
+            const url = new URL(window.location.href);
+            url.searchParams.set('deeptime', 'true');
+            window.location.href = url.toString();
+        });
+    }
+})();
+</script>
