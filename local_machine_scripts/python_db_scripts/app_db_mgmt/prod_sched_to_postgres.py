@@ -1,10 +1,11 @@
-import pandas as pd 
+import pandas as pd
 import datetime as dt
 import os
+from io import StringIO
 import psycopg2
 import pyexcel as pe
 import csv
-from .sharepoint_download import download_to_temp
+from .sharepoint_download import download_to_temp, download_to_memory
 import time
 import warnings
 warnings.filterwarnings("ignore")
@@ -364,3 +365,170 @@ def get_starbrite_item_quantities():
         #     f.write('ERROR COPYING FOAMFACTOR: ' + str(dt.datetime.now()))
         #     f.write('\n')
         #     print('BLENDVERSE DB ERROR: ' + str(e))
+
+
+def sync_production_schedule():
+    """
+    Unified production schedule sync - downloads once to memory, processes all sheets.
+    Replaces: get_prod_schedule() + get_starbrite_item_quantities()
+    Zero disk I/O = zero file locking bugs.
+    """
+    print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: sync_production_schedule :: Starting...')
+    time_start = time.perf_counter()
+
+    # === SINGLE DOWNLOAD TO MEMORY ===
+    file_buffer = download_to_memory("ProductionSchedule")
+    download_time = time.perf_counter() - time_start
+    print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: sync_production_schedule :: Downloaded in {download_time:.1f}s')
+
+    # === READ ALL SHEETS IN ONE PASS ===
+    prod_line_sheets = ["BLISTER", "INLINE", "JB LINE", "KITS", "OIL LINE", "PD LINE"]
+    month_sheets = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE",
+                    "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"]
+    all_sheets = prod_line_sheets + month_sheets + ["REWORK"]
+
+    sheets = pd.read_excel(file_buffer, sheet_name=all_sheets, engine='pyxlsb')
+    read_time = time.perf_counter() - time_start - download_time
+    print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: sync_production_schedule :: Read {len(sheets)} sheets in {read_time:.1f}s')
+
+    # === PROCESS PRODUCTION LINE SHEETS ===
+    prodmerge_rows = []
+    for sheet_name in prod_line_sheets:
+        try:
+            df = sheets[sheet_name].iloc[2:]  # skiprows=2
+            df.columns = ["Bill#", "PO#", "Product", "Blend", "Case Size", "Qty", "Bottle", "Cap", "Runtime", "Carton"]
+            df = df.reset_index(drop=True)
+            df["ID2"] = np.arange(len(df)) + 4
+            df = df.dropna(subset=['Runtime'])
+            df = df[pd.to_numeric(df["Runtime"], errors='coerce').notna()]
+            df = df[~df["Product"].astype(str).str.contains("0x2a", na=False)]
+            df["Start_time"] = df["Runtime"].cumsum()
+            df = df.reset_index(drop=True)
+            df["Start_time"] = df["Start_time"].shift(1, fill_value=0)
+            df["prod_line"] = sheet_name
+            df = df[df["Qty"] != "."]
+            prodmerge_rows.append(df)
+        except Exception as e:
+            print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: sync_production_schedule :: Error in sheet {sheet_name}: {e}')
+            continue
+
+    # === PROCESS MONTH SHEETS (UNSCHEDULED) ===
+    now = dt.datetime.now()
+    current_month = now.month
+    current_year = now.year
+    month_dict = {month: i + 1 for i, month in enumerate(month_sheets)}
+
+    sheets_with_dates = []
+    for sheet_name in month_sheets:
+        month_num = month_dict[sheet_name]
+        year = current_year if month_num >= current_month else current_year + 1
+        date = dt.datetime(year, month_num, 1)
+        sheets_with_dates.append((sheet_name, date))
+    sheets_with_dates.sort(key=lambda x: x[1])
+
+    starttime_running_total = 300
+    for sheet_name, _ in sheets_with_dates:
+        try:
+            df = sheets[sheet_name].iloc[3:]  # skiprows=3
+            df.columns = ["Bill#", "PO#", "Product", "Blend", "Case Size", "Qty", "Bottle", "Cap", "Runtime", "Carton"]
+            df = df.reset_index(drop=True)
+            df["ID2"] = np.arange(len(df)) + 5
+            df = df.dropna(subset=['Runtime'])
+            df = df[~df["Runtime"].astype(str).str.contains(" ", na=False)]
+            df = df[~df["Product"].astype(str).str.contains("0x2a", na=False)]
+            df = df[~df["Runtime"].astype(str).str.contains("SchEnd", na=False)]
+            df["Runtime"] = pd.to_numeric(df["Runtime"], errors='coerce')
+            df = df.dropna(subset=['Runtime'])
+            if df.empty:
+                continue
+            df["start_time"] = df["Runtime"].cumsum() + starttime_running_total
+            df = df.reset_index(drop=True)
+            df["start_time"] = df["start_time"].shift(1, fill_value=starttime_running_total)
+            df["prod_line"] = f'UNSCHEDULED: {sheet_name}'
+            df = df[df["Qty"] != "."]
+            if df.empty:
+                continue
+            prodmerge_rows.append(df)
+            last_start_time = df["start_time"].iloc[-1]
+            starttime_running_total = starttime_running_total + last_start_time
+        except Exception as e:
+            print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: sync_production_schedule :: Error in month sheet {sheet_name}: {e}')
+            continue
+
+    # === BUILD PRODMERGE TABLE ===
+    if prodmerge_rows:
+        combined = pd.concat(prodmerge_rows, ignore_index=True)
+        # Select and rename columns to match DB schema
+        prodmerge_df = combined[["Bill#", "PO#", "Qty", "Runtime", "ID2", "Start_time", "prod_line"]].copy()
+        prodmerge_df.columns = ["item_code", "po_number", "item_run_qty", "run_time", "id2", "start_time", "prod_line"]
+
+        csv_buffer = StringIO()
+        prodmerge_df.to_csv(csv_buffer, index=False, header=True)
+        csv_buffer.seek(0)
+
+        connection_postgres = psycopg2.connect('postgresql://postgres:REDACTED_DB_PASSWORD@localhost:5432/blendversedb')
+        cursor_postgres = connection_postgres.cursor()
+        cursor_postgres.execute("""CREATE TABLE prodmerge_run_data_TEMP (
+            item_code text,
+            po_number text,
+            item_run_qty numeric,
+            run_time numeric,
+            id2 numeric,
+            start_time numeric,
+            prod_line text
+        )""")
+        cursor_postgres.copy_expert("COPY prodmerge_run_data_TEMP FROM stdin WITH CSV HEADER DELIMITER ','", csv_buffer)
+        cursor_postgres.execute("""
+            ALTER TABLE prodmerge_run_data_TEMP ADD item_description text;
+            UPDATE prodmerge_run_data_TEMP SET item_description = (
+                SELECT bill_of_materials.item_description
+                FROM bill_of_materials
+                WHERE bill_of_materials.item_code = prodmerge_run_data_TEMP.item_code LIMIT 1
+            );
+            ALTER TABLE prodmerge_run_data_TEMP ADD id serial PRIMARY KEY;
+            DROP TABLE IF EXISTS prodmerge_run_data;
+            ALTER TABLE prodmerge_run_data_TEMP RENAME TO prodmerge_run_data;
+        """)
+        connection_postgres.commit()
+        cursor_postgres.close()
+        connection_postgres.close()
+        print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: sync_production_schedule :: prodmerge_run_data updated ({len(prodmerge_df)} rows)')
+
+    # === PROCESS REWORK SHEET (STARBRITE QUANTITIES) ===
+    try:
+        df = sheets["REWORK"].iloc[2:52]  # skiprows=2, nrows=50
+        df.columns = df.columns[:10].tolist() if len(df.columns) >= 10 else df.columns.tolist()
+        # Columns C:D = index 2:4 but after iloc the df has original columns, we need cols C and D
+        # Re-read with usecols would be: C=qty, D=item_code
+        # Since we read full sheet, select columns by position (C=2, D=3)
+        file_buffer.seek(0)  # Reset buffer for re-read
+        rework_df = pd.read_excel(file_buffer, sheet_name="REWORK", usecols='C:D', skiprows=2, nrows=50, engine='pyxlsb')
+        rework_df.columns = ["quantity", "item_code"]
+        rework_df = rework_df.dropna(how='any')
+        rework_df = rework_df[~rework_df.apply(lambda row: row.astype(str).str.contains('# CS ON HAND').any(), axis=1)]
+        rework_df = rework_df[~rework_df.apply(lambda row: row.astype(str).str.contains('P/N').any(), axis=1)]
+
+        if not rework_df.empty:
+            csv_buffer = StringIO()
+            rework_df.to_csv(csv_buffer, index=False, header=True)
+            csv_buffer.seek(0)
+
+            connection_postgres = psycopg2.connect('postgresql://postgres:REDACTED_DB_PASSWORD@localhost:5432/blendversedb')
+            cursor_postgres = connection_postgres.cursor()
+            cursor_postgres.execute("""CREATE TABLE starbrite_item_quantities_TEMP (
+                quantity numeric,
+                item_code text,
+                id serial PRIMARY KEY
+            )""")
+            cursor_postgres.copy_expert("COPY starbrite_item_quantities_TEMP(quantity, item_code) FROM stdin WITH CSV HEADER DELIMITER ','", csv_buffer)
+            cursor_postgres.execute("DROP TABLE IF EXISTS starbrite_item_quantities")
+            cursor_postgres.execute("ALTER TABLE starbrite_item_quantities_TEMP RENAME TO starbrite_item_quantities")
+            connection_postgres.commit()
+            cursor_postgres.close()
+            connection_postgres.close()
+            print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: sync_production_schedule :: starbrite_item_quantities updated ({len(rework_df)} rows)')
+    except Exception as e:
+        print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: sync_production_schedule :: REWORK sheet error: {e}')
+
+    total_time = time.perf_counter() - time_start
+    print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: sync_production_schedule :: Complete in {total_time:.1f}s')

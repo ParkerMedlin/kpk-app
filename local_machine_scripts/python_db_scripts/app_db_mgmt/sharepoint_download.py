@@ -1,4 +1,5 @@
 import os
+from io import BytesIO
 from dotenv import load_dotenv
 from msal import ConfidentialClientApplication
 import requests
@@ -68,3 +69,43 @@ def download_to_temp(which_file):
         return f'SHAREPOINT ERROR: Unable to download file. Error: {str(e)}'
 
     return download_path
+
+
+def download_to_memory(which_file):
+    """Download SharePoint file directly to memory (BytesIO) - no disk I/O."""
+    access_token = get_access_token()
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+        'Accept': 'application/json'
+    }
+
+    site_id = "adminkinpak.sharepoint.com,ea15b2fd-35e7-426f-a90b-605f97dadca0,45d34af9-f92f-425d-8feb-e1b3e9f3207f"
+    drive_id = "b!_bIV6uc1b0KpC2Bfl9rcoPlK00Uv-V1Cj-vhs-nzIH8aDWyU6El7Tpp_ePWKacOm"
+
+    file_paths = {
+        "ProductionSchedule": '/Production Schedule/Starbrite KPK production schedule.xlsb',
+        "ProductionScheduleDEV": '/Production Schedule/dev/Starbrite KPK production schedule.xlsb',
+        "BlendingSchedule": '/03 Projects/Blending Schedule/Blending-Schedule/BlendingSchedule.xlsb',
+        "LotNumGenerator": '/01 Spreadsheet Tools/Blending Lot Number Generator/LotNumGenerator-Prod/Blending Lot Number Generator.xlsb',
+    }
+
+    if which_file not in file_paths:
+        raise ValueError(f"Invalid file type: {which_file}")
+
+    file_path = file_paths[which_file]
+
+    # Get the file metadata
+    file_url = f"https://graph.microsoft.com/v1.0/sites/{site_id}/drives/{drive_id}/root:{file_path}"
+    response = requests.get(file_url, headers=headers)
+    response.raise_for_status()
+    file_metadata = response.json()
+
+    # Get the download URL
+    download_url = file_metadata.get('@microsoft.graph.downloadUrl')
+    if not download_url:
+        raise Exception("Failed to get download URL")
+
+    # Download directly to memory
+    r = requests.get(download_url)
+    r.raise_for_status()
+    return BytesIO(r.content)
