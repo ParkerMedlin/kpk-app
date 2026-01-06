@@ -90,9 +90,8 @@ def update_xlsb_tables():
         # Aligned with local_machine_scripts/python_db_scripts/data_looper.py
         functions = [
             tank_level_reading.update_tank_levels_table,
-            prod_sched_pg.get_prod_schedule,
+            prod_sched_pg.sync_production_schedule,  # Unified: replaces get_prod_schedule + get_starbrite_item_quantities
             horix_pg.get_horix_line_blends,
-            prod_sched_pg.get_starbrite_item_quantities,
             calc_tables_pg.create_bill_of_materials_table,
             calc_tables_pg.create_component_usage_table,
             calc_tables_pg.create_component_shortages_table,
