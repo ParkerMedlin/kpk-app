@@ -1477,25 +1477,30 @@ def display_maximum_producible_quantity(request):
 
 def display_truck_rail_material_schedule(request):
     """Display truck and rail material schedule page.
-    
+
     Shows upcoming truck and rail material deliveries, including:
     - Required delivery dates
     - Tank assignments and capacity warnings
     - Vendor information
-    
+
     Filters for orders within the last 3 days and only shows undelivered quantities.
-    
+
     Args:
         request: HTTP request object
-        
+
     Returns:
         Rendered template with truck/rail schedule context
-        
+
     Template:
         core/reports/truckrailmaterialschedule.html
     """
     three_days_ago = dt.datetime.today() - dt.timedelta(days = 3)
-    truck_rail_item_codes = ['100507TANKO','100507TANKB','100507TANKD','100507','030033','030066','031018','100428M6','050000','050000G','100449','500200','100560','100427','601015','100421G2','020001']
+    truck_rail_item_codes = list(
+        StorageTank.objects
+        .filter(item_description__istartswith='CHEM')
+        .values_list('item_code', flat=True)
+        .distinct()
+    )
     truck_and_rail_orders = PoPurchaseOrderDetail.objects.filter(itemcode__in=truck_rail_item_codes) \
         .filter(requireddate__gte=three_days_ago) \
         .filter(quantityreceived=0) \
