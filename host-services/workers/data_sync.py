@@ -54,6 +54,24 @@ from app_db_mgmt import table_updates as update_tables_pg
 from app_db_mgmt import i_eat_the_specsheet as specsheet_eat
 from app_db_mgmt import email_sender
 from app_db_mgmt import tank_level_reading
+from app_db_mgmt.sharepoint_download import download_to_memory
+
+
+def sync_production_data():
+    """
+    Downloads ProductionSchedule once to memory, then runs both
+    sync_production_schedule and get_horix_line_blends using the same buffer.
+    Eliminates duplicate downloads and file locking issues.
+    """
+    logger.info("sync_production_data: Downloading ProductionSchedule to memory...")
+    file_buffer = download_to_memory("ProductionSchedule")
+    logger.info("sync_production_data: Download complete, processing...")
+    try:
+        prod_sched_pg.sync_production_schedule(file_buffer)
+        horix_pg.get_horix_line_blends(file_buffer)
+    finally:
+        file_buffer.close()
+        logger.info("sync_production_data: Buffer closed")
 
 # --- Configuration ---
 SERVICE_NAME = "Data Sync Worker"
@@ -90,8 +108,7 @@ def update_xlsb_tables():
         # Aligned with local_machine_scripts/python_db_scripts/data_looper.py
         functions = [
             tank_level_reading.update_tank_levels_table,
-            prod_sched_pg.sync_production_schedule,  # Unified: replaces get_prod_schedule + get_starbrite_item_quantities
-            horix_pg.get_horix_line_blends,
+            sync_production_data,  # Single download: sync_production_schedule + get_horix_line_blends
             calc_tables_pg.create_bill_of_materials_table,
             calc_tables_pg.create_component_usage_table,
             calc_tables_pg.create_component_shortages_table,
