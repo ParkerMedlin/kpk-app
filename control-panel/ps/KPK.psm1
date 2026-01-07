@@ -28,6 +28,7 @@ $script:HostServices = @{
     "excel_worker" = "host-services/workers/excel_worker.py"
     "stream_relay" = "host-services/workers/stream_relay.py"
     "looper_health" = "host-services/watchdogs/looper_health.py"
+    "backup_health" = "host-services/watchdogs/backup_health.py"
     "tank_leak_detector" = "host-services/watchdogs/tank_leak_detector.py"
 }
 
@@ -36,6 +37,7 @@ $script:HostServiceLogs = @{
     "excel_worker" = "host-services/logs/excel_worker.log"
     "stream_relay" = "host-services/logs/stream_relay.log"
     "looper_health" = "host-services/logs/looper_health.log"
+    "backup_health" = "host-services/logs/backup_health.log"
     "tank_leak_detector" = "host-services/logs/tank_leak_detector.log"
 }
 
@@ -395,12 +397,13 @@ function Get-KPKHostServiceList {
     param([switch]$Detailed)
 
     $services = @()
-    foreach ($svc in @("data_sync", "excel_worker", "stream_relay", "looper_health")) {
+    foreach ($svc in @("data_sync", "excel_worker", "stream_relay", "looper_health", "backup_health")) {
         $scriptName = switch ($svc) {
             "data_sync" { "data_sync.py" }
             "excel_worker" { "excel_worker.py" }
             "stream_relay" { "stream_relay.py" }
             "looper_health" { "looper_health.py" }
+            "backup_health" { "backup_health.py" }
         }
 
         $checkCmd = '$result = wmic process where "name like ''%python%''" get ProcessId,CommandLine /format:csv 2>$null | Select-String ''' + $scriptName + '''; if ($result) { $parts = ($result -split '',''); @{ProcessId=[int]$parts[-1]} | ConvertTo-Json -Compress } else { Write-Output ''none'' }'

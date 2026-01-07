@@ -163,12 +163,13 @@ func (c *Commands) OpenContainerExec(containerName string) error {
 // GetHostServiceStatuses returns status of all host services
 func (c *Commands) GetHostServiceStatuses() ([]HostServiceStatus, error) {
 	// Ordered list of services (maintains consistent display order)
-	serviceOrder := []string{"data_sync", "excel_worker", "stream_relay", "looper_health", "tank_leak_detector"}
+	serviceOrder := []string{"data_sync", "excel_worker", "stream_relay", "looper_health", "backup_health", "tank_leak_detector"}
 	serviceScripts := map[string]string{
 		"data_sync":          "data_sync.py",
 		"excel_worker":       "excel_worker.py",
 		"stream_relay":       "stream_relay.py",
 		"looper_health":      "looper_health.py",
+		"backup_health":      "backup_health.py",
 		"tank_leak_detector": "tank_leak_detector.py",
 	}
 
@@ -228,6 +229,7 @@ func getServicePath(serviceName string) (string, bool) {
 		"excel_worker":       "host-services/workers/excel_worker.py",
 		"stream_relay":       "host-services/workers/stream_relay.py",
 		"looper_health":      "host-services/watchdogs/looper_health.py",
+		"backup_health":      "host-services/watchdogs/backup_health.py",
 		"tank_leak_detector": "host-services/watchdogs/tank_leak_detector.py",
 	}
 	path, ok := servicePaths[serviceName]
@@ -323,6 +325,7 @@ func (c *Commands) GetHostServiceLogs(serviceName string, lines int) (string, er
 		"excel_worker":       "host-services/logs/excel_worker.log",
 		"stream_relay":       "host-services/logs/stream_relay.log",
 		"looper_health":      "host-services/logs/looper_health.log",
+		"backup_health":      "host-services/logs/backup_health.log",
 		"tank_leak_detector": "host-services/logs/tank_leak_detector.log",
 	}
 
@@ -460,7 +463,7 @@ func (c *Commands) ColdStart() error {
 	// The app containers have wait_for_db in their startup command
 
 	// 4. Start host services
-	services := []string{"data_sync", "excel_worker", "stream_relay", "looper_health", "tank_leak_detector"}
+	services := []string{"data_sync", "excel_worker", "stream_relay", "looper_health", "backup_health", "tank_leak_detector"}
 	for _, svc := range services {
 		if err := c.StartHostService(svc); err != nil {
 			return fmt.Errorf("failed to start %s: %v", svc, err)
@@ -473,7 +476,7 @@ func (c *Commands) ColdStart() error {
 // StopAll stops all services
 func (c *Commands) StopAll() error {
 	// 1. Stop host services
-	services := []string{"data_sync", "excel_worker", "stream_relay", "looper_health", "tank_leak_detector"}
+	services := []string{"data_sync", "excel_worker", "stream_relay", "looper_health", "backup_health", "tank_leak_detector"}
 	for _, svc := range services {
 		c.StopHostService(svc) // Ignore errors, some might not be running
 	}
