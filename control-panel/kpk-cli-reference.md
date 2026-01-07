@@ -75,7 +75,7 @@ kpk status --local                      # Local mode (on server)
 
 ## Host Services
 
-`data_sync`, `excel_worker`, `stream_relay`, `looper_health`
+`data_sync`, `excel_worker`, `stream_relay`, `looper_health`, `backup_health`
 
 ## Output
 
