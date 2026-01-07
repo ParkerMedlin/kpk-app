@@ -18,6 +18,7 @@ import logging
 import threading
 import queue
 import json
+import argparse
 import requests
 import tkinter as tk
 from tkinter import scrolledtext, font
@@ -51,12 +52,15 @@ SERVICE_NAME = "Backup Health Watchdog"
 DEFAULT_BACKUP_ROOT = r"\\KinPak-Svr1\apps\kpkapp\backups"
 BACKUP_ROOT = os.environ.get("BACKUP_ROOT", DEFAULT_BACKUP_ROOT)
 
-# Check time: 5:30 PM (17:30)
-CHECK_HOUR = 17
-CHECK_MINUTE = 30
+# Check time: 5:30 PM (17:30) - can be overridden via command line args
+DEFAULT_CHECK_HOUR = 17
+DEFAULT_CHECK_MINUTE = 30
+DEFAULT_ALERT_WINDOW_HOURS = 2
 
-# How long after check time to keep alerting if backup missing (hours)
-ALERT_WINDOW_HOURS = 2
+# These will be set by parse_args() or use defaults
+CHECK_HOUR = DEFAULT_CHECK_HOUR
+CHECK_MINUTE = DEFAULT_CHECK_MINUTE
+ALERT_WINDOW_HOURS = DEFAULT_ALERT_WINDOW_HOURS
 
 # Teams webhook for notifications
 TEAMS_WEBHOOK_URL = os.environ.get("TEAMS_WEBHOOK_URL")
@@ -260,9 +264,11 @@ def get_seconds_until_check() -> int:
 
 def backup_monitor_thread():
     """Background thread for backup monitoring."""
+    print(f"[DEBUG] backup_monitor_thread starting...")
     log_and_queue(f"Service: Backup monitor thread started.")
     log_and_queue(f"Service: Backup root: {BACKUP_ROOT}")
     log_and_queue(f"Service: Check time: {CHECK_HOUR}:{CHECK_MINUTE:02d}")
+    log_and_queue(f"Service: Alert window: {ALERT_WINDOW_HOURS} hours")
 
     checker = BackupChecker(BACKUP_ROOT)
 
@@ -274,12 +280,22 @@ def backup_monitor_thread():
     else:
         log_and_queue("Service: TEAMS_WEBHOOK_URL not set. Teams notifications disabled.", logging.WARNING)
 
+    loop_count = 0
     while True:
+        loop_count += 1
+        now = datetime.datetime.now()
+        print(f"[DEBUG] Loop #{loop_count} at {now.strftime('%H:%M:%S')}")
+
         try:
-            if is_check_time():
+            in_window = is_check_time()
+            print(f"[DEBUG] is_check_time() = {in_window} (window: {CHECK_HOUR}:{CHECK_MINUTE:02d} - {CHECK_HOUR + ALERT_WINDOW_HOURS}:{CHECK_MINUTE:02d})")
+
+            if in_window:
                 log_and_queue(f"Check: Within check window, verifying backup...")
+                print(f"[DEBUG] IN CHECK WINDOW - running backup check")
 
                 exists, message, folders = checker.check_backup_exists()
+                print(f"[DEBUG] check_backup_exists() returned: exists={exists}, message={message}, folders={folders}")
 
                 if exists:
                     log_and_queue(f"Check: {message}")
@@ -289,7 +305,10 @@ def backup_monitor_thread():
                     log_and_queue(f"Check: {message}", logging.WARNING)
 
                     # Send alert if we haven't already today
-                    if checker.should_alert():
+                    should = checker.should_alert()
+                    print(f"[DEBUG] should_alert() = {should}")
+
+                    if should:
                         log_and_queue(f"Alert: Sending missing backup alert...", logging.WARNING)
 
                         if notifier:
@@ -299,30 +318,40 @@ def backup_monitor_thread():
                                 backup_path=BACKUP_ROOT,
                                 date_checked=checker.get_today_date_prefix()
                             )
-                            notifier.send_alert(alert)
+                            result = notifier.send_alert(alert)
+                            print(f"[DEBUG] send_alert() returned: {result}")
+                        else:
+                            print(f"[DEBUG] No notifier configured, skipping Teams alert")
 
                         checker.mark_alerted()
                     else:
                         log_and_queue(f"Alert: Already alerted for today, skipping.", logging.DEBUG)
 
-                # After checking, sleep until next check window (tomorrow)
-                sleep_seconds = get_seconds_until_check()
-                log_and_queue(f"Check: Next check in {sleep_seconds // 3600}h {(sleep_seconds % 3600) // 60}m")
-                time.sleep(min(sleep_seconds, 3600))  # Sleep at most 1 hour at a time
+                # After checking, sleep for a bit then check again (in case backup appears)
+                sleep_seconds = 60  # Check every minute while in window
+                print(f"[DEBUG] In window, sleeping {sleep_seconds}s before next check")
+                log_and_queue(f"Check: Will re-check in {sleep_seconds}s")
+                time.sleep(sleep_seconds)
             else:
                 # Not in check window, calculate time until check
                 sleep_seconds = get_seconds_until_check()
                 hours = sleep_seconds // 3600
                 minutes = (sleep_seconds % 3600) // 60
 
-                log_and_queue(f"Service: Next check in {hours}h {minutes}m (at {CHECK_HOUR}:{CHECK_MINUTE:02d})", logging.DEBUG)
+                print(f"[DEBUG] NOT in check window. Next check in {hours}h {minutes}m ({sleep_seconds}s)")
+                log_and_queue(f"Service: Next check in {hours}h {minutes}m (at {CHECK_HOUR}:{CHECK_MINUTE:02d})")
 
-                # Sleep for shorter intervals to stay responsive
-                time.sleep(min(sleep_seconds, 1800))  # Check every 30 min max
+                # Sleep for shorter intervals during testing
+                actual_sleep = min(sleep_seconds, 30)  # Check every 30 seconds for responsiveness
+                print(f"[DEBUG] Sleeping {actual_sleep}s...")
+                time.sleep(actual_sleep)
 
         except Exception as e:
+            print(f"[DEBUG] ERROR in loop: {e}")
+            import traceback
+            traceback.print_exc()
             log_and_queue(f"Monitor: Error in check cycle: {e}", logging.ERROR)
-            time.sleep(300)  # Wait 5 minutes on error
+            time.sleep(60)  # Wait 1 minute on error
 
 
 def manual_check():
@@ -456,9 +485,62 @@ def exit_application(icon):
     os._exit(0)
 
 
+def parse_args():
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(
+        description="Backup Health Watchdog - monitors daily backup existence",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Run with default settings (check at 5:30 PM)
+  python backup_health.py
+
+  # Test mode: check at 2:45 PM with 1-hour window
+  python backup_health.py --check-time 14:45 --window 1
+
+  # Check in 2 minutes from now (for quick testing)
+  python backup_health.py --check-time 14:32
+        """
+    )
+    parser.add_argument(
+        '--check-time',
+        type=str,
+        default=None,
+        metavar='HH:MM',
+        help=f'Time to check for backup (24-hour format). Default: {DEFAULT_CHECK_HOUR}:{DEFAULT_CHECK_MINUTE:02d}'
+    )
+    parser.add_argument(
+        '--window',
+        type=int,
+        default=DEFAULT_ALERT_WINDOW_HOURS,
+        metavar='HOURS',
+        help=f'Hours after check time to keep checking. Default: {DEFAULT_ALERT_WINDOW_HOURS}'
+    )
+    return parser.parse_args()
+
+
 def main():
     """Main entry point for the Backup Health Watchdog."""
+    global CHECK_HOUR, CHECK_MINUTE, ALERT_WINDOW_HOURS
+
+    args = parse_args()
+
+    # Override check time if provided
+    if args.check_time:
+        try:
+            hour, minute = map(int, args.check_time.split(':'))
+            if not (0 <= hour <= 23 and 0 <= minute <= 59):
+                raise ValueError("Invalid time range")
+            CHECK_HOUR = hour
+            CHECK_MINUTE = minute
+        except ValueError as e:
+            print(f"Error: Invalid --check-time format. Use HH:MM (e.g., 17:30). {e}")
+            sys.exit(1)
+
+    ALERT_WINDOW_HOURS = args.window
+
     log_and_queue(f"Service: Starting {SERVICE_NAME}...")
+    log_and_queue(f"Service: Check time set to {CHECK_HOUR}:{CHECK_MINUTE:02d} with {ALERT_WINDOW_HOURS}h window")
 
     # Start the backup monitoring thread
     monitor_thread = threading.Thread(target=backup_monitor_thread, daemon=True)
