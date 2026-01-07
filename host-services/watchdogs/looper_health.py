@@ -1188,8 +1188,19 @@ class LogScanner(ABC):
         """Return new log lines since last scan as list of (timestamp, line) tuples."""
         pass
 
-    def _parse_timestamp(self, line: str) -> Optional[datetime.datetime]:
-        """Extract timestamp from log line. Returns None if not found."""
+    def _local_to_utc(self, local_dt: datetime.datetime) -> datetime.datetime:
+        """Convert naive local datetime to naive UTC datetime."""
+        # Use timestamp() which treats naive datetime as local time,
+        # then convert back to UTC via utcfromtimestamp()
+        return datetime.datetime.utcfromtimestamp(local_dt.timestamp())
+
+    def _parse_timestamp(self, line: str, convert_to_utc: bool = False) -> Optional[datetime.datetime]:
+        """Extract timestamp from log line. Returns None if not found.
+
+        Args:
+            line: Log line to parse
+            convert_to_utc: If True, convert parsed local time to UTC
+        """
         # Match common log formats:
         # "2025-12-03 13:37:26" or "2025-12-03 13:37:26,149"
         patterns = [
@@ -1200,7 +1211,10 @@ class LogScanner(ABC):
             match = re.search(pattern, line)
             if match:
                 try:
-                    return datetime.datetime.strptime(match.group(1), '%Y-%m-%d %H:%M:%S')
+                    local_dt = datetime.datetime.strptime(match.group(1), '%Y-%m-%d %H:%M:%S')
+                    if convert_to_utc:
+                        return self._local_to_utc(local_dt)
+                    return local_dt
                 except ValueError:
                     pass
         return None
@@ -1233,13 +1247,13 @@ class FileLogScanner(LogScanner):
                 new_content = f.read()
                 new_offset = f.tell()
 
-            # Parse lines
+            # Parse lines (convert local timestamps to UTC for consistent comparison)
             for line in new_content.splitlines():
                 line = line.strip()
                 if line:
-                    timestamp = self._parse_timestamp(line)
+                    timestamp = self._parse_timestamp(line, convert_to_utc=True)
                     if timestamp is None:
-                        timestamp = datetime.datetime.now()
+                        timestamp = datetime.datetime.utcnow()
                     results.append((timestamp, line))
 
             # Update state
@@ -1372,7 +1386,7 @@ class AlertEngine:
     def process_lines(self, source_name: str, lines: list) -> list:
         """Match lines against rules for this source. Return alerts to fire."""
         alerts = []
-        now = datetime.datetime.utcnow()  # Use UTC to match Docker log timestamps
+        now = datetime.datetime.utcnow()  # All timestamps are now normalized to UTC
 
         for rule in self.config.rules:
             if not rule.get('enabled', True):
