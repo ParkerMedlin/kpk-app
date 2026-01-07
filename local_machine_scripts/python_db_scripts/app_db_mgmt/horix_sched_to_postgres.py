@@ -53,7 +53,13 @@ def get_horix_line_blends(file_buffer=None, use_dev=False):
         # add and set amt column
         sheet_df.loc[sheet_df['Case Size']=='6-1gal','amt'] = (sheet_df['item_run_qty'] * 6)
         sheet_df.loc[sheet_df['Case Size']=='55gal drum','amt'] = (sheet_df['item_run_qty'] * 55)
-        sheet_df.loc[sheet_df['Case Size']=='5 gal pail','amt'] = (sheet_df['item_run_qty'] * 5)
+        pail_mask = sheet_df['Case Size'].str.contains('gal pail', case=False, na=False)
+        pail_sizes = (
+            sheet_df.loc[pail_mask, 'Case Size']
+            .str.extract(r'(\d+(?:\.\d+)?)')[0]
+            .astype(float)
+        )
+        sheet_df.loc[pail_mask, 'amt'] = (sheet_df.loc[pail_mask, 'item_run_qty'] * pail_sizes)
         tote_mask = sheet_df['Case Size'].str.contains(' gal tote', na=False)
         sheet_df.loc[tote_mask, 'amt'] = (
             sheet_df.loc[tote_mask, 'item_run_qty'] * 
@@ -64,7 +70,7 @@ def get_horix_line_blends(file_buffer=None, use_dev=False):
         sheet_df['prod_line'] = ''
         sheet_df.loc[sheet_df['Case Size']=='6-1gal','prod_line'] = 'Hx'
         sheet_df.loc[sheet_df['Case Size']=='55gal drum','prod_line'] = 'Dm'
-        sheet_df.loc[sheet_df['Case Size']=='5 gal pail','prod_line'] = 'Pails'
+        sheet_df.loc[pail_mask, 'prod_line'] = 'Pails'
         sheet_df.loc[tote_mask, 'prod_line'] = 'Totes'
 
         run_dicts = []
