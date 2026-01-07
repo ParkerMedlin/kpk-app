@@ -254,8 +254,9 @@ func (c *Commands) StartHostServiceWithOutput(serviceName string) (string, error
 	cmd := fmt.Sprintf(`
 $ErrorActionPreference = 'SilentlyContinue'
 $root = "%s"
-$py = "$root/../AppData/Local/Programs/Python/Python311/pythonw.exe"`, c.repoRoot) + fmt.Sprintf(`
-$script = "$root/%s"
+$userHome = Split-Path (Split-Path $root -Parent) -Parent  # e.g., C:\Users\pmedlin from C:\Users\pmedlin\Documents\kpk-app
+$py = Join-Path $userHome "AppData\Local\Programs\Python\Python311\pythonw.exe"
+$script = Join-Path $root "%s"
 
 # Load PSEXEC_USER/PSEXEC_PASS from .env
 $u=$null; $p=$null
@@ -264,24 +265,27 @@ Get-Content "$root/.env" 2>$null | ForEach-Object {
     if ($_ -match '^PSEXEC_PASS=(.+)$') { $p = $Matches[1] }
 }
 
-# Get pmedlin's session ID
+# Get pmedlin's session ID (capture the 3rd field which is the ID column)
 $sid = 1
 $q = query user 2>$null | Select-String "pmedlin"
-if ($q) { $q -split '\s+' | ForEach-Object { if ($_ -match '^\d+$' -and [int]$_ -gt 0) { $sid = $_; return } } }
+if ($q) { $parts = $q -split '\s+' | Where-Object { $_ }; if ($parts.Count -ge 3 -and $parts[2] -match '^\d+$') { $sid = $parts[2] } }
 
 # Find PsExec
 $px = "C:/Windows/System32/PsExec.exe"
 if (!(Test-Path $px)) { $px = "C:/SysinternalsSuite/PsExec.exe" }
 
-# Create VBS launcher
-$vbs = "$root/host-services/launcher.vbs"
-$userHome = Split-Path (Split-Path $root -Parent) -Parent  # e.g., C:\Users\pmedlin from C:\Users\pmedlin\Documents\kpk-app
+# Create VBS launcher (use resolved absolute paths with backslashes)
+$vbs = Join-Path $root "host-services\launcher.vbs"
+$pyPath = $py -replace '/', '\'
+$scriptPath = $script -replace '/', '\'
+$rootPath = $root -replace '/', '\'
+$homePath = $userHome -replace '/', '\'
 @"
 Set s=CreateObject("WScript.Shell")
-s.Environment("Process")("USERPROFILE")="$userHome"
-s.Environment("Process")("HOME")="$userHome"
-s.CurrentDirectory="$root"
-s.Run """$py"" ""$script""",0,False
+s.Environment("Process")("USERPROFILE")="$homePath"
+s.Environment("Process")("HOME")="$homePath"
+s.CurrentDirectory="$rootPath"
+s.Run """$pyPath"" ""$scriptPath""",0,False
 "@ | Set-Content $vbs -Force
 
 # Run PsExec (suppress stderr noise)
@@ -291,7 +295,7 @@ if ($u -and $p) {
     $null = & $px -accepteula -i $sid -d wscript.exe $vbs 2>$null
 }
 Write-Output "Started %s (session $sid)"
-`, path, serviceName)
+`, c.repoRoot, path, serviceName)
 
 	output, err := c.exec.RunCommand(cmd)
 	return output, err
