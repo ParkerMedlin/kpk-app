@@ -1,3 +1,4 @@
+import asyncio
 import datetime as dt
 import json
 import logging
@@ -8,6 +9,8 @@ import redis
 from asgiref.sync import sync_to_async
 
 logger = logging.getLogger(__name__)
+
+DISCONNECT_TIMEOUT = 3
 
 STATE_EVENT_LIMIT = 25
 
@@ -245,3 +248,21 @@ class RedisBackedConsumer:
         return event.get("sender_channel_name") == getattr(
             self, "channel_name", None
         )
+
+    async def safe_group_discard(self) -> None:
+        """Remove from channel group with timeout to prevent blocking disconnect."""
+        if not self.group_name:
+            return
+        try:
+            await asyncio.wait_for(
+                self.channel_layer.group_discard(self.group_name, self.channel_name),
+                timeout=DISCONNECT_TIMEOUT,
+            )
+        except asyncio.TimeoutError:
+            logger.warning(
+                "group_discard timed out for %s on group %s",
+                self.channel_name,
+                self.group_name,
+            )
+        except Exception as exc:
+            logger.debug("group_discard failed for %s: %s", self.group_name, exc)
