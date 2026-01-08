@@ -95,10 +95,56 @@ def log_and_queue(message, level=logging.INFO):
 class RedisQueueProcessor:
     """Processes Excel macro jobs from Redis queue."""
 
+    CLEANUP_INTERVAL_SECONDS = 60
+    JOB_RETENTION_SECONDS = 300  # 5 minutes
+
     def __init__(self):
         self.redis_client = None
         self.executor = ThreadPoolExecutor(max_workers=10)
         self.running = True
+        self.last_cleanup_time = time.time()
+
+    def cleanup_old_jobs(self):
+        """Remove completed/failed jobs older than JOB_RETENTION_SECONDS from Redis."""
+        try:
+            all_jobs = self.redis_client.hgetall('excel_macro_jobs')
+            now = datetime.datetime.now()
+            deleted_count = 0
+
+            for job_id, job_data_str in all_jobs.items():
+                try:
+                    job_data = json.loads(job_data_str)
+                    status = job_data.get('status')
+
+                    if status not in ('completed', 'failed'):
+                        continue
+
+                    completed_at_str = job_data.get('completed_at')
+                    if not completed_at_str:
+                        continue
+
+                    completed_at = datetime.datetime.fromisoformat(completed_at_str)
+                    age_seconds = (now - completed_at).total_seconds()
+
+                    if age_seconds > self.JOB_RETENTION_SECONDS:
+                        self.redis_client.hdel('excel_macro_jobs', job_id)
+                        deleted_count += 1
+
+                except (json.JSONDecodeError, ValueError, KeyError):
+                    continue
+
+            if deleted_count > 0:
+                log_and_queue(f"Redis: Cleaned up {deleted_count} old job(s) from excel_macro_jobs", logging.DEBUG)
+
+        except redis.RedisError as e:
+            log_and_queue(f"Redis: Error during job cleanup: {e}", logging.WARNING)
+
+    def maybe_cleanup(self):
+        """Run cleanup if enough time has passed since last cleanup."""
+        now = time.time()
+        if now - self.last_cleanup_time >= self.CLEANUP_INTERVAL_SECONDS:
+            self.cleanup_old_jobs()
+            self.last_cleanup_time = now
 
     def connect_redis(self):
         """Connect to Redis with retry logic."""
@@ -291,6 +337,7 @@ class RedisQueueProcessor:
 
         while self.running:
             try:
+                self.maybe_cleanup()
                 result = self.redis_client.brpop('excel_macro_queue', timeout=1)
                 if result:
                     _, job_data = result
