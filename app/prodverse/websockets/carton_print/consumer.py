@@ -150,11 +150,11 @@ class CartonPrintConsumer(RedisBackedConsumer, AsyncWebsocketConsumer):
 
         try:
             if is_printed:
-                await sync_to_async(client.zadd, thread_sensitive=True)(
+                await sync_to_async(client.zadd, thread_sensitive=False)(
                     self.redis_zset_key, {item_code: time.time()}
                 )
             else:
-                await sync_to_async(client.zrem, thread_sensitive=True)(
+                await sync_to_async(client.zrem, thread_sensitive=False)(
                     self.redis_zset_key, item_code
                 )
         except redis.RedisError as exc:
@@ -172,7 +172,7 @@ class CartonPrintConsumer(RedisBackedConsumer, AsyncWebsocketConsumer):
 
         cutoff = time.time() - THREE_WEEKS_SECONDS
         try:
-            removed = await sync_to_async(client.zremrangebyscore, thread_sensitive=True)(
+            removed = await sync_to_async(client.zremrangebyscore, thread_sensitive=False)(
                 self.redis_zset_key, "-inf", cutoff
             )
             if removed:
@@ -194,7 +194,7 @@ class CartonPrintConsumer(RedisBackedConsumer, AsyncWebsocketConsumer):
             return []
 
         try:
-            items = await sync_to_async(client.zrange, thread_sensitive=True)(
+            items = await sync_to_async(client.zrange, thread_sensitive=False)(
                 self.redis_zset_key, 0, -1
             )
         except redis.RedisError as exc:

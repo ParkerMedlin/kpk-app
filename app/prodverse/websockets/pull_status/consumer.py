@@ -145,11 +145,11 @@ class PullStatusConsumer(RedisBackedConsumer, AsyncWebsocketConsumer):
 
         try:
             if is_pulled:
-                await sync_to_async(client.sadd, thread_sensitive=True)(
+                await sync_to_async(client.sadd, thread_sensitive=False)(
                     self.redis_set_key, item_code
                 )
             else:
-                await sync_to_async(client.srem, thread_sensitive=True)(
+                await sync_to_async(client.srem, thread_sensitive=False)(
                     self.redis_set_key, item_code
                 )
         except redis.RedisError as exc:
@@ -166,7 +166,7 @@ class PullStatusConsumer(RedisBackedConsumer, AsyncWebsocketConsumer):
             return []
 
         try:
-            items = await sync_to_async(client.smembers, thread_sensitive=True)(
+            items = await sync_to_async(client.smembers, thread_sensitive=False)(
                 self.redis_set_key
             )
         except redis.RedisError as exc:

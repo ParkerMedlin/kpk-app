@@ -17,6 +17,8 @@ try:
         port=6379,
         db=0,
         decode_responses=True,
+        socket_timeout=5,
+        socket_connect_timeout=5,
     )
     redis_client.ping()
 except redis.RedisError as exc:
@@ -146,7 +148,7 @@ async def persist_event(
 ) -> None:
     if redis_client is None:
         return
-    await sync_to_async(_append_event_sync, thread_sensitive=True)(
+    await sync_to_async(_append_event_sync, thread_sensitive=False)(
         redis_key,
         event_type,
         payload,
@@ -157,7 +159,7 @@ async def persist_event(
 async def load_events(redis_key: str) -> List[Dict[str, Any]]:
     if redis_client is None:
         return []
-    return await sync_to_async(_load_events_sync, thread_sensitive=True)(
+    return await sync_to_async(_load_events_sync, thread_sensitive=False)(
         redis_key
     )
 
@@ -165,7 +167,7 @@ async def load_events(redis_key: str) -> List[Dict[str, Any]]:
 async def clear_events(redis_key: str) -> None:
     if redis_client is None:
         return
-    await sync_to_async(_clear_events_sync, thread_sensitive=True)(redis_key)
+    await sync_to_async(_clear_events_sync, thread_sensitive=False)(redis_key)
 
 
 class RedisBackedConsumer:

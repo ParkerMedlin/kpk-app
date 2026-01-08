@@ -142,7 +142,7 @@ class SpecSheetConsumer(RedisBackedConsumer, AsyncWebsocketConsumer):
         try:
             raw = await sync_to_async(
                 client.get,
-                thread_sensitive=True,
+                thread_sensitive=False,
             )(legacy_key)
         except redis.RedisError as exc:
             logger.error(
@@ -162,7 +162,7 @@ class SpecSheetConsumer(RedisBackedConsumer, AsyncWebsocketConsumer):
                 "Invalid JSON stored in legacy spec sheet state for %s; clearing key",
                 self.spec_id,
             )
-            await sync_to_async(client.delete, thread_sensitive=True)(
+            await sync_to_async(client.delete, thread_sensitive=False)(
                 legacy_key
             )
             return None
