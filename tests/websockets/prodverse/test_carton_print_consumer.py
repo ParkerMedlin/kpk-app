@@ -59,7 +59,7 @@ async def test_receive_persists_and_broadcasts(monkeypatch, fake_redis, channel_
     consumer.channel_name = "sender-chan"
     consumer.group_name = "carton_print_unique_Hx"
     consumer.redis_key = "carton_print_events:Hx"
-    consumer.redis_set_key = "carton_print:Hx"
+    consumer.redis_zset_key = "carton_print:Hx"
     consumer.prod_line = "Hx"
 
     async def fake_group_send(group, message):
@@ -86,7 +86,7 @@ async def test_receive_persists_and_broadcasts(monkeypatch, fake_redis, channel_
     assert events[-1]["event"] == "carton_print_update"
     assert events[-1]["data"]["isPrinted"] is True
 
-    members = fake_redis.smembers("carton_print:Hx")
+    members = fake_redis.zrange("carton_print:Hx", 0, -1)
     assert "PN123_PO42_10" in members
     logger.info(
         "carton_print receive persisted %s and broadcast to %s",
@@ -141,13 +141,13 @@ async def test_carton_print_update_filters_sender(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_initial_state_falls_back_to_set(fake_redis, monkeypatch):
+async def test_initial_state_falls_back_to_zset(fake_redis, monkeypatch):
     consumer = carton_print_consumer.CartonPrintConsumer()
     consumer.redis_key = "carton_print_events:Hx"
-    consumer.redis_set_key = "carton_print:Hx"
+    consumer.redis_zset_key = "carton_print:Hx"
     consumer.prod_line = "Hx"
 
-    fake_redis.sadd("carton_print:Hx", "PN555_PO11_5")
+    fake_redis.zadd("carton_print:Hx", {"PN555_PO11_5": 1234567890.0})
 
     sent_messages = []
 
@@ -166,7 +166,7 @@ async def test_initial_state_falls_back_to_set(fake_redis, monkeypatch):
     assert events[0]["event"] == "carton_print_update"
     assert events[0]["data"]["itemCode"] == "PN555_PO11_5"
     logger.info(
-        "carton_print fallback initial state replayed %s from redis set %s",
+        "carton_print fallback initial state replayed %s from redis zset %s",
         events[0],
-        consumer.redis_set_key,
+        consumer.redis_zset_key,
     )
