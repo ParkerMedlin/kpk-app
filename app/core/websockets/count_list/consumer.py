@@ -50,10 +50,7 @@ class CountListConsumer(RedisBackedConsumer, AsyncWebsocketConsumer):
         await self._send_initial_state()
 
     async def disconnect(self, close_code):
-        await self.channel_layer.group_discard(
-            self.group_name,
-            self.channel_name,
-        )
+        await self.safe_group_discard()
         raise StopConsumer
 
     async def receive(self, text_data):

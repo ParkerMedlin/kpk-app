@@ -831,25 +831,40 @@ class HostServiceHealthChecker:
         return alerts
 
     def _is_service_running(self, process_pattern: str) -> bool:
-        """Check if a host service is running by looking for its process pattern."""
+        """Check if a host service is running by looking for its process pattern.
+
+        Uses direct wmic call (same approach as _get_process_instances) for reliability.
+        """
         try:
-            # Hide console window on Windows
             startupinfo = subprocess.STARTUPINFO()
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
             startupinfo.wShowWindow = 0
 
             result = subprocess.run(
-                ['powershell', '-Command',
-                 f"wmic process where \"name like '%python%' and commandline like '%{process_pattern}%'\" get ProcessId /format:csv 2>$null | Select-String '\\d+' | ForEach-Object {{ ($_ -split ',')[-1].Trim() }}"],
+                ['wmic', 'process', 'where',
+                 f"name like '%python%' and commandline like '%{process_pattern}%'",
+                 'get', 'ProcessId', '/format:csv'],
                 capture_output=True,
                 text=True,
                 timeout=10,
                 startupinfo=startupinfo,
                 creationflags=subprocess.CREATE_NO_WINDOW
             )
-            # If we got any PIDs, it's running
-            pids = [p.strip() for p in result.stdout.strip().split('\n') if p.strip().isdigit()]
-            return len(pids) > 0
+
+            if result.returncode != 0:
+                return False
+
+            # Parse CSV output: Node,ProcessId header then HOSTNAME,PID rows
+            for line in result.stdout.strip().split('\n'):
+                line = line.strip()
+                if not line or line.startswith('Node'):
+                    continue
+                parts = line.split(',')
+                if len(parts) >= 2:
+                    pid = parts[-1].strip()
+                    if pid.isdigit():
+                        return True
+            return False
         except Exception:
             return False
 
@@ -1075,21 +1090,34 @@ class Remediator:
             # Wait and verify it started
             time.sleep(3)
 
-            # Check if running
+            # Check if running using direct wmic call
             startupinfo2 = subprocess.STARTUPINFO()
             startupinfo2.dwFlags |= subprocess.STARTF_USESHOWWINDOW
             startupinfo2.wShowWindow = 0
 
             result = subprocess.run(
-                ['powershell', '-Command',
-                 f"wmic process where \"name like '%python%' and commandline like '%{process_pattern}%'\" get ProcessId /format:csv 2>$null | Select-String '\\d+' | ForEach-Object {{ ($_ -split ',')[-1].Trim() }}"],
+                ['wmic', 'process', 'where',
+                 f"name like '%python%' and commandline like '%{process_pattern}%'",
+                 'get', 'ProcessId', '/format:csv'],
                 capture_output=True,
                 text=True,
                 timeout=10,
                 startupinfo=startupinfo2,
                 creationflags=subprocess.CREATE_NO_WINDOW
             )
-            pids = [p.strip() for p in result.stdout.strip().split('\n') if p.strip().isdigit()]
+
+            # Parse CSV output for PIDs
+            pids = []
+            if result.returncode == 0:
+                for line in result.stdout.strip().split('\n'):
+                    line = line.strip()
+                    if not line or line.startswith('Node'):
+                        continue
+                    parts = line.split(',')
+                    if len(parts) >= 2:
+                        pid = parts[-1].strip()
+                        if pid.isdigit():
+                            pids.append(pid)
 
             if len(pids) > 0:
                 log_and_queue(f"Remediator: Successfully restarted {display_name} (PID: {pids[0]})", logging.INFO)
@@ -1105,22 +1133,34 @@ class Remediator:
     def _terminate_process(self, process_pattern: str) -> bool:
         """Terminate processes matching the pattern. Returns True if any were terminated."""
         try:
-            # Hide console window
             startupinfo = subprocess.STARTUPINFO()
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
             startupinfo.wShowWindow = 0
 
-            # Find PIDs
+            # Find PIDs using direct wmic call
             result = subprocess.run(
-                ['powershell', '-Command',
-                 f"wmic process where \"name like '%python%' and commandline like '%{process_pattern}%'\" get ProcessId /format:csv 2>$null | Select-String '\\d+' | ForEach-Object {{ ($_ -split ',')[-1].Trim() }}"],
+                ['wmic', 'process', 'where',
+                 f"name like '%python%' and commandline like '%{process_pattern}%'",
+                 'get', 'ProcessId', '/format:csv'],
                 capture_output=True,
                 text=True,
                 timeout=10,
                 startupinfo=startupinfo,
                 creationflags=subprocess.CREATE_NO_WINDOW
             )
-            pids = [p.strip() for p in result.stdout.strip().split('\n') if p.strip().isdigit()]
+
+            # Parse CSV output for PIDs
+            pids = []
+            if result.returncode == 0:
+                for line in result.stdout.strip().split('\n'):
+                    line = line.strip()
+                    if not line or line.startswith('Node'):
+                        continue
+                    parts = line.split(',')
+                    if len(parts) >= 2:
+                        pid = parts[-1].strip()
+                        if pid.isdigit():
+                            pids.append(pid)
 
             if not pids:
                 return False
@@ -1786,27 +1826,38 @@ def exit_application(icon):
 def is_data_sync_running():
     """Check if data_sync is already running.
 
-    Uses wmic which can see processes across all user sessions,
-    unlike Get-WmiObject which may only see the current session.
+    Uses direct wmic call which can see processes across all user sessions.
     """
     try:
-        # Hide console window on Windows
         startupinfo = subprocess.STARTUPINFO()
         startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-        startupinfo.wShowWindow = 0  # SW_HIDE
+        startupinfo.wShowWindow = 0
 
         result = subprocess.run(
-            ['powershell', '-Command',
-             "wmic process where \"name like '%python%' and commandline like '%data_sync%'\" get ProcessId /format:csv 2>$null | Select-String '\\d+' | ForEach-Object { ($_ -split ',')[-1].Trim() }"],
+            ['wmic', 'process', 'where',
+             "name like '%python%' and commandline like '%data_sync%'",
+             'get', 'ProcessId', '/format:csv'],
             capture_output=True,
             text=True,
             timeout=10,
             startupinfo=startupinfo,
             creationflags=subprocess.CREATE_NO_WINDOW
         )
-        # If we got any PIDs, it's running
-        pids = [p.strip() for p in result.stdout.strip().split('\n') if p.strip().isdigit()]
-        return len(pids) > 0
+
+        if result.returncode != 0:
+            return False
+
+        # Parse CSV output: Node,ProcessId header then HOSTNAME,PID rows
+        for line in result.stdout.strip().split('\n'):
+            line = line.strip()
+            if not line or line.startswith('Node'):
+                continue
+            parts = line.split(',')
+            if len(parts) >= 2:
+                pid = parts[-1].strip()
+                if pid.isdigit():
+                    return True
+        return False
     except Exception:
         return False
 
