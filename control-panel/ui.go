@@ -487,8 +487,8 @@ func (u *UI) openRemoteDesktop() {
 		host = "192.168.178.169" // Default
 	}
 
-	// Create temp .rdp file with username pre-filled
-	rdpContent := fmt.Sprintf("full address:s:%s\nusername:s:KINPAK03\\pmedlin\n", host)
+	// Create temp .rdp file with username pre-filled, printers disabled
+	rdpContent := fmt.Sprintf("full address:s:%s\nusername:s:KINPAK03\\pmedlin\nredirectprinters:i:0\n", host)
 
 	tmpFile, err := os.CreateTemp("", "kpk-rdp-*.rdp")
 	if err != nil {
