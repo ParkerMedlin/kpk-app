@@ -68,7 +68,7 @@ def sync_production_data():
     logger.info("sync_production_data: Download complete, processing...")
     try:
         prod_sched_pg.sync_production_schedule(file_buffer)
-        horix_pg.get_horix_line_blends(file_buffer)
+        horix_pg.get_horix_line_blends(file_buffer, logger=logger)
     finally:
         file_buffer.close()
         logger.info("sync_production_data: Buffer closed")
