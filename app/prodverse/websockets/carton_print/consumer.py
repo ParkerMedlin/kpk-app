@@ -1,5 +1,6 @@
 import json
 import logging
+import time
 from typing import Dict, List, Optional
 
 import redis
@@ -17,15 +18,18 @@ from app.websockets.base_consumer import (
 
 logger = logging.getLogger(__name__)
 
+THREE_WEEKS_SECONDS = 21 * 24 * 60 * 60
+
 
 class CartonPrintConsumer(RedisBackedConsumer, AsyncWebsocketConsumer):
     """
     Websocket consumer that tracks carton print toggles for a given production
-    line. State is persisted in Redis both as a set (for the latest snapshot)
-    and as an ordered event log (for replay).
+    line. State is persisted in Redis as a sorted set (ZSET) with Unix timestamps
+    as scores for automatic cleanup of stale entries, plus an ordered event log
+    for replay.
     """
 
-    redis_set_key: Optional[str] = None
+    redis_zset_key: Optional[str] = None
 
     async def connect(self):
         raw_prod_line = self.scope["url_route"]["kwargs"].get("prodLine")
@@ -41,8 +45,9 @@ class CartonPrintConsumer(RedisBackedConsumer, AsyncWebsocketConsumer):
 
         self.group_name = f"carton_print_unique_{self.prod_line}"
         self.redis_key = f"carton_print_events:{self.prod_line}"
-        self.redis_set_key = f"carton_print:{self.prod_line}"
+        self.redis_zset_key = f"carton_print:{self.prod_line}"
 
+        await self._cleanup_stale_entries()
         await self.channel_layer.group_add(self.group_name, self.channel_name)
         await self.accept()
         await self._send_initial_state()
@@ -140,39 +145,62 @@ class CartonPrintConsumer(RedisBackedConsumer, AsyncWebsocketConsumer):
 
     async def _update_print_status(self, item_code: str, is_printed: bool) -> None:
         client = base_consumer.redis_client
-        if client is None or not self.redis_set_key:
+        if client is None or not self.redis_zset_key:
             return
 
         try:
             if is_printed:
-                await sync_to_async(client.sadd, thread_sensitive=True)(
-                    self.redis_set_key, item_code
+                await sync_to_async(client.zadd, thread_sensitive=True)(
+                    self.redis_zset_key, {item_code: time.time()}
                 )
             else:
-                await sync_to_async(client.srem, thread_sensitive=True)(
-                    self.redis_set_key, item_code
+                await sync_to_async(client.zrem, thread_sensitive=True)(
+                    self.redis_zset_key, item_code
                 )
         except redis.RedisError as exc:
             logger.error(
-                "Error updating Redis set %s for item %s: %s",
-                self.redis_set_key,
+                "Error updating Redis zset %s for item %s: %s",
+                self.redis_zset_key,
                 item_code,
+                exc,
+            )
+
+    async def _cleanup_stale_entries(self) -> None:
+        client = base_consumer.redis_client
+        if client is None or not self.redis_zset_key:
+            return
+
+        cutoff = time.time() - THREE_WEEKS_SECONDS
+        try:
+            removed = await sync_to_async(client.zremrangebyscore, thread_sensitive=True)(
+                self.redis_zset_key, "-inf", cutoff
+            )
+            if removed:
+                logger.info(
+                    "Cleaned up %d stale carton print entries from %s",
+                    removed,
+                    self.redis_zset_key,
+                )
+        except redis.RedisError as exc:
+            logger.error(
+                "Error cleaning up stale entries from %s: %s",
+                self.redis_zset_key,
                 exc,
             )
 
     async def _snapshot_printed_items(self) -> List[Dict[str, object]]:
         client = base_consumer.redis_client
-        if client is None or not self.redis_set_key:
+        if client is None or not self.redis_zset_key:
             return []
 
         try:
-            items = await sync_to_async(client.smembers, thread_sensitive=True)(
-                self.redis_set_key
+            items = await sync_to_async(client.zrange, thread_sensitive=True)(
+                self.redis_zset_key, 0, -1
             )
         except redis.RedisError as exc:
             logger.error(
                 "Error loading carton print snapshot from %s: %s",
-                self.redis_set_key,
+                self.redis_zset_key,
                 exc,
             )
             return []
