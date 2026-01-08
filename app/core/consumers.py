@@ -1,3 +1,4 @@
+import asyncio
 import datetime as dt
 import json
 import logging
@@ -10,6 +11,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from django.core.exceptions import ObjectDoesNotExist
 
 from app.websockets.base_consumer import (
+    DISCONNECT_TIMEOUT,
     clear_events,
     json_default,
     load_events,
@@ -53,8 +55,13 @@ class CountCollectionConsumer(AsyncWebsocketConsumer):
         await self._send_initial_state()
 
     async def disconnect(self, close_code):
-        await self.channel_layer.group_discard(self.group_name, self.channel_name)
-
+        try:
+            await asyncio.wait_for(
+                self.channel_layer.group_discard(self.group_name, self.channel_name),
+                timeout=DISCONNECT_TIMEOUT,
+            )
+        except (asyncio.TimeoutError, Exception):
+            logger.debug("group_discard timed out for %s", self.group_name)
         raise StopConsumer
 
     async def receive(self, text_data):
