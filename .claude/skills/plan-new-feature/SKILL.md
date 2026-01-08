@@ -55,9 +55,9 @@ Use template: [tasks-template.md](tasks-template.md)
 
 ## Where to Store Specs
 
-Create a feature folder at `.kiro/specs/{feature-name}/` containing:
+Create a feature folder at `project-handbook/feature-specs/{feature-name}/` containing:
 ```
-.kiro/specs/{feature-name}/
+project-handbook/feature-specs/{feature-name}/
 ├── requirements.md
 ├── design.md
 └── tasks.md
@@ -86,7 +86,7 @@ Reference `README.md` and `CLAUDE.md` for architecture details.
 When user describes a feature:
 
 1. **Clarify scope** - Ask questions if the feature boundaries are unclear
-2. **Create spec folder** - `mkdir -p .kiro/specs/{feature-name}`
+2. **Create spec folder** - `mkdir -p project-handbook/feature-specs/{feature-name}`
 3. **Write requirements.md** - Use template, focus on WHAT not HOW
 4. **Get approval** - Explicitly ask: "Does this requirements doc capture what you want?"
 5. **Continue through phases** - Design, then Tasks, getting approval each time
