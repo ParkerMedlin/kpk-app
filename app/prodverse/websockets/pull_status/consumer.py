@@ -48,7 +48,7 @@ class PullStatusConsumer(RedisBackedConsumer, AsyncWebsocketConsumer):
         await self._send_initial_state()
 
     async def disconnect(self, close_code):
-        await self.channel_layer.group_discard(self.group_name, self.channel_name)
+        await self.safe_group_discard()
         raise StopConsumer
 
     async def receive(self, text_data: str):
@@ -145,11 +145,11 @@ class PullStatusConsumer(RedisBackedConsumer, AsyncWebsocketConsumer):
 
         try:
             if is_pulled:
-                await sync_to_async(client.sadd, thread_sensitive=True)(
+                await sync_to_async(client.sadd, thread_sensitive=False)(
                     self.redis_set_key, item_code
                 )
             else:
-                await sync_to_async(client.srem, thread_sensitive=True)(
+                await sync_to_async(client.srem, thread_sensitive=False)(
                     self.redis_set_key, item_code
                 )
         except redis.RedisError as exc:
@@ -166,7 +166,7 @@ class PullStatusConsumer(RedisBackedConsumer, AsyncWebsocketConsumer):
             return []
 
         try:
-            items = await sync_to_async(client.smembers, thread_sensitive=True)(
+            items = await sync_to_async(client.smembers, thread_sensitive=False)(
                 self.redis_set_key
             )
         except redis.RedisError as exc:

@@ -1,3 +1,4 @@
+import asyncio
 import datetime as dt
 import json
 import logging
@@ -9,6 +10,8 @@ from asgiref.sync import sync_to_async
 
 logger = logging.getLogger(__name__)
 
+DISCONNECT_TIMEOUT = 3
+
 STATE_EVENT_LIMIT = 25
 
 try:
@@ -17,6 +20,8 @@ try:
         port=6379,
         db=0,
         decode_responses=True,
+        socket_timeout=5,
+        socket_connect_timeout=5,
     )
     redis_client.ping()
 except redis.RedisError as exc:
@@ -146,7 +151,7 @@ async def persist_event(
 ) -> None:
     if redis_client is None:
         return
-    await sync_to_async(_append_event_sync, thread_sensitive=True)(
+    await sync_to_async(_append_event_sync, thread_sensitive=False)(
         redis_key,
         event_type,
         payload,
@@ -157,7 +162,7 @@ async def persist_event(
 async def load_events(redis_key: str) -> List[Dict[str, Any]]:
     if redis_client is None:
         return []
-    return await sync_to_async(_load_events_sync, thread_sensitive=True)(
+    return await sync_to_async(_load_events_sync, thread_sensitive=False)(
         redis_key
     )
 
@@ -165,7 +170,7 @@ async def load_events(redis_key: str) -> List[Dict[str, Any]]:
 async def clear_events(redis_key: str) -> None:
     if redis_client is None:
         return
-    await sync_to_async(_clear_events_sync, thread_sensitive=True)(redis_key)
+    await sync_to_async(_clear_events_sync, thread_sensitive=False)(redis_key)
 
 
 class RedisBackedConsumer:
@@ -243,3 +248,21 @@ class RedisBackedConsumer:
         return event.get("sender_channel_name") == getattr(
             self, "channel_name", None
         )
+
+    async def safe_group_discard(self) -> None:
+        """Remove from channel group with timeout to prevent blocking disconnect."""
+        if not self.group_name:
+            return
+        try:
+            await asyncio.wait_for(
+                self.channel_layer.group_discard(self.group_name, self.channel_name),
+                timeout=DISCONNECT_TIMEOUT,
+            )
+        except asyncio.TimeoutError:
+            logger.warning(
+                "group_discard timed out for %s on group %s",
+                self.channel_name,
+                self.group_name,
+            )
+        except Exception as exc:
+            logger.debug("group_discard failed for %s: %s", self.group_name, exc)

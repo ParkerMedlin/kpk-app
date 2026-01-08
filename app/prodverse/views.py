@@ -84,10 +84,9 @@ def update_schedule_files(request):
 
 def get_carton_print_status(request):
     """Retrieves carton print status for items on a production line.
-    
-    Fetches item codes from Redis that have been marked as printed for the
-    specified production line. Returns a list of statuses indicating which items
-    have been printed.
+
+    Fetches item codes from Redis sorted set that have been marked as printed
+    for the specified production line.
 
     Args:
         request: HTTP request object containing 'prodLine' query parameter
@@ -99,17 +98,11 @@ def get_carton_print_status(request):
     normalised_prod_line = (prod_line or '').replace(' ', '_')
     redis_key = f"carton_print:{normalised_prod_line}"
 
-    # Fetch all item codes and their print status from Redis
-    item_codes = redis_client.smembers(redis_key)
-    statuses = []
-    for item_code in item_codes:
-        statuses.append({
-            'itemCode': item_code.decode('utf-8'),
-            'isPrinted': True
-        })
-
-    # Log the retrieved statuses
-    print(f"Retrieved statuses from Redis: {statuses}")
+    item_codes = redis_client.zrange(redis_key, 0, -1)
+    statuses = [
+        {'itemCode': item_code.decode('utf-8'), 'isPrinted': True}
+        for item_code in item_codes
+    ]
 
     return JsonResponse({'statuses': statuses})
 
