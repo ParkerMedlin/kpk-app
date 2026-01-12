@@ -36,6 +36,12 @@
       "display_name": "Tank Leak Detector",
       "script": "host-services/watchdogs/tank_leak_detector.py",
       "process_pattern": "tank_leak_detector"
+    },
+    {
+      "name": "backup_health",
+      "display_name": "Backup Health Watchdog",
+      "script": "host-services/watchdogs/backup_health.py",
+      "process_pattern": "backup_health"
     }
   ],
   "host_service_check_cooldown_seconds": 300,
@@ -59,6 +65,10 @@
     "tank_leak_detector": {
       "type": "file",
       "path": "logs/tank_leak_detector.log"
+    },
+    "backup_health": {
+      "type": "file",
+      "path": "logs/backup_health.log"
     },
     "app_blue": {
       "type": "docker",
