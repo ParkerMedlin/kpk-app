@@ -141,7 +141,7 @@ class ContainerClassificationTable {
     this.table = document.getElementById('containerClassificationTable');
     this.tableBody = this.table ? this.table.querySelector('tbody') : null;
     this.addButton = document.getElementById('add-classification-btn');
-    this.autofillFields = ['tote_classification', 'hose_color', 'tank_classification'];
+    this.autofillFields = ['tote_classification', 'flush_tote', 'hose_color', 'tank_classification'];
     this.datalistMap = {};
     this.autofillFields.forEach((field) => {
       this.datalistMap[field] = this.ensureDatalist(field);
@@ -227,7 +227,9 @@ class ContainerClassificationTable {
   getAutofillPlaceholder(field) {
     switch (field) {
       case 'tote_classification':
-        return 'Use existing tote class...';
+        return 'Use existing storage tote...';
+      case 'flush_tote':
+        return 'Use existing flush tote...';
       case 'hose_color':
         return 'Use existing hose class...';
       case 'tank_classification':
@@ -685,12 +687,14 @@ class ContainerClassificationTable {
           row.querySelector('[data-field="item_code"] [data-is-input="true"]').value,
         );
         const toteValue = (row.querySelector('[data-field="tote_classification"] [data-is-input="true"]')?.value || '').trim();
+        const flushToteValue = (row.querySelector('[data-field="flush_tote"] [data-is-input="true"]')?.value || '').trim();
         const hoseValue = (row.querySelector('[data-field="hose_color"] [data-is-input="true"]')?.value || '').trim();
         const containerValue = (row.querySelector('[data-field="tank_classification"] [data-is-input="true"]')?.value || '').trim();
 
         response = await createClassification({
           item_code: itemCodeValue,
           tote_classification: toteValue,
+          flush_tote: flushToteValue,
           hose_color: hoseValue,
           tank_classification: containerValue,
         });
@@ -702,6 +706,7 @@ class ContainerClassificationTable {
       const snapshot = {
         item_code: normalizeItemCode(classification.item_code || ''),
         tote_classification: classification.tote_classification || '',
+        flush_tote: classification.flush_tote || '',
         hose_color: classification.hose_color || '',
         tank_classification: classification.tank_classification || '',
       };
@@ -770,6 +775,7 @@ class ContainerClassificationTable {
         id: data.next_id,
         item_code: '',
         tote_classification: '',
+        flush_tote: '',
         hose_color: '',
         tank_classification: '',
         isNew: true,
@@ -874,6 +880,7 @@ class ContainerClassificationTable {
     row.innerHTML = `
       <td data-field="item_code" class="text-break"></td>
       <td data-field="tote_classification" class="text-break"></td>
+      <td data-field="flush_tote" class="text-break"></td>
       <td data-field="hose_color" class="text-break"></td>
       <td data-field="tank_classification" class="text-break"></td>
       <td data-field="actions" class="text-center">
@@ -886,6 +893,7 @@ class ContainerClassificationTable {
     const assignments = {
       item_code: normalizeItemCode(classification.item_code || ''),
       tote_classification: classification.tote_classification || '',
+      flush_tote: classification.flush_tote || '',
       hose_color: classification.hose_color || '',
       tank_classification: classification.tank_classification || '',
     };
