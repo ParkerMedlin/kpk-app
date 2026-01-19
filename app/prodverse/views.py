@@ -10,7 +10,7 @@ from django.views.decorators.http import require_POST
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.shortcuts import render, redirect, get_object_or_404
-from core.models import BillOfMaterials, CiItem, ImItemWarehouse
+from core.models import BillOfMaterials, CiItem, ImItemWarehouse, BlendContainerClassification
 from prodverse.models import *
 from django.db import transaction
 from django.db.models import Q
@@ -220,6 +220,14 @@ def display_specsheet_detail(request, item_code, po_number, juliandate):
             )
         specsheet = queryset.first()
         item_code_description = CiItem.objects.only("itemcodedesc").get(itemcode__iexact=item_code).itemcodedesc
+
+        flush_tote = None
+        if specsheet.component_item_code:
+            container_classification = BlendContainerClassification.objects.filter(
+                item_code__iexact=specsheet.component_item_code
+            ).first()
+            if container_classification:
+                flush_tote = container_classification.flush_tote
         bom = BillOfMaterials.objects.filter(item_code__iexact=item_code) \
             .exclude(Q(component_item_code__startswith='/') & ~Q(component_item_code__startswith='/C'))
         label_component_item_codes = list(SpecSheetLabels.objects.values_list('item_code', flat=True))
@@ -278,6 +286,7 @@ def display_specsheet_detail(request, item_code, po_number, juliandate):
             'notes': specsheet.notes,
             'bill_of_materials': bom,
             'state_json': context_state_json,
+            'flush_tote': flush_tote,
         }
     except SpecSheetData.DoesNotExist:
         return redirect('/prodverse/specsheet/specsheet-lookup/?redirect=true')

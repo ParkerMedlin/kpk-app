@@ -1260,6 +1260,7 @@ class BlendContainerClassification(models.Model):
     tote_classification = models.TextField(blank=False, default='')
     hose_color = models.TextField(blank=False, default='')
     tank_classification = models.TextField(blank=False, default='')
+    flush_tote = models.TextField(blank=True, null=True, default='')
 
     def __str__(self):
         return self.item_code
