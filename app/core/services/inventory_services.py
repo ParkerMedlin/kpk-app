@@ -820,7 +820,7 @@ def add_count_records(item_codes_list, record_type):
                 counted_quantity = 0,
                 counted_date = dt.date.today(),
                 variance = 0 - this_item_onhandquantity,
-                count_type = 'blend',
+                count_type = record_type,
                 collection_id = this_collection_id
             )
             new_count_record.save()
