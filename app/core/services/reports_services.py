@@ -162,6 +162,7 @@ _MISC_REPORT_DEFINITIONS = [
         'requires_item': True,
         'requires_quantity': False,
         'requires_start_time': False,
+        'supports_deeptime': True,
     },
     {
         'slug': 'BOM-Cost-Tool',
@@ -1604,14 +1605,15 @@ def build_component_stock_coverage_payload():
         'tanks': tank_levels,
     }
 
-def generate_transaction_mismatches_report(item_code):
+def generate_transaction_mismatches_report(item_code, use_deeptime=False):
     try:
+        TransactionModel = get_transaction_history_model(use_deeptime)
         parent_items = BillOfMaterials.objects.filter(component_item_code__iexact=item_code)
         parent_item_qtyperbills = { item.item_code : item.qtyperbill for item in parent_items }
         parent_item_codes = parent_items.values_list('item_code', flat=True)
-        component_item_transaction_quantities = { transaction.entryno : transaction.transactionqty for transaction in ImItemTransactionHistory.objects.filter(itemcode__iexact=item_code).filter(transactioncode='BI') }
+        component_item_transaction_quantities = { transaction.entryno : transaction.transactionqty for transaction in TransactionModel.objects.filter(itemcode__iexact=item_code).filter(transactioncode='BI') }
         print(component_item_transaction_quantities)
-        parent_item_transactions = ImItemTransactionHistory.objects.filter(itemcode__in=parent_item_codes).filter(transactioncode='BR').order_by('-transactiondate')
+        parent_item_transactions = TransactionModel.objects.filter(itemcode__in=parent_item_codes).filter(transactioncode='BR').order_by('-transactiondate')
 
         for transaction in parent_item_transactions:
             transaction.qtyperbill = parent_item_qtyperbills[transaction.itemcode]
@@ -1684,7 +1686,8 @@ def generate_transaction_mismatches_report(item_code):
         render_payload = {
             'template_string' : 'core/reports/transactionmismatches.html',
             'context' : {'parent_item_transactions' : parent_item_transactions,
-                         'item_code' : item_code}
+                         'item_code' : item_code,
+                         'use_deeptime': use_deeptime}
         }
         return render_payload
         
@@ -1757,7 +1760,7 @@ def create_report(request, which_report, item_code, use_deeptime=None):
         render_payload = generate_component_usage_for_scheduled_blends_report(item_code)
     
     elif which_report=="Transaction-Mismatches":
-        render_payload = generate_transaction_mismatches_report(item_code)
+        render_payload = generate_transaction_mismatches_report(item_code, use_deeptime=use_deeptime)
 
     return render_payload
 
