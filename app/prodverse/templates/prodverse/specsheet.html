@@ -174,12 +174,23 @@
                 <td colspan="2">{{ product_class }}</td>
             </tr>
 
+            <tr class="align-middle">
+                <td></td>
+                <td></td>
+                <td class="align-middle"><div class="align-middle" style="padding-top: 10px; padding-bottom: 10px;"><strong>Flush Tote:</strong></div></td>
+                <td class="align-middle"><div class="align-middle" style="padding-top: 10px; padding-bottom: 10px; ">
+                    <span class="badge bg-primary" style="font-size: 16px;">{% if flush_tote %}{{ flush_tote }}{% else %}N/A{% endif %}</span></div>
+                </td>
+                {% comment %} colspan="4" {% endcomment %}
+            </tr>
+
             <tr>
                 <td class="align-middle"><input type="checkbox" class="larger-checkbox" id="cb05"></td>
                 <td class="align-middle"><input type="checkbox" class="larger-checkbox" id="cb06"></td>
                 <td>Water Flush</td>
                 <td colspan="2">{{ water_flush }}</td>
             </tr>
+
             <tr>
                 <td class="align-middle"><input type="checkbox" class="larger-checkbox" id="cb07"></td>
                 <td class="align-middle"><input type="checkbox" class="larger-checkbox" id="cb08"></td>
