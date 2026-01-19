@@ -2112,6 +2112,9 @@ def display_all_purchasing_aliases(request):
 @ensure_csrf_cookie
 def display_container_classifications(request):
     classifications = BlendContainerClassification.objects.order_by('item_code', 'id')
+    for item in classifications:
+        print(item.item_code)
+        print(item.flush_tote)
     form = BlendContainerClassificationForm()
 
     context = {

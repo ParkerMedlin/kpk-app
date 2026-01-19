@@ -42,7 +42,8 @@
             <thead class="th-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
                 <tr>
                     <th scope="col">Item Code</th>
-                    <th scope="col">Tote Class</th>
+                    <th scope="col">Storage Tote</th>
+                    <th scope="col">Flush Tote</th>
                     <th scope="col">Hose Class</th>
                     <th scope="col">Container Guidance</th>
                     <th scope="col" class="text-center">Actions</th>
@@ -53,6 +54,7 @@
                 <tr class="filterableRow" data-classification-id="{{ classification.id }}">
                     <td data-field="item_code" data-value="{{ classification.item_code|default_if_none:'' }}">{{ classification.item_code|default_if_none:'' }}</td>
                     <td data-field="tote_classification" data-value="{{ classification.tote_classification|default_if_none:'' }}" class="text-break">{{ classification.tote_classification|default_if_none:'' }}</td>
+                    <td data-field="flush_tote" data-value="{{ classification.flush_tote|default_if_none:'' }}" class="text-break">{{ classification.flush_tote|default_if_none:'' }}</td>
                     <td data-field="hose_color" data-value="{{ classification.hose_color|default_if_none:'' }}" class="text-break">{{ classification.hose_color|default_if_none:'' }}</td>
                     <td data-field="tank_classification" data-value="{{ classification.tank_classification|default_if_none:'' }}" class="text-break">{{ classification.tank_classification|default_if_none:'' }}</td>
                     <td data-field="actions" class="text-center">
@@ -63,7 +65,7 @@
                 </tr>
             {% empty %}
                 <tr>
-                    <td colspan="5" class="text-center py-4">No classifications found.</td>
+                    <td colspan="6" class="text-center py-4">No classifications found.</td>
                 </tr>
             {% endfor %}
             </tbody>
