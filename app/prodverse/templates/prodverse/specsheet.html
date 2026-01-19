@@ -141,6 +141,11 @@
 
 <div class="specsheetTableContainer" style="max-width: 800px;">
     <div class="noPrint" id="flushButtonContainer" style="text-align: center; margin-bottom: 1rem;">
+        {% if flush_tote %}
+        <div class="alert alert-info" style="display: inline-block; margin-right: 1rem; padding: 0.5rem 1rem;">
+            <strong>Flush Tote:</strong> {{ flush_tote }}
+        </div>
+        {% endif %}
         <button class="btn btn-secondary" onclick="document.getElementById('flushPartsDialog').showModal()">Show Flush Part Numbers</button>
     </div>
     <table class="specsheet-table table">
