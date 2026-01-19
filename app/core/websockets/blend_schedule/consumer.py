@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 from collections import deque
@@ -7,6 +8,7 @@ from channels.exceptions import StopConsumer
 from channels.generic.websocket import AsyncWebsocketConsumer
 
 from app.websockets.base_consumer import (
+    DISCONNECT_TIMEOUT,
     RedisBackedConsumer,
     json_default,
     sanitize_events,
@@ -59,14 +61,13 @@ class BlendScheduleConsumer(RedisBackedConsumer, AsyncWebsocketConsumer):
         await self._send_initial_state()
 
     async def disconnect(self, close_code: int) -> None:
-        if self.group_name:
-            await self.channel_layer.group_discard(self.group_name, self.channel_name)
+        await self.safe_group_discard()
         try:
-            await self.channel_layer.group_discard(
-                LEGACY_GROUP_NAME,
-                self.channel_name,
+            await asyncio.wait_for(
+                self.channel_layer.group_discard(LEGACY_GROUP_NAME, self.channel_name),
+                timeout=DISCONNECT_TIMEOUT,
             )
-        except Exception:
+        except (asyncio.TimeoutError, Exception):
             logger.debug("Legacy group discard failed for %s", LEGACY_GROUP_NAME)
         raise StopConsumer
 

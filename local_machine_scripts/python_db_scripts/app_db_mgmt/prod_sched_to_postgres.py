@@ -321,12 +321,28 @@ def get_starbrite_item_quantities():
             writer = csv.writer(my_new_csv)
             writer.writerow(header_name_list)
         sheet_name = "REWORK"
-        sheet_df = pd.read_excel(source_file_path, sheet_name, usecols = 'C:D', skiprows = 2, nrows = 50)
-        sheet_df = sheet_df.dropna(how='any', axis=0) #get rid of all rows that don't have anything in them
-        sheet_df = sheet_df[~sheet_df.apply(lambda row: row.astype(str).str.contains('# CS ON HAND').any(), axis=1)]
-        sheet_df = sheet_df[~sheet_df.apply(lambda row: row.astype(str).str.contains('P/N').any(), axis=1)]
+        # Read the REWORK tab but keep only the lower "external part numbers" section.
+        # The top half looks like a schedule and puts part numbers in column C; those
+        # rows will have non-numeric quantities, so we drop anything that cannot be
+        # coerced to a number.
+        sheet_df = pd.read_excel(
+            source_file_path,
+            sheet_name,
+            usecols='C:D',
+            skiprows=2,
+            header=None,
+            names=["quantity_raw", "item_code"],
+        )
+        sheet_df = sheet_df.dropna(how='all')
+        sheet_df = sheet_df[
+            ~sheet_df.apply(lambda row: row.astype(str).str.contains('# CS ON HAND|P/N', case=False, na=False), axis=1)
+        ]
+        sheet_df["quantity"] = pd.to_numeric(sheet_df["quantity_raw"], errors="coerce")
+        sheet_df = sheet_df[sheet_df["quantity"].notna()]
+        sheet_df["item_code"] = sheet_df["item_code"].astype(str).str.strip()
+        sheet_df = sheet_df[sheet_df["item_code"] != ""]
+        sheet_df = sheet_df[["quantity", "item_code"]]
 
-        sheet_df["id"] = np.arange(len(sheet_df))
         sheet_df.to_csv(starbrite_item_quantities_temp_csv_path, mode='a', header=False, index=False)
         starbrite_item_quantities_csv_path  = (os.path.expanduser('~\\Documents')
                             +"\\kpk-app\\db_imports\\starbrite_item_quantities.csv")
@@ -348,7 +364,7 @@ def get_starbrite_item_quantities():
         connection_postgres = psycopg2.connect('postgresql://postgres:REDACTED_DB_PASSWORD@localhost:5432/blendversedb')
         cursor_postgres = connection_postgres.cursor()
         cursor_postgres.execute("CREATE TABLE starbrite_item_quantities_TEMP" + sql_columns_with_types)
-        copy_sql = "COPY starbrite_item_quantities_TEMP FROM stdin WITH CSV HEADER DELIMITER as ','"
+        copy_sql = "COPY starbrite_item_quantities_TEMP (quantity, item_code) FROM stdin WITH CSV HEADER DELIMITER as ','"
         with open(starbrite_item_quantities_csv_path, 'r', encoding='utf-8') as f:
             cursor_postgres.copy_expert(sql=copy_sql, file=f)
         cursor_postgres.execute("DROP TABLE IF EXISTS starbrite_item_quantities")
@@ -545,12 +561,25 @@ def sync_production_schedule(file_buffer=None):
             writer.writerow(header_name_list)
         sheet_name = "REWORK"
         file_buffer.seek(0)
-        sheet_df = pd.read_excel(file_buffer, sheet_name, usecols = 'C:D', skiprows = 2, nrows = 50)
-        sheet_df = sheet_df.dropna(how='any', axis=0)
-        sheet_df = sheet_df[~sheet_df.apply(lambda row: row.astype(str).str.contains('# CS ON HAND').any(), axis=1)]
-        sheet_df = sheet_df[~sheet_df.apply(lambda row: row.astype(str).str.contains('P/N').any(), axis=1)]
+        # Keep only the lower REWORK section by requiring numeric quantities.
+        sheet_df = pd.read_excel(
+            file_buffer,
+            sheet_name,
+            usecols='C:D',
+            skiprows=2,
+            header=None,
+            names=["quantity_raw", "item_code"],
+        )
+        sheet_df = sheet_df.dropna(how='all')
+        sheet_df = sheet_df[
+            ~sheet_df.apply(lambda row: row.astype(str).str.contains('# CS ON HAND|P/N', case=False, na=False), axis=1)
+        ]
+        sheet_df["quantity"] = pd.to_numeric(sheet_df["quantity_raw"], errors="coerce")
+        sheet_df = sheet_df[sheet_df["quantity"].notna()]
+        sheet_df["item_code"] = sheet_df["item_code"].astype(str).str.strip()
+        sheet_df = sheet_df[sheet_df["item_code"] != ""]
+        sheet_df = sheet_df[["quantity", "item_code"]]
 
-        sheet_df["id"] = np.arange(len(sheet_df))
         sheet_df.to_csv(starbrite_item_quantities_temp_csv_path, mode='a', header=False, index=False)
         starbrite_item_quantities_csv_path  = (os.path.expanduser('~\\Documents')
                             +"\\kpk-app\\db_imports\\starbrite_item_quantities.csv")
@@ -569,7 +598,7 @@ def sync_production_schedule(file_buffer=None):
         connection_postgres = psycopg2.connect('postgresql://postgres:REDACTED_DB_PASSWORD@localhost:5432/blendversedb')
         cursor_postgres = connection_postgres.cursor()
         cursor_postgres.execute("CREATE TABLE starbrite_item_quantities_TEMP" + sql_columns_with_types)
-        copy_sql = "COPY starbrite_item_quantities_TEMP FROM stdin WITH CSV HEADER DELIMITER as ','"
+        copy_sql = "COPY starbrite_item_quantities_TEMP (quantity, item_code) FROM stdin WITH CSV HEADER DELIMITER as ','"
         with open(starbrite_item_quantities_csv_path, 'r', encoding='utf-8') as f:
             cursor_postgres.copy_expert(sql=copy_sql, file=f)
         cursor_postgres.execute("DROP TABLE IF EXISTS starbrite_item_quantities")
