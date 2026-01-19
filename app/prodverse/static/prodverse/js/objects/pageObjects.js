@@ -44,7 +44,6 @@ export class ProductionSchedulePage {
             this.cartonPrintStatuses = {};
             this.columnIndexCache = {};
             this.setupProductionSchedule();
-            this.initScheduleUpdateWebSocket();
         } catch(err) {
             console.error(err.message);
         };

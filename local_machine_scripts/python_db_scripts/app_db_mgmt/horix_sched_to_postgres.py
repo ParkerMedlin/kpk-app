@@ -20,7 +20,7 @@ def floatHourToTime(fh):
         int(seconds * 60),
     )
 
-def get_horix_line_blends(file_buffer=None, use_dev=False):
+def get_horix_line_blends(file_buffer=None, use_dev=False, logger=None):
     """
     Args:
         file_buffer: Optional BytesIO buffer containing ProductionSchedule.xlsb.
@@ -36,9 +36,13 @@ def get_horix_line_blends(file_buffer=None, use_dev=False):
             source.seek(0)  # Reset buffer position
             print(f'{dt.datetime.now()} :: horix_sched_to_postgres.py :: get_horix_line_blends :: Using provided buffer')
         sheet_df = pd.read_excel(source, 'Horix Line', usecols = 'C:K')
+        # sheet_df.to_csv(r'C:\Users\pmedlin\Desktop\horix_debug.csv', index=False)
         sheet_df = sheet_df.iloc[2:] # take out first two rows of the table body
+        # if logger:
+        #     logger.info(sheet_df)
         sheet_df.columns = ['item_code','po_number','item_description','amt','blend','dye','Case Size','item_run_qty','run_date']
-
+        # if logger:
+        #     logger.info(sheet_df[sheet_df['Case Size'].str.contains('pail', case=False, na=False)]['Case Size'].unique())
         # take out non-useful rows
         sheet_df = sheet_df.dropna(axis=0, how='any', subset=['po_number'])
         sheet_df = sheet_df[sheet_df['po_number'] != 'XXXX']
