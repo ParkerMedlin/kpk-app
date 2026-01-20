@@ -51,7 +51,7 @@ Use existing naming conventions: `flush_tote_services.py`, `flush_tote_selectors
   - **Verify**: Requests return expected payload/status codes.  
   - **Requirement**: Core Functionality – create/update via async calls; Error Handling responses.
 
-- [ ] **3.3** Wire URL routes  
+- [x] **3.3** Wire URL routes  
   - **Do**: Add paths for web + API in `app/core/urls.py`.  
   - **Deliverable**: Routes resolve (`flush-totes/`, `api/flush-totes/`, `api/flush-totes/<id>/`).  
   - **Verify**: `python manage.py show_urls` or manual reverse succeeds.
@@ -108,12 +108,12 @@ Use existing naming conventions: `flush_tote_services.py`, `flush_tote_selectors
 |-------|--------|----------------|
 | 1. Data Layer | Complete | 3/3 |
 | 2. Business Logic | Complete | 2/2 |
-| 3. API/Views | Not Started | 0/3 |
+| 3. API/Views | Complete | 3/3 |
 | 4. Frontend | Not Started | 0/3 |
 | 5. WebSocket | Not Started | 0/3 |
 | 6. Integration | Not Started | 0/2 |
 
-**Overall**: 5/16 tasks (31%)
+**Overall**: 8/16 tasks (50%)
 
 ---
 
