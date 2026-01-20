@@ -40,7 +40,7 @@ Use existing naming conventions: `flush_tote_services.py`, `flush_tote_selectors
 
 ## Phase 3: API/Views
 
-- [ ] **3.1** Add web view  
+- [x] **3.1** Add web view  
   - **Do**: Create `flush_totes_view` in `app/core/views/web.py` to render page with options + initial data.  
   - **Deliverable**: View returns template context for production lines, flush types, current totes.  
   - **Requirement**: UX – page available to both roles.
