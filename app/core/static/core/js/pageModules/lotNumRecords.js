@@ -3,6 +3,7 @@ import { ShiftSelectCheckBoxes } from '../objects/pageUtilities.js'
 import { CreateCountListButton, GHSSheetGenerator, CreateBlendLabelButton, EditLotNumButton } from '../objects/buttonObjects.js'
 import { BlendScheduleSocket } from '../websockets/blendScheduleSocket.js';
 import { getOrphanedLots } from '../requestFunctions/requestFunctions.js';
+import { initDataTableWithExport } from '../objects/tableObjects.js';
 
 // Notification helper
 function showPrintNotification(type, title, message) {
@@ -92,6 +93,8 @@ function enhanceLotNumRecordTableForWebSockets() {
 // --- End functions for data-blend-id ---
 
 $(document).ready(function(){
+    initDataTableWithExport('#lotNumRecordsTable');
+
     const thisShiftSelectCheckBoxes = new ShiftSelectCheckBoxes();
     const thisGHSSheetGenerator = new GHSSheetGenerator();
     let thisScheduleItemModal;
