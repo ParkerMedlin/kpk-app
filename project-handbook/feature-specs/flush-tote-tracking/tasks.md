@@ -45,7 +45,7 @@ Use existing naming conventions: `flush_tote_services.py`, `flush_tote_selectors
   - **Deliverable**: View returns template context for production lines, flush types, current totes.  
   - **Requirement**: UX – page available to both roles.
 
-- [ ] **3.2** Add API endpoints  
+- [x] **3.2** Add API endpoints  
   - **Do**: Implement list/create (`flush_tote_list_api`) and update (`flush_tote_detail_api`) in `app/core/views/api.py` using services; enforce role-based editable fields.  
   - **Deliverable**: JSON endpoints for POST/PATCH.  
   - **Verify**: Requests return expected payload/status codes.  

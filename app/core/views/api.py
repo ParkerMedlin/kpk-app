@@ -22,6 +22,7 @@ from core.models import (
 from prodverse.models import SpecSheetData
 from django.http import JsonResponse, HttpRequest
 from django.core.cache import cache
+from django.core.exceptions import ValidationError
 from django.conf import settings
 import json, math, logging, re
 from decimal import Decimal, InvalidOperation
@@ -48,6 +49,8 @@ from django.db import connection
 from core.selectors.inventory_selectors import get_count_record_model
 from core.services.tank_levels_services import get_tank_levels_html, extract_all_tank_levels
 from core.services import reports_services
+from core.services import create_flush_tote_reading, record_action_and_final_ph, record_initial_ph
+from core.services.flush_tote_services import GROUP_LAB_TECHNICIAN, GROUP_LINE_PERSONNEL
 from core.services.bom_costing_service import (
     BomCostingService,
     CircularBomReferenceError,
@@ -63,6 +66,7 @@ from core.services.cost_impact_service import analyze_cost_impacts
 import time
 from django.utils.dateparse import parse_datetime
 from typing import Dict
+from core.selectors import get_flush_tote, list_flush_totes
 
 logger = logging.getLogger(__name__)
 
@@ -2190,3 +2194,175 @@ def get_json_cost_impact_analysis(request):
     }
 
     return JsonResponse(payload)
+
+
+def _user_in_group(user, group_name):
+    if not user or not getattr(user, 'is_authenticated', False):
+        return False
+    return user.groups.filter(name__iexact=group_name).exists()
+
+
+def _user_display(user):
+    if not user:
+        return None
+    full_name = user.get_full_name()
+    return full_name or user.get_username()
+
+
+def _serialize_flush_tote_reading(tote):
+    return {
+        'id': tote.id,
+        'date': tote.date.isoformat() if tote.date else None,
+        'production_line': tote.production_line,
+        'flush_type': tote.flush_type,
+        'initial_pH': _safe_float(tote.initial_pH),
+        'action_required': tote.action_required or '',
+        'final_pH': _safe_float(tote.final_pH),
+        'approval_status': tote.approval_status,
+        'lab_technician_id': tote.lab_technician_id,
+        'lab_technician_name': _user_display(tote.lab_technician),
+        'line_personnel_id': tote.line_personnel_id,
+        'line_personnel_name': _user_display(tote.line_personnel),
+    }
+
+
+def _parse_flush_tote_payload(request):
+    if request.content_type and 'application/json' in request.content_type:
+        payload = _parse_json_payload(request)
+        if payload is None:
+            raise ValueError('Invalid JSON payload.')
+        return payload
+    return request.POST.dict()
+
+
+def _validation_error_payload(exc):
+    if hasattr(exc, 'message_dict'):
+        return exc.message_dict
+    return {'error': exc.messages}
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def flush_tote_list_api(request):
+    if request.method == "GET":
+        limit_param = (request.GET.get("limit") or "").strip()
+        limit = None
+        if limit_param:
+            try:
+                parsed = int(limit_param)
+                if parsed < 1:
+                    raise ValueError
+                limit = min(parsed, 1000)
+            except ValueError:
+                return JsonResponse({"error": "limit must be a positive integer"}, status=400)
+
+        totes = list_flush_totes(limit=limit)
+        return JsonResponse(
+            {
+                'status': 'success',
+                'totes': [_serialize_flush_tote_reading(tote) for tote in totes],
+            }
+        )
+
+    try:
+        payload = _parse_flush_tote_payload(request)
+    except ValueError as exc:
+        return JsonResponse({'status': 'error', 'error': str(exc)}, status=400)
+
+    production_line = (payload.get('production_line') or '').strip()
+    flush_type = (payload.get('flush_type') or '').strip()
+    initial_ph = payload.get('initial_pH')
+    action_required = payload.get('action_required')
+    final_ph = payload.get('final_pH')
+
+    try:
+        tote = create_flush_tote_reading(
+            production_line=production_line,
+            flush_type=flush_type,
+            user=request.user,
+            initial_pH=initial_ph,
+            action_required=action_required,
+            final_pH=final_ph,
+        )
+    except ValidationError as exc:
+        return JsonResponse({'status': 'error', 'errors': _validation_error_payload(exc)}, status=400)
+
+    return JsonResponse(
+        {
+            'status': 'success',
+            'tote': _serialize_flush_tote_reading(tote),
+        },
+        status=201,
+    )
+
+
+@login_required
+@require_http_methods(["PATCH", "PUT"])
+def flush_tote_detail_api(request, pk):
+    try:
+        payload = _parse_flush_tote_payload(request)
+    except ValueError as exc:
+        return JsonResponse({'status': 'error', 'error': str(exc)}, status=400)
+
+    if not payload:
+        return JsonResponse({'status': 'error', 'error': 'No update fields provided.'}, status=400)
+
+    try:
+        tote = get_flush_tote(pk)
+    except Exception:
+        return JsonResponse({'status': 'error', 'error': 'Flush tote not found.'}, status=404)
+
+    is_admin = request.user.is_staff or request.user.is_superuser
+    is_line = is_admin or _user_in_group(request.user, GROUP_LINE_PERSONNEL)
+    is_lab = is_admin or _user_in_group(request.user, GROUP_LAB_TECHNICIAN)
+
+    line_fields = {'production_line', 'flush_type'}
+    lab_fields = {'initial_pH', 'final_pH', 'action_required'}
+
+    requested_line_fields = line_fields.intersection(payload.keys())
+    requested_lab_fields = lab_fields.intersection(payload.keys())
+
+    if requested_line_fields and not is_line:
+        return JsonResponse({'status': 'error', 'error': 'Forbidden'}, status=403)
+    if requested_lab_fields and not is_lab:
+        return JsonResponse({'status': 'error', 'error': 'Forbidden'}, status=403)
+    if not requested_line_fields and not requested_lab_fields:
+        return JsonResponse({'status': 'error', 'error': 'No valid fields supplied.'}, status=400)
+
+    try:
+        if requested_line_fields:
+            updated_fields = []
+            if 'production_line' in requested_line_fields:
+                tote.production_line = (payload.get('production_line') or '').strip()
+                updated_fields.append('production_line')
+            if 'flush_type' in requested_line_fields:
+                tote.flush_type = (payload.get('flush_type') or '').strip()
+                updated_fields.append('flush_type')
+
+            tote.full_clean()
+            tote.save(update_fields=updated_fields)
+
+        if 'initial_pH' in requested_lab_fields:
+            tote = record_initial_ph(tote, ph_value=payload.get('initial_pH'), user=request.user)
+
+        if 'final_pH' in requested_lab_fields:
+            tote = record_action_and_final_ph(
+                tote,
+                action_text=payload.get('action_required'),
+                final_ph=payload.get('final_pH'),
+                user=request.user,
+            )
+        elif 'action_required' in requested_lab_fields:
+            tote.action_required = (payload.get('action_required') or '').strip()
+            tote.full_clean()
+            tote.save(update_fields=['action_required'])
+
+    except ValidationError as exc:
+        return JsonResponse({'status': 'error', 'errors': _validation_error_payload(exc)}, status=400)
+
+    return JsonResponse(
+        {
+            'status': 'success',
+            'tote': _serialize_flush_tote_reading(tote),
+        }
+    )
