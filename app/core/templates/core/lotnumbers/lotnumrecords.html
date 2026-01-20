@@ -1,7 +1,9 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block scripts %} 
+{% block scripts %}
     <link rel="stylesheet" type="text/css" href="{% static 'core/css/lotNumRecords.css' %}">
+    <link rel="stylesheet" href="{% static 'core/css/thirdPartyLibraries/jquery.dataTables.min.css' %}">
+    <script src="{% static 'core/js/thirdPartyLibraries/datatables/jquery.dataTables.min.js' %}"></script>
 {% endblock%}
 {% block title %}<title>Lot Numbers</title>{% endblock %}
 
@@ -31,7 +33,7 @@
     {% include 'core/labels/modals/blendlabeltemplate.html' %}
 
     <div class="table-responsive-sm">
-        <table class="table text-left table-bordered table-hover">
+        <table id="lotNumRecordsTable" class="table text-left table-bordered table-hover">
             <thead class="thead-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
                 <tr>
                     {% if user.is_staff %}<th scope="col" class='text-center'></th>{% endif %}

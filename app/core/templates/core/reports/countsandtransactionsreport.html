@@ -2,10 +2,13 @@
 {% load static %}
 {% block title %}<title>Counts and Transactions</title>{% endblock %}
 
+{% block scripts %}
+    <link rel="stylesheet" type="text/css" href="{% static 'core/css/countsAndTransactions.css' %}">
+    <link rel="stylesheet" href="{% static 'core/css/thirdPartyLibraries/jquery.dataTables.min.css' %}">
+    <script src="{% static 'core/js/thirdPartyLibraries/datatables/jquery.dataTables.min.js' %}"></script>
+{% endblock scripts %}
 
 {% block content %}
-
-<link rel="stylesheet" type="text/css" href="{% static 'core/css/countsAndTransactions.css' %}">
 <div class='text-center'><a href='/core/reports/'>Return to the Reports Page</a></div>
 
 <div class='text-center'>
@@ -15,7 +18,7 @@
 
 {% include 'core/partials/deeptime_toggle.html' %}
 
-<table class="table text-left table-bordered table-hover">
+<table id="countsAndTransactionsTable" class="table text-left table-bordered table-hover">
     <thead class="thead-dark">
         <tr>
             <th scope="col">Part Number</th>
@@ -52,3 +55,7 @@
     {% endfor %}
 </table>
 {% endblock content %}
+
+{% block belowdeckscripts %}
+    <script src="{% static 'core/js/pageModules/countsAndTransactionsReport.js' %}"></script>
+{% endblock %}

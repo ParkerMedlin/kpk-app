@@ -8,7 +8,7 @@
         <h1>Count History for {{ item_info.item_code }} {{ item_info.item_description }}</h1>
     </div>
 
-    <table class="table text-left table-bordered table-hover">
+    <table class="table text-left table-bordered table-hover" id="inventoryCountsTable">
         <thead class="thead-dark">
             <tr>
                 <th scope="col">Part Number</th>
@@ -18,14 +18,32 @@
                 <th scope="col">Variance</th>
             </tr>
         </thead>
+        <tbody>
         {% for item in blend_count_records %}
             <tr>
                 <td>{{ item.item_code }}</td>
                 <td>{{ item.item_description }}</td>
                 <td>{{ item.counted_quantity|floatformat:0 }}</td>
-                <td>{{ item.counted_date }}</td>
+                <td data-order="{{ item.counted_date|date:'Y-m-d' }}">{{ item.counted_date }}</td>
                 <td>{{ item.variance }}</td>
             </tr>
         {% endfor %}
+        </tbody>
     </table>
 {% endblock content %}
+
+{% block scripts %}
+<link rel="stylesheet" href="{% static 'core/css/thirdPartyLibraries/jquery.dataTables.min.css' %}">
+<link rel="stylesheet" href="{% static 'core/css/thirdPartyLibraries/buttons.dataTables.min.css' %}">
+<script src="{% static 'core/js/thirdPartyLibraries/jszip.min.js' %}"></script>
+<script src="{% static 'core/js/thirdPartyLibraries/pdfmake.min.js' %}"></script>
+<script src="{% static 'core/js/thirdPartyLibraries/vfs_fonts.js' %}"></script>
+<script src="{% static 'core/js/thirdPartyLibraries/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'core/js/thirdPartyLibraries/datatables/dataTables.buttons.min.js' %}"></script>
+<script src="{% static 'core/js/thirdPartyLibraries/datatables/buttons.html5.min.js' %}"></script>
+<script src="{% static 'core/js/thirdPartyLibraries/datatables/buttons.print.min.js' %}"></script>
+{% endblock %}
+
+{% block belowdeckscripts %}
+<script type="module" src="{% static 'core/js/pageModules/inventoryCountsReport.js' %}"></script>
+{% endblock %}

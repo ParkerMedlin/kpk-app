@@ -30,7 +30,8 @@ $BlendSheetFolders = @(
     "\\KinPak-Svr1\users\qclab\My Documents\Lab Sheets 04 10 07\Blend Sheets 06 15 07\BLEND SHEETS 06 15 07\5) -SPLASH W-W\NON-repel formulas",
     "\\KinPak-Svr1\users\qclab\My Documents\Lab Sheets 04 10 07\Blend Sheets 06 15 07\BLEND SHEETS 06 15 07\5) -SPLASH W-W\REPEL formulas",
     "\\KinPak-Svr1\users\qclab\My Documents\Lab Sheets 04 10 07\Blend Sheets 06 15 07\BLEND SHEETS 06 15 07\7) LET BLENDS",
-    "\\KinPak-Svr1\users\qclab\My Documents\Lab Sheets 04 10 07\Blend Sheets 06 15 07\BLEND SHEETS 06 15 07\6) Teak Sealer"
+    "\\KinPak-Svr1\users\qclab\My Documents\Lab Sheets 04 10 07\Blend Sheets 06 15 07\BLEND SHEETS 06 15 07\6) Teak Sealer",
+    "\\KinPak-Svr1\users\qclab\My Documents\Lab Sheets 04 10 07\Blend Sheets 06 15 07\BLEND SHEETS 06 15 07\Flush Totes"
 )
 
 $Result = @{
