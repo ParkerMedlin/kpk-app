@@ -15,10 +15,10 @@ Implementation tasks for the flush tote testing/approval workflow. Work through 
   - **Verify**: `python manage.py makemigrations` succeeds.  
   - **Requirement**: Core Functionality – auto date, required line & flush type, pH tracking.
 
-- [ ] **1.2** Apply migrations (this will be delegated to user, do not do this yourself)
+- [x] **1.2** Apply migrations (this will be delegated to user, do not do this yourself)
   - **Do**: prompt user to execute the migrations
 
-- [ ] **1.3** Create selectors  
+- [x] **1.3** Create selectors  
   - **Do**: Implement `list_flush_totes`, `get_flush_tote`, `get_flush_type_options` in `app/core/selectors/flush_tote_selectors.py`; export via `__init__.py`.  
   - **Deliverable**: Selector module returning recent totes and option lists.  
   - **Verify**: Functions return expected QuerySets/options in shell.  
@@ -105,15 +105,15 @@ Implementation tasks for the flush tote testing/approval workflow. Work through 
 
 | Phase | Status | Tasks Complete |
 |-------|--------|----------------|
-| 1. Data Layer | In Progress | 1/3 |
+| 1. Data Layer | Complete | 3/3 |
 | 2. Business Logic | Not Started | 0/2 |
 | 3. API/Views | Not Started | 0/3 |
 | 4. Frontend | Not Started | 0/3 |
 | 5. WebSocket | Not Started | 0/3 |
 | 6. Integration | Not Started | 0/2 |
 
-**Overall**: 1/16 tasks (6%)
+**Overall**: 3/16 tasks (19%)
 
 ---
 
-**Status**: Draft
+**Status**: In Progress
