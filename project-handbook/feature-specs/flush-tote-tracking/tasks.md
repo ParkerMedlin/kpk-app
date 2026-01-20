@@ -68,7 +68,7 @@ Use existing naming conventions: `flush_tote_services.py`, `flush_tote_selectors
   - **Deliverable**: Interactive page with client-side validation, toast/errors.  
   - **Verify**: Creating/editing rows works without reload.
 
-- [ ] **4.3** Add navigation entry (if needed)  
+- [x] **4.3** Add navigation entry (if needed)  
   - **Do**: Link page from appropriate navbar/menu.  
   - **Deliverable**: Nav link to `flush-totes/`.  
   - **Verify**: Link appears for permitted roles.
@@ -109,11 +109,11 @@ Use existing naming conventions: `flush_tote_services.py`, `flush_tote_selectors
 | 1. Data Layer | Complete | 3/3 |
 | 2. Business Logic | Complete | 2/2 |
 | 3. API/Views | Complete | 3/3 |
-| 4. Frontend | In Progress | 2/3 |
+| 4. Frontend | Complete | 3/3 |
 | 5. WebSocket | Not Started | 0/3 |
 | 6. Integration | Not Started | 0/2 |
 
-**Overall**: 10/16 tasks (62%)
+**Overall**: 11/16 tasks (69%)
 
 ---
 
