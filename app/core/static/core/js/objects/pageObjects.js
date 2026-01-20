@@ -1,6 +1,6 @@
-import { getMaxProducibleQuantity, getURLParameter, getNewBlendInstructionInfo, getItemInfo } from '../requestFunctions/requestFunctions.js'
+import { getMaxProducibleQuantity, getURLParameter, getItemInfo } from '../requestFunctions/requestFunctions.js'
 // import { getContainersFromCount } from '../requestFunctions/requestFunctions.js'
-import { updateBlendInstructionsOrder, logContainerLabelPrint, updateCountCollection } from '../requestFunctions/updateFunctions.js'
+import { logContainerLabelPrint, updateCountCollection } from '../requestFunctions/updateFunctions.js'
 // import { ItemReferenceFieldPair } from './lookupFormObjects.js'
 
 // Initialize a cache for conversion data
@@ -3280,115 +3280,6 @@ export class CountReportPage {
             console.log("Error", err.message);
         };
     };
-};
-
-export class BlendInstructionEditorPage {
-    constructor() {
-        try {
-            this.setupDragnDrop();
-            this.setupEventListeners();
-            this.setReadOnlyFields();
-            this.setupFormMonitoring();
-        } catch(err) {
-            console.error(err.message);
-        };
-    };
-
-
-    setupDragnDrop(){
-        $(function () {
-            // .sortable is a jquery function that makes your table
-            // element drag-n-droppable.
-            // Currently can't highlight text in the table cells.
-            $("#blendInstructionTable").sortable({
-                items: '.tableBodyRow',
-                cursor: 'move',
-                axis: 'y',
-                dropOnEmpty: false,
-                start: function (e, ui) {
-                    ui.item.addClass("selected");
-                },
-                stop: function (e, ui) {
-                    ui.item.removeClass("selected");
-                    $(this).find("tr").each(function(index) {
-                        if (index > 0 && !($(this).attr('id') === 'addNewInstructionRow')) {
-                            $(this).find("td").eq(0).find('input').val(index); // Set Order column cell = index value
-                        }
-                    });
-                    updateBlendInstructionsOrder();
-                }
-            });
-        });
-    };
-
-    setupEventListeners(){
-        document.getElementById("addNewInstructionButton").addEventListener('click', function(e){
-            e.preventDefault();
-            const encodedItemCode = getURLParameter("itemCode");
-            const newBlendInstructionInfo = getNewBlendInstructionInfo(encodedItemCode);
-            console.log(newBlendInstructionInfo)
-
-            // Get the formset's total forms input element and obtain the form count
-            let totalForms = document.querySelector('input[name="form-TOTAL_FORMS"]');
-            let formNum = parseInt(totalForms.value);
-            
-            // // Get the last form in the formset, which is the second to last row in the 
-            // // table due to the row containing the Add New button.
-            let table = document.getElementById("blendInstructionTable");
-            let rows = table.tBodies[0].children;
-            let secondToLastRow = rows[rows.length - 2];
-            let newRow = secondToLastRow.cloneNode(true);
-
-            // // Update the new form's input elements to use the new form count
-            newRow.querySelectorAll('input, select, textarea').forEach(function(input) {
-                input.name = input.name.replace('-' + (formNum - 1) + '-', '-' + formNum + '-');
-                input.id = input.id.replace('-' + (formNum - 1) + '-', '-' + formNum + '-');
-            });
-            newRow.querySelectorAll('td').forEach(function(tdCell) {
-                tdCell.setAttribute('data-item-id', newBlendInstructionInfo.next_id) 
-            })
-            
-            newRow.querySelector('input[name*="step_number"]').value = formNum + 1;
-            newRow.querySelector('input[name*="step_description"]').value = "";
-            newRow.querySelector('input[name*="component_item_code"]').value = "";
-            newRow.querySelector('input[name*="id"]').value = newBlendInstructionInfo.next_id;
-            newRow.querySelector('.deleteBtn').setAttribute('data-item-id', newBlendInstructionInfo.next_id)
-
-
-            let lastRow = table.tBodies[0].lastElementChild;
-
-            // Insert the new form before the "Add New" button row
-            lastRow.parentNode.insertBefore(newRow, document.getElementById('addNewInstructionRow'));
-
-            // Increment the form count
-            totalForms.value = formNum + 1;
-
-            // console.log();
-        })
-    }
-
-    setReadOnlyFields() {
-        $('input[name*="step_number"]').prop('readonly', true); 
-        $('input[name*="step_number"]').css('pointer-events', 'none');
-    }
-
-    setupFormMonitoring(){
-        let formIsDirty = false;
-        document.querySelector('form').addEventListener('input', function () {
-            formIsDirty = true;
-        });
-
-        document.querySelector('#saveInstructionsButton').addEventListener('click', function () {
-            formIsDirty = false;
-        });
-
-        window.addEventListener('beforeunload', function (e) {
-            if (formIsDirty) {
-                e.preventDefault();
-                e.returnValue = '';
-            }
-        });
-    }
 };
 
 export class PartialContainerLabelPage {
