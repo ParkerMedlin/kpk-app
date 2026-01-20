@@ -11,25 +11,25 @@ Note: This is purely frontend JavaScript refactoring—no database or backend ch
 
 ## Phase 1: Create tableObjects.js
 
-- [ ] **1.1** Create tableObjects.js with FilterForm
+- [x] **1.1** Create tableObjects.js with FilterForm
   - **Do**: Create `app/core/static/core/js/objects/tableObjects.js`, move FilterForm class from lookupFormObjects.js
   - **Deliverable**: FilterForm exported from tableObjects.js
   - **Verify**: Import works: `import { FilterForm } from '../objects/tableObjects.js'`
   - **Requirement**: FilterForm acceptance criteria
 
-- [ ] **1.2** Add backwards-compatible re-export
+- [x] **1.2** Add backwards-compatible re-export
   - **Do**: In lookupFormObjects.js, replace FilterForm class with `export { FilterForm } from './tableObjects.js'`
   - **Deliverable**: Existing imports from lookupFormObjects.js still work
   - **Verify**: containerClassificationRecords.js continues to work without changes
   - **Requirement**: FilterForm backwards compatibility
 
-- [ ] **1.3** Implement initDataTableWithExport()
+- [x] **1.3** Implement initDataTableWithExport()
   - **Do**: Add helper function that wraps DataTables initialization with standard defaults
   - **Deliverable**: Function exported from tableObjects.js
   - **Verify**: `initDataTableWithExport('#testTable')` initializes DataTables with buttons
   - **Requirement**: initDataTableWithExport acceptance criteria
 
-- [ ] **1.4** Implement SortableRows class
+- [x] **1.4** Implement SortableRows class
   - **Do**: Add SortableRows class wrapping jQuery UI sortable with options for tableSelector, rowSelector, orderColumnIndex, onReorder, getRowId
   - **Deliverable**: Class exported from tableObjects.js
   - **Verify**: Class can be instantiated and makes rows draggable
@@ -37,19 +37,19 @@ Note: This is purely frontend JavaScript refactoring—no database or backend ch
 
 ## Phase 2: Migrate Existing Pages
 
-- [ ] **2.1** Refactor DeskSchedulePage
+- [x] **2.1** Refactor DeskSchedulePage
   - **Do**: In pageObjects.js, replace inline sortable code with `new SortableRows({...})`
   - **Deliverable**: DeskSchedulePage uses SortableRows, ~25 lines removed
   - **Verify**: Drag-and-drop reordering still works, order saves to backend
   - **Requirement**: SortableRows acceptance criteria
 
-- [ ] **2.2** Refactor CountCollectionLinksPage
+- [x] **2.2** Refactor CountCollectionLinksPage
   - **Do**: In pageObjects.js, replace inline sortable code with `new SortableRows({...})`
   - **Deliverable**: CountCollectionLinksPage uses SortableRows
   - **Verify**: Drag-and-drop reordering still works, WebSocket order update still fires
   - **Requirement**: SortableRows acceptance criteria
 
-- [ ] **2.3** Update containerClassificationRecords.js import (optional)
+- [x] **2.3** Update containerClassificationRecords.js import (optional)
   - **Do**: Change import from `'../objects/lookupFormObjects.js'` to `'../objects/tableObjects.js'`
   - **Deliverable**: Direct import from canonical location
   - **Verify**: Page still works
@@ -57,7 +57,7 @@ Note: This is purely frontend JavaScript refactoring—no database or backend ch
 
 ## Phase 3: Documentation & Integration
 
-- [ ] **3.1** Document InlineEditTable interface
+- [x] **3.1** Document InlineEditTable interface
   - **Do**: Add JSDoc comment block for InlineEditTable class stub in tableObjects.js (implementation deferred)
   - **Deliverable**: Interface documented for future implementation
   - **Requirement**: InlineEditTable acceptance criteria (interface only)

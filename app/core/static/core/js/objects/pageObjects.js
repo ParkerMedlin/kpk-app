@@ -2,6 +2,7 @@ import { getMaxProducibleQuantity, getURLParameter, getItemInfo } from '../reque
 // import { getContainersFromCount } from '../requestFunctions/requestFunctions.js'
 import { logContainerLabelPrint, updateCountCollection } from '../requestFunctions/updateFunctions.js'
 // import { ItemReferenceFieldPair } from './lookupFormObjects.js'
+import { SortableRows } from './tableObjects.js'
 
 // Initialize a cache for conversion data
 const conversionCache = {};
@@ -2905,62 +2906,46 @@ export class DeskSchedulePage {
 
 
     setupDragnDrop(){
-        // this function posts the current order on the page to the database
-        function updateScheduleOrder(){
-            let deskScheduleDict = {};
-            let thisRow;
-            $('#deskScheduleTable tbody tr').each(function() {
-                thisRow = $(this);
-                let orderNumber = $(this).find('td.orderCell').text();
-                let lotNumber = $(this).find('td.lot-number-cell').attr('lot-number');
-                // Skip rows with an empty value in the second cell.
-                if (lotNumber.trim() !== '') {
-                    deskScheduleDict[lotNumber] = orderNumber;
+        const updateScheduleOrder = (orderedData = []) => {
+            const deskScheduleDict = {};
+            let lastRow;
+
+            orderedData.forEach(item => {
+                if (item.id && item.order) {
+                    deskScheduleDict[item.id] = item.order;
                 }
             });
-            if (thisRow.hasClass('Desk_1')) {
-                deskScheduleDict["desk"] = "Desk_1";
-            } else if (thisRow.hasClass('Desk_2')) {
-                deskScheduleDict["desk"] = "Desk_2";
-            } else if (thisRow.hasClass('LET_Desk')) {
-                deskScheduleDict["desk"] = "LET_Desk";
+
+            $('#deskScheduleTable tbody tr').each(function() {
+                lastRow = $(this);
+            });
+
+            if (lastRow) {
+                if (lastRow.hasClass('Desk_1')) {
+                    deskScheduleDict["desk"] = "Desk_1";
+                } else if (lastRow.hasClass('Desk_2')) {
+                    deskScheduleDict["desk"] = "Desk_2";
+                } else if (lastRow.hasClass('LET_Desk')) {
+                    deskScheduleDict["desk"] = "LET_Desk";
+                }
             }
-            let jsonString = JSON.stringify(deskScheduleDict);
-            let encodedDeskScheduleOrder = btoa(jsonString);
-            let scheduleUpdateResult;
+
+            const jsonString = JSON.stringify(deskScheduleDict);
+            const encodedDeskScheduleOrder = btoa(jsonString);
+
             $.ajax({
                 url: `/core/update-desk-order?encodedDeskScheduleOrder=${encodedDeskScheduleOrder}`,
                 async: false,
-                dataType: 'json',
-                success: function(data) {
-                    scheduleUpdateResult = data;
-                    console.log(data)
-                }
+                dataType: 'json'
             });
         };
 
-        $(function () {
-            // .sortable is a jquery function that makes your table
-            // element drag-n-droppable.
-            // Currently can't highlight text in the table cells.
-            $("#deskScheduleTable").sortable({
-                items: '.tableBodyRow',
-                cursor: 'move',
-                axis: 'y',
-                dropOnEmpty: false,
-                start: function (e, ui) {
-                    ui.item.addClass("selected");
-                },
-                stop: function (e, ui) {
-                    ui.item.removeClass("selected");
-                    $(this).find("tr").each(function(index) {
-                        if (index > 0) {
-                            $(this).find("td").eq(0).html(index); // Set Order column cell = index value
-                        }
-                    });
-                    updateScheduleOrder();
-                }
-            });
+        new SortableRows({
+            tableSelector: '#deskScheduleTable',
+            rowSelector: '.tableBodyRow',
+            orderColumnIndex: 0,
+            getRowId: (row) => $(row).find('td.lot-number-cell').attr('lot-number'),
+            onReorder: updateScheduleOrder
         });
     };
 
@@ -3227,44 +3212,24 @@ export class CountCollectionLinksPage {
     }
 
     setupDragnDrop(thisCountCollectionWebSocket){
-        // this function posts the current order on the page to the database
-        function updateCollectionLinkOrder(){
-            let collectionLinkDict = {};
-            $('#countCollectionLinkTable tbody tr').each(function() {
-                let orderNumber = $(this).find('td:eq(0)').text();
-                let collectionID = $(this).find('td:eq(1)').attr('data-collection-id');
-                // Skip rows with an empty value in the second cell.
-                if (collectionID.trim() !== '') {
-                    collectionLinkDict[collectionID] = orderNumber;
+        const updateCollectionLinkOrder = (orderedData = []) => {
+            const collectionLinkDict = {};
+            orderedData.forEach(item => {
+                if (item.id) {
+                    collectionLinkDict[item.id] = item.order;
                 }
             });
             thisCountCollectionWebSocket.updateCollectionOrder(collectionLinkDict);
         };
 
-        $(function () {
-            // .sortable is a jquery function that makes your table
-            // element drag-n-droppable.
-            // Currently can't highlight text in the table cells.
-            $("#countCollectionLinkTable").sortable({
-                items: '.tableBodyRow',
-                cursor: 'move',
-                axis: 'y',
-                dropOnEmpty: false,
-                start: function (e, ui) {
-                    ui.item.addClass("selected");
-                },
-                stop: function (e, ui) {
-                    ui.item.removeClass("selected");
-                    $(this).find("tr").each(function(index) {
-                        if (index > 0) {
-                            $(this).find("td").eq(0).html(index); // Set Order column cell = index value
-                        }
-                    });
-                    updateCollectionLinkOrder();
-                }
-            });
-
+        new SortableRows({
+            tableSelector: '#countCollectionLinkTable',
+            rowSelector: '.tableBodyRow',
+            orderColumnIndex: 0,
+            getRowId: (row) => $(row).find('td:eq(1)').attr('data-collection-id'),
+            onReorder: updateCollectionLinkOrder
         });
+
     };
     
 };
