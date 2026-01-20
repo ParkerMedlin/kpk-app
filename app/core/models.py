@@ -1463,7 +1463,10 @@ class FlushToteReading(models.Model):
                 name='flush_tote_final_ph_range',
                 check=(
                     models.Q(final_pH__isnull=True)
-                    | (models.Q(final_pH__gte=PH_MIN) & models.Q(final_pH__lte=PH_MAX))
+                    | (
+                        models.Q(final_pH__gte=Decimal('5.10'))
+                        & models.Q(final_pH__lte=Decimal('10.90'))
+                    )
                 ),
             ),
         ]
