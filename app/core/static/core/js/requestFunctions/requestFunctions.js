@@ -133,19 +133,6 @@ export function getMostRecentLotRecords(encodedItemCode) {
     return lotNumbers;
 }
 
-export function getNewBlendInstructionInfo(encodedItemCode) {
-    let blendInstructionInfo;
-    $.ajax({
-        url: `/core/get-new-blend-instruction-info/?encodedItemCode=${encodedItemCode}`,
-        async: false,
-        dataType: 'json',
-        success: function(data) {
-            blendInstructionInfo = data;
-        }
-    });
-    return blendInstructionInfo;
-}
-
 export function getMatchingLotNumbers(encodedItemCode, prodLine, runDate) {
     let matchingLotNumbers;
     $.ajax({
