@@ -2,7 +2,7 @@
 
 ## Overview
 
-This design consolidates scattered table functionality into a single `tableObjects.js` module. The three pages with drag-and-drop (DeskSchedulePage, CountCollectionLinksPage, BlendInstructionEditorPage) all use nearly identical jQuery `.sortable()` patterns that can be abstracted into a reusable `SortableRows` class. Filtering is currently whole-table text search; this adds per-column filtering via `ColumnFilter`. Inline editing patterns are standardized in `FormRowTable`.
+This design consolidates scattered table functionality into a single `tableObjects.js` module. The two pages with drag-and-drop (DeskSchedulePage, CountCollectionLinksPage) all use nearly identical jQuery `.sortable()` patterns that can be abstracted into a reusable `SortableRows` class. Filtering is currently whole-table text search; this adds per-column filtering via `ColumnFilter`. Inline editing patterns are standardized in `FormRowTable`.
 
 The approach is composition-based: each behavior (sorting, filtering, inline editing) is a standalone class that can be applied independently or combined via an `enhanceTable()` helper.
 
@@ -11,7 +11,7 @@ The approach is composition-based: each behavior (sorting, filtering, inline edi
 ### Existing Files to Modify
 | File | Changes |
 |------|---------|
-| `app/core/static/core/js/objects/pageObjects.js` | DeskSchedulePage, CountCollectionLinksPage, BlendInstructionEditorPage refactored to use SortableRows |
+| `app/core/static/core/js/objects/pageObjects.js` | DeskSchedulePage, CountCollectionLinksPage refactored to use SortableRows |
 | `app/core/static/core/js/objects/lookupFormObjects.js` | Keep FilterForm/DropDownFilter, add re-export of ColumnFilter for discoverability |
 
 ### New Files to Create
@@ -26,7 +26,6 @@ No database changes required. This feature is purely frontend JavaScript refacto
 ### Existing Tables Used
 - `core_deskoneschedule` - DeskSchedulePage row ordering
 - `core_countcollectionlink` - CountCollectionLinksPage row ordering and inline name editing
-- `core_blendinstructioneditoritem` - BlendInstructionEditorPage row ordering
 
 ## URL Routes
 
