@@ -182,6 +182,7 @@ def _serialize_container_classification(classification):
         'id': classification.id,
         'item_code': classification.item_code,
         'tote_classification': classification.tote_classification,
+        'flush_tote': classification.flush_tote,
         'hose_color': classification.hose_color,
         'tank_classification': classification.tank_classification,
     }

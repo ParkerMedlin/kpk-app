@@ -459,7 +459,13 @@ class ItemLocationForm(forms.ModelForm):
 class BlendContainerClassificationForm(forms.ModelForm):
     class Meta:
         model = BlendContainerClassification
-        fields = ('item_code', 'tote_classification', 'hose_color', 'tank_classification')
+        fields = (
+            'item_code',
+            'tote_classification',
+            'flush_tote',
+            'hose_color',
+            'tank_classification',
+        )
         widgets = {
             'item_code': forms.TextInput(),
             'tote_classification': forms.TextInput(),
