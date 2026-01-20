@@ -480,7 +480,7 @@ export class ReportCenterForm {
     constructor() {
         this.reportDefinitions = [];
         this.BOMFields = getAllBOMFields();
-        this._autoNavigateSlugs = new Set(['bom-cost-tool', 'sales-order-bom-cost']);
+        this._autoNavigateSlugs = new Set(['bom-cost-tool', 'sales-order-bom-cost', 'cost-impact-analysis']);
         this._suppressAutoNavigate = false;
         try {
             this.initialize();

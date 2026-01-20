@@ -156,6 +156,13 @@ def display_sales_order_vs_bom_cost_report(request):
 
 
 @login_required
+@ensure_csrf_cookie
+def display_cost_impact_report(request):
+    """Render the Cost Impact Analysis report UI."""
+    return render(request, 'core/reports/cost_impact_report.html')
+
+
+@login_required
 def display_blend_costing_report(request):
     """Render blend costing report comparing actual labor hours to standard costs."""
     report_data = get_blend_costing_report_data()
