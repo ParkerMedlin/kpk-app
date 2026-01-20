@@ -1,4 +1,4 @@
-import { FilterForm } from '../objects/lookupFormObjects.js';
+import { FilterForm } from '../objects/tableObjects.js';
 
 const API_ENDPOINT_BASE = '/core/api/container-classification/';
 const CREATE_ENDPOINT = `${API_ENDPOINT_BASE}create/`;

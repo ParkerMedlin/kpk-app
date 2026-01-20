@@ -811,63 +811,7 @@ export class ReportCenterForm {
     }
 }
 
-export class FilterForm {
-    constructor(options = {}) {
-        this.inputSelector = options.inputSelector || '#id_filter_criteria';
-        this.tableSelector = options.tableSelector || '#displayTable';
-        this.rowSelector = options.rowSelector || 'tr.filterableRow';
-        this.ignoreSelectors = Array.isArray(options.ignoreSelectors) ? options.ignoreSelectors : [];
-
-        try {
-            this.setUpFiltering();
-        } catch (err) {
-            console.error(err.message);
-        }
-    }
-
-    setUpFiltering() {
-        const $input = $(this.inputSelector);
-        if (!$input.length) {
-            return;
-        }
-
-        $input.on('keyup', () => {
-            const value = this._normalizeText($input.val());
-            $(`${this.tableSelector} ${this.rowSelector}`).each((_, element) => {
-                const $row = $(element);
-                const rowText = this._getRowSearchText($row);
-                const isMatch = rowText.includes(value);
-
-                $row.toggle(isMatch);
-                if (isMatch) {
-                    $row.addClass('chosen');
-                } else {
-                    $row.removeClass('chosen');
-                }
-            });
-        });
-    }
-
-    _getRowSearchText($row) {
-        let text;
-
-        if (this.ignoreSelectors.length) {
-            const $clone = $row.clone();
-            this.ignoreSelectors.forEach((selector) => {
-                $clone.find(selector).remove();
-            });
-            text = $clone.text();
-        } else {
-            text = $row.text();
-        }
-
-        return this._normalizeText(text);
-    }
-
-    _normalizeText(value) {
-        return (value || '').toString().toLowerCase().replace(/\s+/g, '');
-    }
-}
+export { FilterForm } from './tableObjects.js';
 
 export class BlendShortagesFilterForm {
     constructor() {

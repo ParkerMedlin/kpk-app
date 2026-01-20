@@ -2,76 +2,67 @@
 
 ## Problem Statement
 
-Table-related JavaScript functionality is scattered across the codebase with significant duplication. Three pages have nearly identical drag-and-drop implementations, filtering is text-based rather than per-column, and inline form row patterns are reimplemented from scratch on each page. This increases maintenance burden and makes it harder to add consistent table behaviors to new pages.
+Table enhancement code (filtering, sorting, drag-and-drop reordering, inline editing, export buttons) is scattered across multiple files with duplicated patterns. This makes maintenance harder and leads to inconsistent behavior across pages. Consolidating these patterns into a single `tableObjects.js` module improves code reuse and consistency.
 
 ## User Stories
 
 ### Developer
-- **As a** developer, **I want to** add row drag-and-drop to a table with one line of code, **so that** I don't have to copy/paste 20 lines of boilerplate each time.
-- **As a** developer, **I want to** compose multiple table behaviors (sorting, filtering, inline editing), **so that** I can pick what I need without taking everything.
-- **As a** developer, **I want to** add per-column filtering to a table, **so that** users can filter on specific columns instead of searching all text.
-
-### End User
-- **As a** warehouse user, **I want to** filter a table by a specific column value, **so that** I can find items faster than searching all visible text.
-- **As a** blend scheduler, **I want to** reorder table rows by dragging, **so that** I can prioritize items visually.
+- **As a** developer, **I want to** import table utilities from a single module, **so that** I don't have to hunt through multiple files to find the right class
+- **As a** developer, **I want to** add drag-and-drop row reordering with a single class instantiation, **so that** I don't have to copy-paste jQuery sortable boilerplate
+- **As a** developer, **I want to** add DataTables with export buttons using a helper function, **so that** I get consistent defaults without remembering all the configuration options
+- **As a** developer, **I want** FilterForm in tableObjects.js instead of lookupFormObjects.js, **so that** table-related utilities are co-located
 
 ## Acceptance Criteria
 
-### SortableRows (Drag-and-Drop)
+### FilterForm (moved from lookupFormObjects.js)
+- **WHEN** FilterForm is instantiated with a table selector, **THEN** the system **SHALL** filter rows based on text input matching row content
+- **WHEN** a user types in the filter input, **THEN** the system **SHALL** hide rows that don't match and show rows that do
+- **WHEN** ignoreSelectors option is provided, **THEN** the system **SHALL** exclude those elements from the search text
+- **WHEN** FilterForm is imported from lookupFormObjects.js, **THEN** the system **SHALL** still work (backwards-compatible re-export)
 
-- **WHEN** a developer instantiates SortableRows with a table selector and onReorder callback, **THEN** the table rows **SHALL** become draggable.
-- **WHEN** a user drags a row to a new position, **THEN** the system **SHALL** visually indicate the dragged row (e.g., "selected" class).
-- **WHEN** a user drops a row, **THEN** the system **SHALL** update order column values and invoke the onReorder callback.
-- **WHEN** a row is excluded by selector (e.g., "Add New" button row), **THEN** that row **SHALL NOT** be draggable.
+### initDataTableWithExport()
+- **WHEN** initDataTableWithExport is called with a table selector, **THEN** the system **SHALL** initialize DataTables with Copy/CSV/Excel/Print buttons
+- **WHEN** options are passed, **THEN** the system **SHALL** merge them with defaults (paging: false, order: [[0, 'asc']], dom: 'Bfrtip')
+- **WHEN** the user clicks a column header, **THEN** the table **SHALL** sort by that column
 
-### ColumnFilter
+### SortableRows
+- **WHEN** SortableRows is instantiated with a table selector, **THEN** the system **SHALL** make rows draggable via jQuery UI sortable
+- **WHEN** a user starts dragging a row, **THEN** the row **SHALL** receive the 'selected' class for visual feedback
+- **WHEN** a user drops a row, **THEN** the system **SHALL** update order values in the first column and invoke the onReorder callback
+- **WHEN** getRowId option is provided, **THEN** the system **SHALL** use it to extract row identifiers for the callback
 
-- **WHEN** a developer instantiates ColumnFilter with column configuration, **THEN** filter inputs **SHALL** appear in the table header row.
-- **WHEN** a user types in a column filter input, **THEN** the table **SHALL** hide rows that don't match on that column.
-- **WHEN** multiple column filters are active, **THEN** filtering **SHALL** be cumulative (AND logic).
-- **WHEN** a filter input is cleared, **THEN** the table **SHALL** show all rows that pass other active filters.
+### InlineEditTable
+- **WHEN** a user clicks an edit button, **THEN** the row **SHALL** enter edit mode with input fields replacing display values
+- **WHEN** a user clicks save, **THEN** the system **SHALL** call the onSave callback with row data
+- **WHEN** a user clicks cancel, **THEN** the system **SHALL** restore original values without calling any callback
+- **WHEN** a user clicks delete, **THEN** the system **SHALL** confirm and call the onDelete callback
+- **WHEN** a user has unsaved changes and tries to edit another row, **THEN** the system **SHALL** prompt to abandon changes
 
-### FormRowTable (Inline Editing)
-
-- **WHEN** a developer instantiates FormRowTable with configuration, **THEN** an "Add New" row **SHALL** be appended to the table.
-- **WHEN** a user clicks "Add New", **THEN** a new editable row **SHALL** appear with empty fields.
-- **WHEN** a user modifies a field and loses focus, **THEN** the system **SHALL** persist the change (via callback or API).
-- **WHEN** a user clicks a row's delete button, **THEN** the system **SHALL** remove that row (via callback or API).
-- **WHEN** unsaved changes exist and user navigates away, **THEN** the system **SHALL** warn the user (dirty tracking).
-
-### Column Reordering
-
-- **WHEN** ColReorder is enabled on a DataTables instance, **THEN** users **SHALL** be able to drag column headers to reorder.
-- **WHEN** columns are reordered, **THEN** the new order **SHALL** persist for the session (localStorage optional).
-
-### enhanceTable() Helper
-
-- **WHEN** a developer calls enhanceTable() with multiple behavior options, **THEN** all requested behaviors **SHALL** be applied to the table.
-- **WHEN** behaviors are composed, **THEN** they **SHALL NOT** conflict (e.g., row sorting shouldn't break column filtering).
+### Error Handling
+- **WHEN** a table selector doesn't match any element, **THEN** the system **SHALL** log a warning and gracefully no-op
+- **WHEN** an onReorder/onSave/onDelete callback throws, **THEN** the system **SHALL** log the error and display an alert
 
 ## Scope
 
 ### In Scope
-- Create `objects/tableObjects.js` with SortableRows, ColumnFilter, FormRowTable classes
-- Migrate DeskSchedulePage, CountCollectionLinksPage, BlendInstructionEditorPage to use SortableRows
-- Per-column text filtering inputs in table headers
-- Add DataTables ColReorder plugin for column reordering (where DataTables is already in use)
-- enhanceTable() helper to compose multiple behaviors
-- Dirty form tracking for inline editing
+- Move FilterForm from lookupFormObjects.js to tableObjects.js
+- Create initDataTableWithExport() helper function
+- Create SortableRows class
+- Document InlineEditTable interface
+- Refactor DeskSchedulePage and CountCollectionLinksPage to use SortableRows
+- Backwards-compatible re-export of FilterForm from lookupFormObjects.js
 
 ### Out of Scope
-- Converting non-DataTables tables to DataTables (only add ColReorder where DT already exists)
-- Server-side pagination/filtering
-- Undo/redo functionality
-- Keyboard navigation between editable cells
-- Mobile-specific touch gestures (beyond jQuery UI's touch-punch if already present)
+- Full InlineEditTable implementation (may keep ContainerClassificationTable as-is if abstraction cost is too high)
+- Per-column filtering (not currently used in codebase)
+- DataTables ColReorder (not currently used)
+- Refactoring pages that don't use these patterns
 
 ## Dependencies
 
-- jQuery and jQuery UI (.sortable) - already in stack
-- DataTables (for ColReorder plugin) - already in stack for some pages
-- Existing pages using sortable: DeskSchedulePage, CountCollectionLinksPage, BlendInstructionEditorPage
-- Existing filtering classes: FilterForm, DropDownFilter in lookupFormObjects.js
+- jQuery and jQuery UI (already included globally)
+- DataTables library with Buttons extension (already in static files)
+- Existing pages: DeskSchedulePage, CountCollectionLinksPage, ContainerClassificationRecords
 
 ---
 
