@@ -47,6 +47,7 @@ from core.services.inventory_services import (
 from core.selectors.production_planning_selectors import get_schedulable_blend_shortages
 from core.selectors.inventory_selectors import *
 from core.selectors.reports_selectors import *
+from core.selectors import get_flush_type_options, list_flush_totes
 from core.kpkapp_utils.string_utils import get_unencoded_item_code
 from core.services.lot_numbers_services import generate_next_lot_number
 from core.services.blend_scheduling_services import get_blend_schedule_querysets, prepare_blend_schedule_queryset
@@ -2130,6 +2131,18 @@ def display_container_classifications(request):
     }
 
     return render(request, 'core/lotnumbers/containerclassificationrecords.html', context)
+
+
+@login_required
+@ensure_csrf_cookie
+def flush_totes_view(request):
+    """Render the flush tote tracking page with initial options and data."""
+    context = {
+        'production_line_choices': FlushToteReading.PRODUCTION_LINE_CHOICES,
+        'flush_type_options': get_flush_type_options(),
+        'flush_totes': list_flush_totes(),
+    }
+    return render(request, 'core/flush_totes.html', context)
 
 
 @login_required
