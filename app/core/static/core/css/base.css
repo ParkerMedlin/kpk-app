@@ -1,7 +1,12 @@
+:root {
+    --navbar-height: 3.5rem;
+    --sticky-header-offset: calc(var(--navbar-height));
+}
+
 body {
   background: #fafafa;
   color: #333333;
-  margin-top: 5rem;
+  margin-top: var(--navbar-height);
 }
 
 h1, h2, h3, h4, h5, h6 {

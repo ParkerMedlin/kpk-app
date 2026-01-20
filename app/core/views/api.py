@@ -57,7 +57,9 @@ from core.services.purchasing_cost_service import (
     PurchasingCostParseError,
     load_default_purchasing_costs,
     load_purchasing_costs_from_file,
+    load_purchasing_costs_with_both_values,
 )
+from core.services.cost_impact_service import analyze_cost_impacts
 import time
 from django.utils.dateparse import parse_datetime
 from typing import Dict
@@ -2108,10 +2110,83 @@ def validate_blend_item(request):
             return JsonResponse({'valid': False, 'error': 'No item code provided.'})
 
         item = CiItem.objects.filter(itemcode__iexact=item_code).first()
-        if item and (item.itemcodedesc.upper().startswith('BLEND-') or 
+        if item and (item.itemcodedesc.upper().startswith('BLEND-') or
                     item.itemcodedesc.upper().startswith('CHEM')):
             return JsonResponse({'valid': True, 'item_description': item.itemcodedesc})
         else:
             return JsonResponse({'valid': False, 'error': 'Item not found or not a valid BLEND/CHEM code.'})
 
     return JsonResponse({'valid': False, 'error': 'Invalid request method.'})
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def get_json_cost_impact_analysis(request):
+    """Analyze how raw material cost changes impact BLENDs and finished goods."""
+    data_source = request.POST if request.method == "POST" else request.GET
+    warehouse = (data_source.get("warehouse") or "MTG").strip().upper() or "MTG"
+    limit_param = (data_source.get("limit") or "500").strip()
+
+    try:
+        limit = int(limit_param)
+        limit = min(max(limit, 1), 1000)
+    except ValueError:
+        return JsonResponse({"error": "limit must be an integer"}, status=400)
+
+    # Load purchasing costs with both est_landed and next_cost
+    pricing_label = "Standard costs only"
+    uploaded_file = None
+
+    if request.method == "POST" and request.FILES.get("cost_override"):
+        uploaded_file = request.FILES["cost_override"]
+
+    try:
+        purchasing_costs, workbook_name = load_purchasing_costs_with_both_values(uploaded_file)
+    except PurchasingCostParseError as exc:
+        return JsonResponse({"error": str(exc)}, status=400)
+
+    if workbook_name:
+        if uploaded_file:
+            pricing_label = f"Uploaded workbook ({workbook_name})"
+        else:
+            pricing_label = f"Server workbook ({workbook_name})"
+
+    if not purchasing_costs:
+        return JsonResponse({
+            "error": "No purchasing costs available. Please upload a workbook or configure server workbook path."
+        }, status=400)
+
+    started = time.perf_counter()
+
+    # Perform cost impact analysis
+    result = analyze_cost_impacts(
+        purchasing_costs=purchasing_costs,
+        warehouse=warehouse,
+        limit=limit
+    )
+
+    elapsed_ms = round((time.perf_counter() - started) * 1000, 2)
+
+    # Build response payload
+    payload = {
+        'warehouse': warehouse,
+        'pricingSource': pricing_label,
+        'elapsedMs': elapsed_ms,
+        'summary': result.summary,
+        'rawMaterialChanges': [
+            {
+                'itemCode': item['item_code'],
+                'itemDescription': item['item_description'],
+                'currentCost': float(item['current_cost']),
+                'nextCost': float(item['next_cost']),
+                'delta': float(item['delta']),
+                'pctChange': float(item['pct_change']),
+            }
+            for item in result.raw_material_changes
+        ],
+        'affectedBlends': result.affected_blends,
+        'affectedFinishedGoods': result.affected_finished_goods,
+        'salesOrderImpacts': result.sales_order_impacts,
+    }
+
+    return JsonResponse(payload)
