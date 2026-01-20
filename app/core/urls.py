@@ -78,6 +78,7 @@ urlpatterns = [
     path('tank-usage/<str:tank_identifier>/', web.display_tank_usage_monitor, name='tank-usage-monitor'),
     path('purchasing-aliases/', web.display_all_purchasing_aliases, name='display_all_purchasing_aliases'),
     path('container-classifications/', web.display_container_classifications, name='display_container_classifications'),
+    path('flush-totes/', web.flush_totes_view, name='flush-totes'),
     path('production-holidays/', web.display_production_holidays, name='production-holidays'),
     path('desk-labor-rates/', web.display_desk_labor_rates, name='desk-labor-rates'),
 
@@ -120,6 +121,8 @@ urlpatterns = [
     path('api/function-toggles/create/', pystray_services.create_function_toggle, name='function-toggle-create'),
     path('api/function-toggles/update/', pystray_services.update_function_toggle, name='function-toggle-update'),
     path('api/function-toggles/delete/', pystray_services.delete_function_toggle, name='function-toggle-delete'),
+    path('api/flush-totes/', api.flush_tote_list_api, name='flush-tote-list-api'),
+    path('api/flush-totes/<int:pk>/', api.flush_tote_detail_api, name='flush-tote-detail-api'),
     path('api/validate-blend-item/', api.validate_blend_item, name='validate-blend-item'),
     path('api/purchasing-alias-audit/', operating_supplies_services.update_purchasing_alias_audit, name='purchasing-alias-audit-api'),
     path('api/purchasing-alias/<int:alias_id>/', operating_supplies_services.update_purchasing_alias, name='update-purchasing-alias'),
