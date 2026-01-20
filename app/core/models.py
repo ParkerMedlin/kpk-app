@@ -1,7 +1,9 @@
 from pickle import TRUE
 from xml.etree.ElementTree import TreeBuilder
+from decimal import Decimal
 from django.db import models
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 import os
 from django.contrib.postgres.fields import ArrayField
 from django.contrib.auth.models import User
@@ -1401,3 +1403,89 @@ class PurchasingAlias(models.Model):
 
     def __str__(self):
         return f"{self.vendor_name} - {self.vendor_part_number} (for {self.internal_item_code or 'N/A'})"
+
+
+class FlushToteReading(models.Model):
+    """Tracks pH testing, actions, and approval of flush totes."""
+
+    PRODUCTION_LINE_JB = 'JB Line'
+    PRODUCTION_LINE_INLINE = 'INLINE'
+    PRODUCTION_LINE_PD = 'PD Line'
+    PRODUCTION_LINE_CHOICES = [
+        (PRODUCTION_LINE_JB, 'JB Line'),
+        (PRODUCTION_LINE_INLINE, 'INLINE'),
+        (PRODUCTION_LINE_PD, 'PD Line'),
+    ]
+
+    STATUS_PENDING = 'pending'
+    STATUS_NEEDS_ACTION = 'needs_action'
+    STATUS_APPROVED = 'approved'
+    STATUS_CHOICES = [
+        (STATUS_PENDING, 'Pending'),
+        (STATUS_NEEDS_ACTION, 'Needs Action'),
+        (STATUS_APPROVED, 'Approved'),
+    ]
+
+    PH_MIN = Decimal('5.10')
+    PH_MAX = Decimal('10.90')
+
+    date = models.DateTimeField(auto_now_add=True, db_index=True)
+    production_line = models.CharField(max_length=20, choices=PRODUCTION_LINE_CHOICES)
+    flush_type = models.CharField(max_length=100)
+    initial_pH = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
+    action_required = models.TextField(blank=True, null=True)
+    final_pH = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
+    approval_status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING)
+    lab_technician = models.ForeignKey(
+        User,
+        related_name='flush_totes_lab',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    line_personnel = models.ForeignKey(
+        User,
+        related_name='flush_totes_line',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+
+    class Meta:
+        db_table = 'core_flush_tote_reading'
+        ordering = ['-date', '-id']
+        indexes = [
+            models.Index(fields=['production_line']),
+            models.Index(fields=['approval_status']),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                name='flush_tote_final_ph_range',
+                check=(
+                    models.Q(final_pH__isnull=True)
+                    | (models.Q(final_pH__gte=PH_MIN) & models.Q(final_pH__lte=PH_MAX))
+                ),
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.flush_type} ({self.production_line}) @ {self.date.strftime('%Y-%m-%d %H:%M')}"
+
+    @classmethod
+    def is_ph_in_range(cls, value):
+        return value is not None and cls.PH_MIN <= value <= cls.PH_MAX
+
+    def clean(self):
+        errors = {}
+
+        if self.final_pH is not None and self.initial_pH is None:
+            errors['final_pH'] = 'Initial pH must be recorded before final pH.'
+
+        if self.approval_status == self.STATUS_APPROVED:
+            if self.final_pH is None:
+                errors['final_pH'] = 'Final pH is required to approve a flush tote.'
+            elif not self.is_ph_in_range(self.final_pH):
+                errors['final_pH'] = f'Final pH must be within {self.PH_MIN} - {self.PH_MAX} to approve.'
+
+        if errors:
+            raise ValidationError(errors)

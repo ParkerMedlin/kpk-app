@@ -9,19 +9,17 @@ Implementation tasks for the flush tote testing/approval workflow. Work through 
 
 ## Phase 1: Data Layer
 
-- [ ] **1.1** Create `FlushToteReading` model and migration  
+- [x] **1.1** Create `FlushToteReading` model and migration  
   - **Do**: Add model (fields, choices, meta) and validators from design; include pH range constants and status choices.  
   - **Deliverable**: Model in `app/core/models.py`; new migration file.  
   - **Verify**: `python manage.py makemigrations` succeeds.  
   - **Requirement**: Core Functionality – auto date, required line & flush type, pH tracking.
 
-- [ ] **1.2** Apply migrations  
-  - **Do**: Run database migrate locally.  
-  - **Deliverable**: Table `core_flush_tote_reading` created.  
-  - **Verify**: `python manage.py migrate` succeeds.
+- [ ] **1.2** Apply migrations (this will be delegated to user, do not do this yourself)
+  - **Do**: prompt user to execute the migrations
 
 - [ ] **1.3** Create selectors  
-  - **Do**: Implement `list_flush_totes`, `get_flush_tote`, `get_flush_type_options` in `app/core/selectors/flush_totes.py`; export via `__init__.py`.  
+  - **Do**: Implement `list_flush_totes`, `get_flush_tote`, `get_flush_type_options` in `app/core/selectors/flush_tote_selectors.py`; export via `__init__.py`.  
   - **Deliverable**: Selector module returning recent totes and option lists.  
   - **Verify**: Functions return expected QuerySets/options in shell.  
   - **Requirement**: Core Functionality – surface flush type options; real-time list view data.
@@ -29,7 +27,7 @@ Implementation tasks for the flush tote testing/approval workflow. Work through 
 ## Phase 2: Business Logic
 
 - [ ] **2.1** Implement services for tote lifecycle  
-  - **Do**: Add `create_flush_tote`, `record_initial_ph`, `record_action_and_final_ph` in `app/core/services/flush_totes.py`; set line/lab users, status transitions, WebSocket publish hooks.  
+  - **Do**: Add `create_flush_tote_reading`, `record_initial_ph`, `record_action_and_final_ph` in `app/core/services/flush_tote_services.py`; set line/lab users, status transitions, WebSocket publish hooks.  
   - **Deliverable**: Service module with unit-level validation and status logic.  
   - **Verify**: Service functions update records correctly in Django shell.  
   - **Requirement**: Core Functionality – pH workflow, role handling, status changes.
@@ -47,7 +45,7 @@ Implementation tasks for the flush tote testing/approval workflow. Work through 
   - **Requirement**: UX – page available to both roles.
 
 - [ ] **3.2** Add API endpoints  
-  - **Do**: Implement list/create (`api_flush_totes`) and update (`api_flush_tote_detail`) in `app/core/views/api.py` using services; enforce role-based editable fields.  
+  - **Do**: Implement list/create (`flush_tote_list_api`) and update (`flush_tote_detail_api`) in `app/core/views/api.py` using services; enforce role-based editable fields.  
   - **Deliverable**: JSON endpoints for POST/PATCH.  
   - **Verify**: Requests return expected payload/status codes.  
   - **Requirement**: Core Functionality – create/update via async calls; Error Handling responses.
@@ -107,14 +105,14 @@ Implementation tasks for the flush tote testing/approval workflow. Work through 
 
 | Phase | Status | Tasks Complete |
 |-------|--------|----------------|
-| 1. Data Layer | Not Started | 0/3 |
+| 1. Data Layer | In Progress | 1/3 |
 | 2. Business Logic | Not Started | 0/2 |
 | 3. API/Views | Not Started | 0/3 |
 | 4. Frontend | Not Started | 0/3 |
 | 5. WebSocket | Not Started | 0/3 |
 | 6. Integration | Not Started | 0/2 |
 
-**Overall**: 0/16 tasks (0%)
+**Overall**: 1/16 tasks (6%)
 
 ---
 
