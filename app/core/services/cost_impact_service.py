@@ -189,6 +189,86 @@ def trace_blend_impacts(
     return affected_blends
 
 
+def trace_direct_raw_material_impacts(
+    changed_items: List[Dict],
+    warehouse: str = "MTG"
+) -> List[Dict]:
+    """
+    Trace which finished goods are DIRECTLY affected by raw material changes (not through BLENDs).
+
+    Args:
+        changed_items: List of dicts with item_code, current_cost, next_cost, delta
+        warehouse: Warehouse code
+
+    Returns:
+        List of finished goods with direct raw material cost impacts
+    """
+    if not changed_items:
+        return []
+
+    changed_item_codes = {item['item_code'] for item in changed_items}
+
+    # Find finished goods that DIRECTLY use these raw materials
+    fg_boms = BillOfMaterials.objects.filter(
+        component_item_code__in=changed_item_codes
+    ).exclude(
+        item_description__istartswith='BLEND'
+    ).values(
+        'item_code',
+        'item_description',
+        'component_item_code',
+        'qtyperbill',
+    )
+
+    # Group by finished good
+    fg_dict = defaultdict(list)
+    for bom in fg_boms:
+        fg_code = bom['item_code']
+        fg_dict[fg_code].append(bom)
+
+    finished_goods = []
+
+    for fg_code, components in fg_dict.items():
+        fg_desc = components[0]['item_description'] if components else ''
+
+        total_cost_delta = Decimal('0')
+        affected_raw_components = []
+
+        for comp in components:
+            comp_code = comp['component_item_code']
+            qty_per_bill = Decimal(str(comp['qtyperbill'] or 0))
+
+            # Find the cost change for this component
+            cost_change = next(
+                (item for item in changed_items if item['item_code'] == comp_code),
+                None
+            )
+
+            if cost_change:
+                delta = Decimal(str(cost_change['delta']))
+                total_cost_delta += delta * qty_per_bill
+
+                affected_raw_components.append({
+                    'component_code': comp_code,
+                    'component_description': cost_change.get('item_description', ''),
+                    'qty_per_bill': float(qty_per_bill),
+                    'current_cost': float(cost_change['current_cost']),
+                    'next_cost': float(cost_change['next_cost']),
+                    'delta': float(delta),
+                    'extended_delta': float(delta * qty_per_bill),
+                })
+
+        if total_cost_delta != 0:
+            finished_goods.append({
+                'item_code': fg_code,
+                'item_description': fg_desc,
+                'cost_delta': float(total_cost_delta),
+                'affected_raw_materials': affected_raw_components,
+            })
+
+    return finished_goods
+
+
 def trace_finished_goods_impacts(
     affected_blends: List[Dict],
     warehouse: str = "MTG"
@@ -391,8 +471,39 @@ def analyze_cost_impacts(
     affected_blends = trace_blend_impacts(raw_material_changes, warehouse)
     result.affected_blends = affected_blends
 
-    # Step 3: Trace finished goods impacts
-    affected_finished_goods = trace_finished_goods_impacts(affected_blends, warehouse)
+    # Step 3: Trace finished goods impacts (both through BLENDs and direct raw materials)
+    fg_from_blends = trace_finished_goods_impacts(affected_blends, warehouse)
+    fg_from_raw_materials = trace_direct_raw_material_impacts(raw_material_changes, warehouse)
+
+    # Merge finished goods impacts (combine if same item has both types of impacts)
+    merged_fg = {}
+    for fg in fg_from_blends:
+        code = fg['item_code']
+        merged_fg[code] = {
+            'item_code': code,
+            'item_description': fg['item_description'],
+            'cost_delta': fg['cost_delta'],
+            'affected_blends': fg.get('affected_blends', []),
+            'affected_raw_materials': [],
+        }
+
+    for fg in fg_from_raw_materials:
+        code = fg['item_code']
+        if code in merged_fg:
+            # Merge with existing entry
+            merged_fg[code]['cost_delta'] += fg['cost_delta']
+            merged_fg[code]['affected_raw_materials'] = fg.get('affected_raw_materials', [])
+        else:
+            # New entry
+            merged_fg[code] = {
+                'item_code': code,
+                'item_description': fg['item_description'],
+                'cost_delta': fg['cost_delta'],
+                'affected_blends': [],
+                'affected_raw_materials': fg.get('affected_raw_materials', []),
+            }
+
+    affected_finished_goods = list(merged_fg.values())
     result.affected_finished_goods = affected_finished_goods
 
     # Step 4: Calculate sales order impacts
