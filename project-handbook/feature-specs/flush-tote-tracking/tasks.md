@@ -58,7 +58,7 @@ Use existing naming conventions: `flush_tote_services.py`, `flush_tote_selectors
 
 ## Phase 4: Frontend
 
-- [ ] **4.1** Build template with inline row forms  
+- [x] **4.1** Build template with inline row forms  
   - **Do**: Create `app/core/templates/core/flush_totes.html` modeled after container classification page; inline edit controls per row (no modal); role-based enablement; status badges.  
   - **Deliverable**: Rendered page shows table and create form.  
   - **Verify**: Page loads and rows switch to editable inputs.
@@ -109,11 +109,11 @@ Use existing naming conventions: `flush_tote_services.py`, `flush_tote_selectors
 | 1. Data Layer | Complete | 3/3 |
 | 2. Business Logic | Complete | 2/2 |
 | 3. API/Views | Complete | 3/3 |
-| 4. Frontend | Not Started | 0/3 |
+| 4. Frontend | In Progress | 1/3 |
 | 5. WebSocket | Not Started | 0/3 |
 | 6. Integration | Not Started | 0/2 |
 
-**Overall**: 8/16 tasks (50%)
+**Overall**: 9/16 tasks (56%)
 
 ---
 
