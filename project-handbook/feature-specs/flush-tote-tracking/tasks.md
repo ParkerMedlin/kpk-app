@@ -63,7 +63,7 @@ Use existing naming conventions: `flush_tote_services.py`, `flush_tote_selectors
   - **Deliverable**: Rendered page shows table and create form.  
   - **Verify**: Page loads and rows switch to editable inputs.
 
-- [ ] **4.2** Implement JS page module  
+- [x] **4.2** Implement JS page module  
   - **Do**: Add `app/core/static/core/js/pageModules/FlushTotes.js` to handle inline edits, async POST/PATCH to API, optimistic updates, reconnect banner; reuse patterns from `containerClassificationRecords.js`.  
   - **Deliverable**: Interactive page with client-side validation, toast/errors.  
   - **Verify**: Creating/editing rows works without reload.
@@ -109,11 +109,11 @@ Use existing naming conventions: `flush_tote_services.py`, `flush_tote_selectors
 | 1. Data Layer | Complete | 3/3 |
 | 2. Business Logic | Complete | 2/2 |
 | 3. API/Views | Complete | 3/3 |
-| 4. Frontend | In Progress | 1/3 |
+| 4. Frontend | In Progress | 2/3 |
 | 5. WebSocket | Not Started | 0/3 |
 | 6. Integration | Not Started | 0/2 |
 
-**Overall**: 9/16 tasks (56%)
+**Overall**: 10/16 tasks (62%)
 
 ---
 
