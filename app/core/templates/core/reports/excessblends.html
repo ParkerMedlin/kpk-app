@@ -89,5 +89,8 @@
 <script src="{% static 'core/js/thirdPartyLibraries/datatables/buttons.html5.min.js' %}"></script>
 <script src="{% static 'core/js/thirdPartyLibraries/datatables/buttons.print.min.js' %}"></script>
 <script src="{% static 'core/js/thirdPartyLibraries/datatables/buttons.colVis.min.js' %}"></script>
-<script type="module" src="{% static 'core/js/PageModules/excess_blends.js' %}"></script>
+{% endblock %}
+
+{% block belowdeckscripts %}
+<script type="module" src="{% static 'core/js/pageModules/excessBlends.js' %}"></script>
 {% endblock %}
