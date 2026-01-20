@@ -208,4 +208,4 @@ Inline editing reference: mirror patterns from `app/core/templates/core/lotnumbe
 
 ---
 
-**Status**: Draft
+**Status**: Approved
