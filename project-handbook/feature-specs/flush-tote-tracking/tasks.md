@@ -3,6 +3,7 @@
 ## Overview
 
 Implementation tasks for the flush tote testing/approval workflow. Work through sequentially, marking complete as you go.
+Use existing naming conventions: `flush_tote_services.py`, `flush_tote_selectors.py`, `flush_tote_list_api` / `flush_tote_detail_api`, and snake_case function names throughout.
 
 **Requirements**: See `requirements.md`  
 **Design**: See `design.md`
@@ -26,13 +27,13 @@ Implementation tasks for the flush tote testing/approval workflow. Work through 
 
 ## Phase 2: Business Logic
 
-- [ ] **2.1** Implement services for tote lifecycle  
+- [x] **2.1** Implement services for tote lifecycle  
   - **Do**: Add `create_flush_tote_reading`, `record_initial_ph`, `record_action_and_final_ph` in `app/core/services/flush_tote_services.py`; set line/lab users, status transitions, WebSocket publish hooks.  
   - **Deliverable**: Service module with unit-level validation and status logic.  
   - **Verify**: Service functions update records correctly in Django shell.  
   - **Requirement**: Core Functionality – pH workflow, role handling, status changes.
 
-- [ ] **2.2** Add validation/error handling  
+- [x] **2.2** Add validation/error handling  
   - **Do**: Enforce numeric pH, initial-before-final, action required when out of range, approval only when final pH within 5.1–10.9; raise friendly errors.  
   - **Deliverable**: Validation paths in services/forms; tests or manual checks.  
   - **Requirement**: Error Handling – reject bad input, block approval until compliant.
@@ -106,13 +107,13 @@ Implementation tasks for the flush tote testing/approval workflow. Work through 
 | Phase | Status | Tasks Complete |
 |-------|--------|----------------|
 | 1. Data Layer | Complete | 3/3 |
-| 2. Business Logic | Not Started | 0/2 |
+| 2. Business Logic | Complete | 2/2 |
 | 3. API/Views | Not Started | 0/3 |
 | 4. Frontend | Not Started | 0/3 |
 | 5. WebSocket | Not Started | 0/3 |
 | 6. Integration | Not Started | 0/2 |
 
-**Overall**: 3/16 tasks (19%)
+**Overall**: 5/16 tasks (31%)
 
 ---
 

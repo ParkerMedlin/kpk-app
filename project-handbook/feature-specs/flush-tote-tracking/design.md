@@ -23,8 +23,8 @@ Add a flush tote tracking workflow so line personnel and lab technicians can rec
 ### New Files to Create
 | File | Purpose |
 |------|---------|
-| `app/core/services/flush_totes.py` | Business logic for create/update, status transitions, and validation. |
-| `app/core/selectors/flush_totes.py` | Data access for list/detail and option lookups. |
+| `app/core/services/flush_tote_services.py` | Business logic for create/update, status transitions, and validation. |
+| `app/core/selectors/flush_tote_selectors.py` | Data access for list/detail and option lookups. |
 | `app/core/templates/core/flush_totes.html` | Page UI for line personnel + lab tech workflows. |
 | `app/core/static/core/js/pageModules/FlushTotes.js` | Front-end logic: form handling, API calls, WebSocket events. |
 | `app/core/websockets/flush_totes/consumer.py` | Channels consumer to broadcast tote events. |
@@ -108,7 +108,7 @@ def get_flush_type_options() -> List[str]:
 
 ### Services (business logic)
 ```python
-def create_flush_tote(data, user) -> FlushToteReading:
+def create_flush_tote_reading(data, user) -> FlushToteReading:
     """
     - set line_personnel=user when user in line personnel group
     - default status pending
@@ -200,7 +200,7 @@ Inline editing reference: mirror patterns from `app/core/templates/core/lotnumbe
 
 | Requirement | Addressed By |
 |-------------|--------------|
-| Auto-fill date/time, require line + flush type | `create_flush_tote` service, create form defaults |
+| Auto-fill date/time, require line + flush type | `create_flush_tote_reading` service, create form defaults |
 | Initial pH check + action if outside 5.1–10.9 | `record_initial_ph` service, validation, UI status |
 | Final pH within range before approval | `record_action_and_final_ph` service; approval_status logic |
 | Real-time visibility for both roles | WebSocket consumer + JS live updates |
