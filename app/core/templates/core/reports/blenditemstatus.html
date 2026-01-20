@@ -35,7 +35,6 @@
                                 <tr>
                                     <th>Item Code</th>
                                     <th>Description</th>
-                                    <th>Status</th>
                                     <th>Last Transaction Date</th>
                                     <th>In BOM</th>
                                 </tr>
@@ -45,19 +44,12 @@
                                 <tr data-item-code="{{ item.item_code }}">
                                     <td>{{ item.item_code }}</td>
                                     <td>{{ item.item_description }}</td>
-                                    <td>
-                                        {% if item.status == 'Dead' %}
-                                        <span class="badge bg-danger">Dead</span>
-                                        {% else %}
-                                        <span class="badge bg-success">Active</span>
-                                        {% endif %}
-                                    </td>
                                     <td>{{ item.last_transaction_date|default:"Never" }}</td>
                                     <td>{{ item.in_bom }}</td>
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="5" class="text-center">No blend items found</td>
+                                    <td colspan="4" class="text-center">No blend items found</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -84,8 +76,8 @@
 <script>
 $(document).ready(function() {
     $('#blendItemStatusTable').DataTable({
-        pageLength: 50,
-        order: [[2, 'asc'], [0, 'asc']],
+        paging: false,
+        order: [[0, 'asc']],
         dom: 'Bfrtip',
         buttons: [
             'copy', 'csv', 'excel', 'print'
