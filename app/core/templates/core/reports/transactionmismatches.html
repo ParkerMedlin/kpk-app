@@ -1,9 +1,10 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}<title>Bill of Materials</title>{% endblock %}
+{% block title %}<title>Transaction Mismatches</title>{% endblock %}
 
 {% block content %}
+{% comment %} <link rel="stylesheet" href="{% static 'core/css/thirdPartyLibraries/jquery.dataTables.min.css' %}"> {% endcomment %}
 <link rel="stylesheet" type="text/css" href="{% static 'core/css/transactionMismatch.css' %}">
 <div class='text-center'><a href='/core/reports/'>Return to the Reports Page</a></div>
 <div class='text-center'>
@@ -46,7 +47,6 @@
 {% endblock content %}
 
 {% block scripts %}
-<link rel="stylesheet" href="{% static 'core/css/thirdPartyLibraries/jquery.dataTables.min.css' %}">
 <link rel="stylesheet" href="{% static 'core/css/thirdPartyLibraries/buttons.dataTables.min.css' %}">
 <script src="{% static 'core/js/thirdPartyLibraries/jszip.min.js' %}"></script>
 <script src="{% static 'core/js/thirdPartyLibraries/pdfmake.min.js' %}"></script>
