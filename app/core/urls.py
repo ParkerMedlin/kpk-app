@@ -70,6 +70,7 @@ urlpatterns = [
     path('display-raw-material-label', web.display_raw_material_label, name='display-raw-material-label'),
     path('partial-container-label/', web.display_partial_container_label, name='partial-container-label'),
     path('display-flush-tote-label/', web.display_flush_tote_label, name='display_flush_tote_label'),
+    path('display-discharge-testing-label/', web.display_flush_tote_label, name='display_discharge_testing_label'),
     path('tank-level-change-report/', web.display_tank_level_change_report, name='tank-level-change-report'),
     path('test-page/', web.display_test_page, name='test-page'),
     path('excess-blends/', web.display_excess_blends, name='excess-blends'),

@@ -64,7 +64,7 @@ _All model changes (rename + field changes) followed by comprehensive rename acr
   - **Deliverable**: JS modules with new names.
   - **Verify**: Page loads without JS errors.
 
-- [ ] **8.13** Update navigation links
+- [x] **8.13** Update navigation links
   - **Do**: In all navbar templates, update link URLs and labels from "Flush Tote" to "Discharge Testing".
   - **Deliverable**: Nav links use new URLs/labels.
 
@@ -142,12 +142,12 @@ _All model changes (rename + field changes) followed by comprehensive rename acr
 
 | Phase | Status | Tasks Complete |
 |-------|--------|----------------|
-| 8. Model & Rename | In Progress | 10/13 |
+| 8. Model & Rename | In Progress | 11/13 |
 | 9. Selector & Service Updates | Pending | 0/2 |
 | 10. Form & Interface | Pending | 0/9 |
 | 11. Navigation | Pending | 0/2 |
 
-**Overall**: 10/26 tasks (38%)
+**Overall**: 11/26 tasks (42%)
 
 ---
 
