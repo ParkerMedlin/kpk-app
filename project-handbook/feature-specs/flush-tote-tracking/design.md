@@ -2,14 +2,14 @@
 
 ## Overview
 
-Add a flush tote tracking workflow so lab technicians can record pH checks, corrective actions, and approvals. Implement a `FlushToteReading` table, API, and two web pages: a single-instance entry form for lab techs and an admin table view for staff to review/edit historical records.
+Add a flush tote tracking workflow so lab technicians can record pH checks, corrective actions, and approvals. Implement a `DischargeTestingRecord` table, API, and two web pages: a single-instance entry form for lab techs and an admin table view for staff to review/edit historical records.
 
 ## Affected Components
 
 ### Existing Files to Modify
 | File | Changes |
 |------|---------|
-| `app/core/models.py` | Add `FlushToteReading` model with fields/choices and validation helpers. |
+| `app/core/models.py` | Add `DischargeTestingRecord` model with fields/choices and validation helpers. |
 | `app/core/selectors/__init__.py` | Export new selector functions. |
 | `app/core/services/__init__.py` | Export new service functions. |
 | `app/core/views/web.py` | Web views for entry form and admin records page. |
@@ -31,7 +31,7 @@ Add a flush tote tracking workflow so lab technicians can record pH checks, corr
 
 ### New Models
 ```python
-class FlushToteReading(models.Model):
+class DischargeTestingRecord(models.Model):
     """Tracks testing/approval of a production flush tote."""
     STATUS_PENDING = "pending"
     STATUS_NEEDS_ACTION = "needs_action"
@@ -88,7 +88,7 @@ path("api/flush-totes/<int:pk>/", views.flush_tote_detail_api, name="flush_tote_
 def list_flush_totes(limit=200) -> QuerySet:
     """Recent totes ordered newest-first for table view."""
 
-def get_flush_tote(pk: int) -> FlushToteReading:
+def get_flush_tote(pk: int) -> DischargeTestingRecord:
     """Fetch single tote or raise DoesNotExist."""
 
 def get_flush_type_options() -> List[str]:
@@ -97,14 +97,14 @@ def get_flush_type_options() -> List[str]:
 
 ### Services (business logic)
 ```python
-def create_flush_tote_reading(data, user) -> FlushToteReading:
+def create_flush_tote_reading(data, user) -> DischargeTestingRecord:
     """
     - set lab_technician=user
     - compute approval_status based on pH values
     - default status pending if no pH, needs_action if out of range, approved if in range
     """
 
-def update_flush_tote_reading(tote: FlushToteReading, data, user) -> FlushToteReading:
+def update_flush_tote_reading(tote: DischargeTestingRecord, data, user) -> DischargeTestingRecord:
     """
     - update fields from data
     - recompute approval_status based on pH values

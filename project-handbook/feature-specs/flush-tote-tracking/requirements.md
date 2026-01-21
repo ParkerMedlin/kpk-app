@@ -31,7 +31,7 @@ Flush totes from production lines need consistent testing, approval, and dischar
 ## Scope
 
 ### In Scope
-- `FlushToteReading` model with fields: date (auto), production_line, flush_type, initial_pH, action_required (free text), final_pH, approval_status, lab_technician, line_personnel.
+- `DischargeTestingRecord` model with fields: date (auto), production_line, flush_type, initial_pH, action_required (free text), final_pH, approval_status, lab_technician, line_personnel.
 - Single-instance entry form for lab technicians at `/flush-tote-entry/`.
 - Admin table view with inline editing and search at `/flush-tote-records/` (staff only).
 - Validation enforcing pH range 5.1–10.9 for approval.

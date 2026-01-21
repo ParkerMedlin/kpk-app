@@ -10,7 +10,7 @@ Use existing naming conventions: `flush_tote_services.py`, `flush_tote_selectors
 
 ## Phase 1: Data Layer
 
-- [x] **1.1** Create `FlushToteReading` model and migration
+- [x] **1.1** Create `DischargeTestingRecord` model and migration
   - **Do**: Add model (fields, choices, meta) and validators from design; include pH range constants and status choices.
   - **Deliverable**: Model in `app/core/models.py`; new migration file.
   - **Verify**: `python manage.py makemigrations` succeeds.

@@ -280,7 +280,7 @@ class FlushTotesPage {
         this.renderEditButtons(row, cell);
         return;
       }
-      if (!field || field === 'date' || field === 'approval_status' || field === 'line_personnel_name' || field === 'lab_technician_name') {
+      if (!field || field === 'date' || field === 'line_personnel_name' || field === 'lab_technician_name') {
         return;
       }
 

@@ -9,7 +9,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 
 from app.websockets import base_consumer
-from core.models import FlushToteReading
+from core.models import DischargeTestingRecord
 from core.websockets.serializer import serialize_for_websocket
 
 logger = logging.getLogger(__name__)
@@ -40,7 +40,7 @@ def _parse_ph(value: Any, field_name: str) -> Optional[Decimal]:
     return parsed
 
 
-def _serialize_flush_tote(tote: FlushToteReading) -> Dict[str, Any]:
+def _serialize_flush_tote(tote: DischargeTestingRecord) -> Dict[str, Any]:
     return serialize_for_websocket(
         {
             "id": tote.id,
@@ -50,7 +50,6 @@ def _serialize_flush_tote(tote: FlushToteReading) -> Dict[str, Any]:
             "initial_pH": tote.initial_pH,
             "action_required": tote.action_required,
             "final_pH": tote.final_pH,
-            "approval_status": tote.approval_status,
             "lab_technician_id": tote.lab_technician_id,
             "lab_technician_name": _user_display(tote.lab_technician),
             "line_personnel_id": tote.line_personnel_id,
@@ -66,7 +65,7 @@ def _user_display(user: Optional[User]) -> Optional[str]:
     return full_name or user.username
 
 
-def _line_personnel_display(tote: FlushToteReading) -> Optional[str]:
+def _line_personnel_display(tote: DischargeTestingRecord) -> Optional[str]:
     line_name = getattr(tote, "line_personnel_name", None)
     if line_name:
         return line_name
@@ -99,7 +98,7 @@ def _is_lab_user(user: Optional[User]) -> bool:
     return user.is_staff or user.is_superuser or _user_in_group(user, GROUP_LAB_TECHNICIAN)
 
 
-def _broadcast_flush_tote_event(event: str, tote: FlushToteReading) -> None:
+def _broadcast_flush_tote_event(event: str, tote: DischargeTestingRecord) -> None:
     """
     Broadcast a flush tote event to shared and per-tote websocket groups.
     """
@@ -135,7 +134,7 @@ def create_flush_tote_reading(
     initial_pH: Any = None,
     action_required: Optional[str] = None,
     final_pH: Any = None,
-) -> FlushToteReading:
+) -> DischargeTestingRecord:
     """
     Create a new flush tote record with optional initial/final pH values.
     Assigns lab_technician to the submitting user and accepts line personnel name input.
@@ -157,29 +156,28 @@ def create_flush_tote_reading(
         else:
             raise ValidationError({"line_personnel_name": "Line personnel name is required."})
 
-    status = FlushToteReading.STATUS_PENDING
-    if initial_value is not None and not FlushToteReading.is_ph_in_range(initial_value):
-        status = FlushToteReading.STATUS_NEEDS_ACTION
+    status = DischargeTestingRecord.STATUS_PENDING
+    if initial_value is not None and not DischargeTestingRecord.is_ph_in_range(initial_value):
+        status = DischargeTestingRecord.STATUS_NEEDS_ACTION
     if final_value is not None:
         if (
             initial_value is not None
-            and not FlushToteReading.is_ph_in_range(initial_value)
+            and not DischargeTestingRecord.is_ph_in_range(initial_value)
             and not cleaned_action
         ):
             raise ValidationError({"action_required": "Action details are required when initial pH is out of range."})
-        if not FlushToteReading.is_ph_in_range(final_value):
+        if not DischargeTestingRecord.is_ph_in_range(final_value):
             raise ValidationError(
-                {"final_pH": f"Final pH must be between {FlushToteReading.PH_MIN} and {FlushToteReading.PH_MAX}."}
+                {"final_pH": f"Final pH must be between {DischargeTestingRecord.PH_MIN} and {DischargeTestingRecord.PH_MAX}."}
             )
-        status = FlushToteReading.STATUS_APPROVED
+        status = DischargeTestingRecord.STATUS_APPROVED
 
-    tote = FlushToteReading(
+    tote = DischargeTestingRecord(
         production_line=production_line,
         flush_type=flush_type,
         initial_pH=initial_value,
         action_required=cleaned_action,
-        final_pH=final_value,
-        approval_status=status,
+        final_pH=final_value
     )
 
     if hasattr(tote, "line_personnel_name") and cleaned_line_personnel:
@@ -205,11 +203,11 @@ def create_flush_tote_reading(
 
 
 def record_initial_ph(
-    tote: Union[int, FlushToteReading],
+    tote: Union[int, DischargeTestingRecord],
     *,
     ph_value: Any,
     user: Optional[User] = None,
-) -> FlushToteReading:
+) -> DischargeTestingRecord:
     """
     Record the initial pH measurement.
     Sets status to needs_action when out of range; otherwise keeps/returns pending.
@@ -220,10 +218,6 @@ def record_initial_ph(
         raise ValidationError({"initial_pH": "Initial pH is required."})
 
     instance.initial_pH = initial_value
-    if not FlushToteReading.is_ph_in_range(initial_value):
-        instance.approval_status = FlushToteReading.STATUS_NEEDS_ACTION
-    elif instance.approval_status != FlushToteReading.STATUS_APPROVED:
-        instance.approval_status = FlushToteReading.STATUS_PENDING
 
     if _is_lab_user(user):
         instance.lab_technician = user
@@ -233,7 +227,6 @@ def record_initial_ph(
     with transaction.atomic():
         instance.save(update_fields=[
             "initial_pH",
-            "approval_status",
             "lab_technician",
             "line_personnel",
         ])
@@ -242,12 +235,12 @@ def record_initial_ph(
 
 
 def record_action_and_final_ph(
-    tote: Union[int, FlushToteReading],
+    tote: Union[int, DischargeTestingRecord],
     *,
     action_text: Optional[str],
     final_ph: Any,
     user: Optional[User] = None,
-) -> FlushToteReading:
+) -> DischargeTestingRecord:
     """
     Record corrective action (if needed) and the final pH.
     Requires an initial pH to exist; final pH must be within allowed range.
@@ -261,20 +254,19 @@ def record_action_and_final_ph(
     if final_value is None:
         raise ValidationError({"final_pH": "Final pH is required."})
 
-    if not FlushToteReading.is_ph_in_range(final_value):
+    if not DischargeTestingRecord.is_ph_in_range(final_value):
         raise ValidationError(
-            {"final_pH": f"Final pH must be between {FlushToteReading.PH_MIN} and {FlushToteReading.PH_MAX}."}
+            {"final_pH": f"Final pH must be between {DischargeTestingRecord.PH_MIN} and {DischargeTestingRecord.PH_MAX}."}
         )
 
     cleaned_action = (action_text or "").strip()
-    initial_out_of_range = not FlushToteReading.is_ph_in_range(instance.initial_pH)
+    initial_out_of_range = not DischargeTestingRecord.is_ph_in_range(instance.initial_pH)
     if initial_out_of_range and not (cleaned_action or instance.action_required):
         raise ValidationError({"action_required": "Action details are required when initial pH is out of range."})
 
     if cleaned_action:
         instance.action_required = cleaned_action
     instance.final_pH = final_value
-    instance.approval_status = FlushToteReading.STATUS_APPROVED
 
     if _is_lab_user(user):
         instance.lab_technician = user
@@ -293,10 +285,10 @@ def record_action_and_final_ph(
     return instance
 
 
-def _resolve_tote(tote: Union[int, FlushToteReading]) -> FlushToteReading:
-    if isinstance(tote, FlushToteReading):
+def _resolve_tote(tote: Union[int, DischargeTestingRecord]) -> DischargeTestingRecord:
+    if isinstance(tote, DischargeTestingRecord):
         return tote
     try:
-        return FlushToteReading.objects.get(pk=tote)
-    except FlushToteReading.DoesNotExist as exc:
+        return DischargeTestingRecord.objects.get(pk=tote)
+    except DischargeTestingRecord.DoesNotExist as exc:
         raise ValidationError({"id": "Flush tote not found."}) from exc

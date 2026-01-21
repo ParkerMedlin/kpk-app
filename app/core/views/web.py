@@ -2144,7 +2144,7 @@ def flush_tote_entry_view(request):
         return HttpResponseForbidden('Lab technician access required.')
 
     context = {
-        'production_line_choices': FlushToteReading.PRODUCTION_LINE_CHOICES,
+        'production_line_choices': DischargeTestingRecord.PRODUCTION_LINE_CHOICES,
         'flush_type_options': get_flush_type_options(),
     }
     return render(request, 'core/flush_tote_entry.html', context)
@@ -2155,7 +2155,7 @@ def flush_tote_entry_view(request):
 def flush_totes_view(request):
     """Render the flush tote tracking page with initial options and data."""
     context = {
-        'production_line_choices': FlushToteReading.PRODUCTION_LINE_CHOICES,
+        'production_line_choices': DischargeTestingRecord.PRODUCTION_LINE_CHOICES,
         'flush_type_options': get_flush_type_options(),
         'flush_totes': list_flush_totes(),
     }
