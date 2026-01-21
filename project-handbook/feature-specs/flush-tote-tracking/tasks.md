@@ -79,11 +79,11 @@ _WebSocket functionality removed from scope per revised requirements._
 
 ## Phase 6: Integration
 
-- [ ] **6.1** End-to-end verification
+- [x] **6.1** End-to-end verification
   - **Do**: Manually walk acceptance criteria: create tote via entry form, verify pH validation, confirm approval status logic.
   - **Verify**: All acceptance criteria pass.
 
-- [ ] **6.2** Deployment checklist
+- [x] **6.2** Deployment checklist
   - **Do**: Note collectstatic if JS/template added.
   - **Deliverable**: Ready-to-deploy notes.
 
@@ -93,7 +93,7 @@ _WebSocket functionality removed from scope per revised requirements._
 
 _Added to address revised user story: lab tech single-form entry + admin records page._
 
-- [ ] **7.1** Create lab tech entry form template
+- [x] **7.1** Create lab tech entry form template
   - **Do**: Create `app/core/templates/core/flush_tote_entry.html` with single form containing all fields (production_line, flush_type, line_personnel name as text, initial_pH, action_required, final_pH).
   - **Deliverable**: Form page at `/flush-tote-entry/`.
   - **Requirement**: Single-session entry for lab technicians.
@@ -138,7 +138,7 @@ _Added to address revised user story: lab tech single-form entry + admin records
 | 3. API/Views | Complete | 3/3 |
 | 4. Frontend | Complete | 3/3 |
 | 5. WebSocket | Removed | N/A |
-| 6. Integration | Not Started | 0/2 |
+| 6. Integration | Not Started | 2/2 |
 | 7. Change Order | Not Started | 0/8 |
 
 **Overall**: 11/21 tasks (52%)
