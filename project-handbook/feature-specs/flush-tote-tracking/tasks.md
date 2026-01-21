@@ -111,7 +111,7 @@ _Added to address revised user story: lab tech single-form entry + admin records
   - **Do**: Update `flush_totes.html` to be admin-only records table; remove create form (lab entry moved to separate page); remove line personnel role checks; add search/filter.
   - **Deliverable**: Staff-only records page at `/flush-tote-records/`.
 
-- [ ] **7.5** Update FlushTotes.js for admin table
+- [x] **7.5** Update FlushTotes.js for admin table
   - **Do**: Remove WebSocket code and reconnect banner; simplify to inline edit only; add search/filter support.
   - **Deliverable**: Clean admin table JS without WebSocket dependencies.
 
@@ -139,9 +139,9 @@ _Added to address revised user story: lab tech single-form entry + admin records
 | 4. Frontend | Complete | 3/3 |
 | 5. WebSocket | Removed | N/A |
 | 6. Integration | Complete | 2/2 |
-| 7. Change Order | In Progress | 4/8 |
+| 7. Change Order | In Progress | 5/8 |
 
-**Overall**: 17/21 tasks (81%)
+**Overall**: 18/21 tasks (86%)
 
 ---
 
