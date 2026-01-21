@@ -3,12 +3,14 @@
 {% block title %}<title>Where Used</title>{% endblock %}
 
 {% block content %}
+{% include 'core/partials/datatableprerequisites.html' %}
+<script src="{% static 'core/js/pageModules/whereUsedReport.js' %}"></script>
 <div class='text-center'><a href='/core/reports/'>Return to the Reports Page</a></div>
     <div class='text-center'>
         <h1>Where-Used Report for {{ item_info.item_code }} {{ item_info.item_description }}</h1>
     </div>
 
-    <table class="table text-left table-bordered table-hover">
+    <table id="whereUsedReportTable" class="table text-left table-bordered table-hover">
         <thead class="thead-dark">
             <tr>
                 <th scope="col">Bill No.</th>
