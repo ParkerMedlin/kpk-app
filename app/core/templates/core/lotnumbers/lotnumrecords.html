@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block scripts %}
-    <link rel="stylesheet" type="text/css" href="{% static 'core/css/lotNumRecords.css' %}">
-    <link rel="stylesheet" href="{% static 'core/css/thirdPartyLibraries/jquery.dataTables.min.css' %}">
+    {% comment %} <link rel="stylesheet" href="{% static 'core/css/thirdPartyLibraries/jquery.dataTables.min.css' %}"> {% endcomment %}
     <script src="{% static 'core/js/thirdPartyLibraries/datatables/jquery.dataTables.min.js' %}"></script>
+    <link rel="stylesheet" type="text/css" href="{% static 'core/css/lotNumRecords.css' %}">
 {% endblock%}
 {% block title %}<title>Lot Numbers</title>{% endblock %}
 
