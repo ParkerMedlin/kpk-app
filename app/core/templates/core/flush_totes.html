@@ -12,11 +12,11 @@
 <div
     id="flush-totes-app"
     class="container-fluid px-0"
-    data-role-line="{% if user.is_staff or user|has_group:'line personnel' %}true{% else %}false{% endif %}"
-    data-role-lab="{% if user.is_staff or user|has_group:'lab technician' %}true{% else %}false{% endif %}"
+    data-role-line="{% if user.is_staff %}true{% else %}false{% endif %}"
+    data-role-lab="{% if user.is_staff %}true{% else %}false{% endif %}"
 >
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-        <h1 class="mb-0">Flush Tote Tracking</h1>
+        <h1 class="mb-0">Flush Tote Records</h1>
         <div class="d-flex flex-wrap gap-2">
             <span class="badge bg-success text-uppercase">Approved</span>
             <span class="badge bg-warning text-dark text-uppercase">Needs Action</span>
@@ -30,69 +30,18 @@
         Connection lost. Updates will retry automatically.
     </div>
 
-    <div class="card shadow-sm mb-3">
-        <div class="card-body">
-            <form id="flush-tote-create-form" class="row gy-2 gx-3 align-items-end">
-                <div class="col-md-3">
-                    <label class="form-label" for="flush-tote-production-line">Production Line</label>
-                    <select
-                        id="flush-tote-production-line"
-                        name="production_line"
-                        class="form-select"
-                        {% if not user.is_staff and not user|has_group:"line personnel" %}disabled{% endif %}
-                    >
-                        <option value="">Select line...</option>
-                        {% for value, label in production_line_choices %}
-                            <option value="{{ value }}">{{ label }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label" for="flush-tote-flush-type">Flush Type</label>
-                    <select
-                        id="flush-tote-flush-type"
-                        name="flush_type"
-                        class="form-select"
-                        {% if not user.is_staff and not user|has_group:"line personnel" %}disabled{% endif %}
-                    >
-                        <option value="">Select flush type...</option>
-                        {% for flush_type in flush_type_options %}
-                            <option value="{{ flush_type }}">{{ flush_type }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label" for="flush-tote-line-personnel">Line Personnel</label>
-                    <input
-                        id="flush-tote-line-personnel"
-                        name="line_personnel_display"
-                        class="form-control"
-                        type="text"
-                        value="{{ user.get_full_name|default:user.username }}"
-                        readonly
-                        required
-                    />
-                </div>
-                <div class="col-md-3">
-                    <button
-                        type="submit"
-                        class="btn btn-primary w-100"
-                        id="flush-tote-create-btn"
-                        {% if not user.is_staff and not user|has_group:"line personnel" %}disabled{% endif %}
-                    >
-                        <i class="fas fa-plus"></i> Enter Flush Tote
-                    </button>
-                </div>
-                <div class="col-12">
-                    <div class="text-muted small">
-                        {% if user.is_staff or user|has_group:"line personnel" %}
-                            Line personnel can create new totes.
-                        {% else %}
-                            Line personnel only.
-                        {% endif %}
-                    </div>
-                </div>
-            </form>
+    <div class="row mb-3">
+        <div class="col-md-6 col-lg-4">
+            <label for="id_filter_criteria" class="form-label">Search Records:</label>
+            <input
+                type="text"
+                name="filter_criteria"
+                maxlength="100"
+                id="id_filter_criteria"
+                class="form-control ui-autocomplete-input"
+                autocomplete="off"
+                placeholder="Type to filter..."
+            >
         </div>
     </div>
 
@@ -114,7 +63,7 @@
             </thead>
             <tbody>
                 {% for tote in flush_totes %}
-                    <tr class="flush-tote-row" data-tote-id="{{ tote.id }}" data-status="{{ tote.approval_status }}">
+                    <tr class="flush-tote-row filterableRow" data-tote-id="{{ tote.id }}" data-status="{{ tote.approval_status }}">
                         <td data-field="date" data-value="{{ tote.date|date:'c' }}">
                             <div class="fw-semibold">{{ tote.date|date:'Y-m-d H:i' }}</div>
                         </td>
@@ -195,7 +144,6 @@
                                 type="button"
                                 class="btn btn-sm btn-outline-primary edit-row-btn"
                                 title="Edit"
-                                {% if not user.is_staff and not user|has_group:"line personnel" and not user|has_group:"lab technician" %}disabled{% endif %}
                             >
                                 <i class="fas fa-edit"></i>
                             </button>

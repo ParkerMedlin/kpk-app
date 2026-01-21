@@ -107,7 +107,7 @@ _Added to address revised user story: lab tech single-form entry + admin records
   - **Do**: Add `flush_tote_entry_view` in `app/core/views/web.py`; restrict to lab technician group or staff.
   - **Deliverable**: View renders entry form template with options context.
 
-- [ ] **7.4** Refactor existing page as admin records view
+- [x] **7.4** Refactor existing page as admin records view
   - **Do**: Update `flush_totes.html` to be admin-only records table; remove create form (lab entry moved to separate page); remove line personnel role checks; add search/filter.
   - **Deliverable**: Staff-only records page at `/flush-tote-records/`.
 
@@ -139,9 +139,9 @@ _Added to address revised user story: lab tech single-form entry + admin records
 | 4. Frontend | Complete | 3/3 |
 | 5. WebSocket | Removed | N/A |
 | 6. Integration | Complete | 2/2 |
-| 7. Change Order | In Progress | 3/8 |
+| 7. Change Order | In Progress | 4/8 |
 
-**Overall**: 16/21 tasks (76%)
+**Overall**: 17/21 tasks (81%)
 
 ---
 
