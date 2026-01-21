@@ -2,56 +2,51 @@
 
 ## Problem Statement
 
-Flush totes from production lines need consistent testing, approval, and discharge tracking. Today the workflow is manual and fragmented, creating risk of dumping out-of-range totes and poor visibility into status between line personnel and lab technicians.
+Flush totes from production lines need consistent testing, approval, and discharge tracking. Today the workflow is manual and fragmented, creating risk of dumping out-of-range totes and poor visibility into status.
 
 ## User Stories
 
-### Line Personnel
-- **As a** line operator, **I want to** create a flush tote entry when I bring it to the lab, **so that** the lab can record test results against the correct tote.
-- **As a** line operator, **I want to** see when a tote is approved for dumping in real time, **so that** I can dispose of it without waiting for verbal confirmation.
-
 ### Lab Technician
-- **As a** lab tech, **I want to** record initial and final pH readings for a flush tote, **so that** the plant has traceability for the discharge decision.
-- **As a** lab tech, **I want to** flag totes that require corrective action and record the action taken, **so that** supervisors can review interventions.
+- **As a** lab tech, **I want to** record all flush tote data (production line, flush type, line personnel name, pH readings, and any corrective action) in a single form, **so that** I can complete the task in one session without navigating multiple screens.
+- **As a** lab tech, **I want to** see clear validation feedback when pH is out of range, **so that** I know when corrective action is required before approval.
 
-### Supervisor (secondary)
-- **As a** supervisor, **I want to** verify that out-of-range totes have documented actions before approval, **so that** compliance and safety policies are met.
+### Supervisor / Admin
+- **As a** supervisor, **I want to** view and search all flush tote records in a table, **so that** I can audit discharge decisions and verify compliance.
+- **As a** supervisor, **I want to** inline-edit historical records if corrections are needed, **so that** data accuracy is maintained.
 
 ## Acceptance Criteria
 
 ### Core Functionality
-- **WHEN** line personnel create a flush tote entry, **THEN** the system **SHALL** auto-fill the date/time as now and require production line and flush tote type.
-- **WHEN** a lab tech records an initial pH, **THEN** the system **SHALL** flag entries outside 5.1–10.9 as “Action Required” and block final approval until action is recorded and a compliant final pH is entered.
-- **WHEN** final pH is saved within 5.1–10.9, **THEN** the system **SHALL** mark the tote as approved for discharge and notify connected clients via WebSocket.
-- **IF** the approval status changes (e.g., Approved, Pending, Needs Action), **THEN** all users viewing the page **SHALL** see the update in real time via WebSocket.
+- **WHEN** a lab tech submits a flush tote entry, **THEN** the system **SHALL** auto-fill the date/time as now and require production line, flush type, and line personnel name.
+- **WHEN** a lab tech records an initial pH, **THEN** the system **SHALL** flag entries outside 5.1–10.9 as "Action Required" and block final approval until action is recorded and a compliant final pH is entered.
+- **WHEN** final pH is saved within 5.1–10.9, **THEN** the system **SHALL** mark the tote as approved for discharge.
 
 ### Error Handling
 - **WHEN** required fields are missing or pH values are non-numeric, **THEN** the system **SHALL** reject the submission with field-level errors.
-- **WHEN** Redis/WebSocket connectivity fails, **THEN** the system **SHALL** allow save via HTTP and queue a reconnect notice in the UI.
 
 ### User Experience
-- **WHEN** a user edits a tote, **THEN** the form **SHALL** show who last updated each pH field and when.
-- **WHEN** a tote is pending action, **THEN** the UI **SHALL** display the recorded action description prominently for both roles.
+- **WHEN** a lab tech opens the entry form, **THEN** the form **SHALL** present all fields for single-session completion (production line, flush type, line personnel, initial pH, action if needed, final pH).
+- **WHEN** a staff user opens the admin records page, **THEN** the page **SHALL** display a searchable table with inline editing capability.
 
 ## Scope
 
 ### In Scope
-- New `FlushToteReading` model with fields: date (auto), production_line, flush_type, initial_pH, action_required (free text), final_pH, approval_status, lab_technician, line_personnel.
-- Web UI for line personnel and lab technicians to create/update entries with role-based field enablement.
-- WebSocket updates so multiple viewers see live state changes.
+- `FlushToteReading` model with fields: date (auto), production_line, flush_type, initial_pH, action_required (free text), final_pH, approval_status, lab_technician, line_personnel.
+- Single-instance entry form for lab technicians at `/flush-tote-entry/`.
+- Admin table view with inline editing and search at `/flush-tote-records/` (staff only).
 - Validation enforcing pH range 5.1–10.9 for approval.
 
 ### Out of Scope
 - Mobile-specific UI.
 - Historical analytics or trend reports beyond table/list views.
 - Automated instrument integration for pH readings.
+- Real-time WebSocket updates (standard HTTP refresh is sufficient).
 
 ## Dependencies
 
-- Existing Django user groups for “lab technician” and “line personnel” to control permissions.
+- Existing Django user group "lab technician" to control entry form access.
 - `BlendContainerClassification` model to source `flush_type` options from unique `flush_tote` values.
-- Django Channels + Redis stack already used for real-time features.
 
 ---
 
-**Status**: Approved
+**Status**: Approved (Revised)
