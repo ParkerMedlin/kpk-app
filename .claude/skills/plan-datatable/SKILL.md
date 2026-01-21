@@ -59,9 +59,30 @@ Ask user about these options:
 | **Default sort** | `order: [[colIndex, 'asc']]` | First column |
 | **Search** | Built into dom `f` | Enabled |
 
-**For date columns:** Add `data-order` attribute for proper sorting:
+### 6. Add data-order to Date Columns
+
+**REQUIRED for all date columns.** DataTables sorts alphabetically by default, so dates like "Jan 15, 2025" won't sort correctly. Add the `data-order` attribute with ISO format (`Y-m-d`) to enable proper chronological sorting.
+
+**Pattern:**
 ```html
-<td data-order="{{ item.date|date:'Y-m-d' }}">{{ item.date }}</td>
+<td data-order="{{ item.date|date:'Y-m-d' }}">{{ item.date|date:'M j, Y' }}</td>
+```
+
+**Implementation steps for date columns:**
+1. Identify all `<td>` cells that display date values in the template
+2. Add `data-order="{{ variable|date:'Y-m-d' }}"` to each date `<td>`
+3. The display format inside the cell can remain whatever the user prefers
+4. The `data-order` value must use `Y-m-d` format (e.g., `2025-01-15`)
+
+**Examples:**
+```html
+<!-- Before -->
+<td>{{ record.created_at|date:'M j, Y' }}</td>
+<td>{{ shipment.ship_date }}</td>
+
+<!-- After -->
+<td data-order="{{ record.created_at|date:'Y-m-d' }}">{{ record.created_at|date:'M j, Y' }}</td>
+<td data-order="{{ shipment.ship_date|date:'Y-m-d' }}">{{ shipment.ship_date }}</td>
 ```
 
 ## Questions to Ask User
@@ -71,7 +92,7 @@ Ask user about these options:
 3. Should paging be enabled? (default: no for <100 rows)
 4. Which export buttons? (default: copy, csv, excel, print)
 5. Any columns that should NOT be sortable?
-6. Any columns with dates that need `data-order` attributes?
+6. Which columns contain dates? (these will require `data-order` attributes)
 
 ## Implementation Steps
 
@@ -79,12 +100,13 @@ Ask user about these options:
 2. Verify table has an `id` attribute
 3. Check if datatableprerequisites partial or block scripts exists
 4. Check if pageModule JS file exists at expected path
-5. Present plan to user with specific changes needed
-6. After approval, make edits:
+5. **Identify all date columns** in the table and note which `<td>` cells need `data-order` attributes
+6. Present plan to user with specific changes needed
+7. After approval, make edits:
    - Add prerequisites (partial or block scripts)
    - Create/update pageModule JS
    - Link pageModule in template
-   - Add `data-order` attributes to date columns if needed
+   - **Add `data-order="{{ var|date:'Y-m-d' }}"` to every date column's `<td>` element**
 
 ## Reference Files
 
