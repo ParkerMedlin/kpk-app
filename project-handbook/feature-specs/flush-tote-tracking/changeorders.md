@@ -72,11 +72,11 @@ _All model changes (rename + field changes) followed by comprehensive rename acr
 
 ## Phase 9: Selector & Service Updates for Field Changes
 
-- [ ] **9.1** Update selectors for field changes
+- [x] **9.1** Update selectors for field changes
   - **Do**: In `discharge_testing_selectors.py`, update any references to `production_line` → `discharge_source`; remove any `approval_status` filtering/sorting.
   - **Deliverable**: Selectors use new field names.
 
-- [ ] **9.2** Update services for field changes
+- [x] **9.2** Update services for field changes
   - **Do**: In `discharge_testing_services.py`, update `create_discharge_test` to accept `discharge_source` (not `production_line`) and `final_disposition`; remove any `approval_status` logic.
   - **Deliverable**: Services use new field names; handle new required field.
 
@@ -142,12 +142,12 @@ _All model changes (rename + field changes) followed by comprehensive rename acr
 
 | Phase | Status | Tasks Complete |
 |-------|--------|----------------|
-| 8. Model & Rename | In Progress | 11/13 |
-| 9. Selector & Service Updates | Pending | 0/2 |
+| 8. Model & Rename | Complete | 13/13 |
+| 9. Selector & Service Updates | Complete | 2/2 |
 | 10. Form & Interface | Pending | 0/9 |
 | 11. Navigation | Pending | 0/2 |
 
-**Overall**: 11/26 tasks (42%)
+**Overall**: 15/26 tasks (58%)
 
 ---
 

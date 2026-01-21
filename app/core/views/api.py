@@ -2224,12 +2224,13 @@ def _serialize_flush_tote_reading(tote):
     return {
         'id': tote.id,
         'date': tote.date.isoformat() if tote.date else None,
-        'production_line': tote.production_line,
+        'discharge_source': tote.discharge_source,
+        'production_line': tote.discharge_source,
         'flush_type': tote.flush_type,
         'initial_pH': _safe_float(tote.initial_pH),
         'action_required': tote.action_required or '',
         'final_pH': _safe_float(tote.final_pH),
-        'approval_status': tote.approval_status,
+        'final_disposition': tote.final_disposition,
         'lab_technician_id': tote.lab_technician_id,
         'lab_technician_name': _user_display(tote.lab_technician),
         'line_personnel_id': tote.line_personnel_id,
@@ -2280,8 +2281,9 @@ def discharge_testing_list_api(request):
     except ValueError as exc:
         return JsonResponse({'status': 'error', 'error': str(exc)}, status=400)
 
-    production_line = (payload.get('production_line') or '').strip()
+    discharge_source = (payload.get('discharge_source') or payload.get('production_line') or '').strip()
     flush_type = (payload.get('flush_type') or '').strip()
+    final_disposition = (payload.get('final_disposition') or '').strip()
     line_personnel_name = (payload.get('line_personnel_name') or '').strip()
     initial_ph = payload.get('initial_pH')
     action_required = payload.get('action_required')
@@ -2289,8 +2291,9 @@ def discharge_testing_list_api(request):
 
     try:
         tote = create_discharge_test(
-            production_line=production_line,
+            discharge_source=discharge_source,
             flush_type=flush_type,
+            final_disposition=final_disposition,
             line_personnel_name=line_personnel_name,
             user=request.user,
             initial_pH=initial_ph,
@@ -2329,7 +2332,7 @@ def discharge_testing_detail_api(request, pk):
     is_line = is_admin or _user_in_group(request.user, GROUP_LINE_PERSONNEL)
     is_lab = is_admin or _user_in_group(request.user, GROUP_LAB_TECHNICIAN)
 
-    line_fields = {'production_line', 'flush_type'}
+    line_fields = {'discharge_source', 'production_line', 'flush_type'}
     lab_fields = {'initial_pH', 'final_pH', 'action_required'}
 
     requested_line_fields = line_fields.intersection(payload.keys())
@@ -2345,9 +2348,11 @@ def discharge_testing_detail_api(request, pk):
     try:
         if requested_line_fields:
             updated_fields = []
-            if 'production_line' in requested_line_fields:
-                tote.production_line = (payload.get('production_line') or '').strip()
-                updated_fields.append('production_line')
+            if 'discharge_source' in requested_line_fields or 'production_line' in requested_line_fields:
+                tote.discharge_source = (
+                    payload.get('discharge_source') or payload.get('production_line') or ''
+                ).strip()
+                updated_fields.append('discharge_source')
             if 'flush_type' in requested_line_fields:
                 tote.flush_type = (payload.get('flush_type') or '').strip()
                 updated_fields.append('flush_type')
