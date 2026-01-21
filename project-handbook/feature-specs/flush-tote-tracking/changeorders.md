@@ -32,7 +32,7 @@ _All model changes (rename + field changes) followed by comprehensive rename acr
   - **Do**: Prompt user to run migrations and delete old table if needed.
   - **Verify**: `python manage.py makemigrations` succeeds; migrations apply cleanly.
 
-- [ ] **8.6** Rename selectors
+- [x] **8.6** Rename selectors
   - **Do**: Rename `flush_tote_selectors.py` → `discharge_testing_selectors.py`; rename functions `list_flush_totes` → `list_discharge_tests`, `get_flush_tote` → `get_discharge_test`, `get_flush_type_options` → `get_discharge_type_options`; update `__init__.py` exports.
   - **Deliverable**: Selector module with new names.
   - **Verify**: Imports resolve in shell.
@@ -142,12 +142,12 @@ _All model changes (rename + field changes) followed by comprehensive rename acr
 
 | Phase | Status | Tasks Complete |
 |-------|--------|----------------|
-| 8. Model & Rename | In Progress | 3/13 |
+| 8. Model & Rename | In Progress | 4/13 |
 | 9. Selector & Service Updates | Pending | 0/2 |
 | 10. Form & Interface | Pending | 0/9 |
 | 11. Navigation | Pending | 0/2 |
 
-**Overall**: 3/26 tasks (12%)
+**Overall**: 4/26 tasks (15%)
 
 ---
 

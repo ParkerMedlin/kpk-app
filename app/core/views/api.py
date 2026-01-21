@@ -66,7 +66,7 @@ from core.services.cost_impact_service import analyze_cost_impacts
 import time
 from django.utils.dateparse import parse_datetime
 from typing import Dict
-from core.selectors import get_flush_tote, list_flush_totes
+from core.selectors import get_discharge_test, list_discharge_tests
 
 logger = logging.getLogger(__name__)
 
@@ -2263,7 +2263,7 @@ def flush_tote_list_api(request):
             except ValueError:
                 return JsonResponse({"error": "limit must be a positive integer"}, status=400)
 
-        totes = list_flush_totes(limit=limit)
+        totes = list_discharge_tests(limit=limit)
         return JsonResponse(
             {
                 'status': 'success',
@@ -2317,7 +2317,7 @@ def flush_tote_detail_api(request, pk):
         return JsonResponse({'status': 'error', 'error': 'No update fields provided.'}, status=400)
 
     try:
-        tote = get_flush_tote(pk)
+        tote = get_discharge_test(pk)
     except Exception:
         return JsonResponse({'status': 'error', 'error': 'Flush tote not found.'}, status=404)
 

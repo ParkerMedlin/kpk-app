@@ -5,9 +5,9 @@ from django.db.models import QuerySet
 from core.models import BlendContainerClassification, DischargeTestingRecord
 
 
-def list_flush_totes(limit: Optional[int] = 200) -> QuerySet:
+def list_discharge_tests(limit: Optional[int] = 200) -> QuerySet:
     """
-    Return recent flush tote readings ordered newest-first.
+    Return recent discharge testing records ordered newest-first.
     Includes related lab_technician and line_personnel for display.
     """
     queryset = (
@@ -20,17 +20,17 @@ def list_flush_totes(limit: Optional[int] = 200) -> QuerySet:
     return queryset
 
 
-def get_flush_tote(pk: int) -> DischargeTestingRecord:
-    """Fetch a single flush tote reading by primary key."""
+def get_discharge_test(pk: int) -> DischargeTestingRecord:
+    """Fetch a single discharge testing record by primary key."""
     return (
         DischargeTestingRecord.objects.select_related('lab_technician', 'line_personnel')
         .get(pk=pk)
     )
 
 
-def get_flush_type_options() -> List[str]:
+def get_discharge_type_options() -> List[str]:
     """
-    Return distinct non-empty flush tote type values sourced
+    Return distinct non-empty discharge type values sourced
     from BlendContainerClassification.flush_tote.
     """
     return list(

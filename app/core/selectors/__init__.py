@@ -1,6 +1,6 @@
 
-from .flush_tote_selectors import (
-    get_flush_tote,
-    get_flush_type_options,
-    list_flush_totes,
+from .discharge_testing_selectors import (
+    get_discharge_test,
+    get_discharge_type_options,
+    list_discharge_tests,
 )

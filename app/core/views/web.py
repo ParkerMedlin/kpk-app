@@ -47,7 +47,7 @@ from core.services.inventory_services import (
 from core.selectors.production_planning_selectors import get_schedulable_blend_shortages
 from core.selectors.inventory_selectors import *
 from core.selectors.reports_selectors import *
-from core.selectors import get_flush_type_options, list_flush_totes
+from core.selectors import get_discharge_type_options, list_discharge_tests
 from core.kpkapp_utils.string_utils import get_unencoded_item_code
 from core.services.lot_numbers_services import generate_next_lot_number
 from core.services.blend_scheduling_services import get_blend_schedule_querysets, prepare_blend_schedule_queryset
@@ -2145,7 +2145,7 @@ def flush_tote_entry_view(request):
 
     context = {
         'production_line_choices': DischargeTestingRecord.PRODUCTION_LINE_CHOICES,
-        'flush_type_options': get_flush_type_options(),
+        'flush_type_options': get_discharge_type_options(),
     }
     return render(request, 'core/flush_tote_entry.html', context)
 
@@ -2156,8 +2156,8 @@ def flush_totes_view(request):
     """Render the flush tote tracking page with initial options and data."""
     context = {
         'production_line_choices': DischargeTestingRecord.PRODUCTION_LINE_CHOICES,
-        'flush_type_options': get_flush_type_options(),
-        'flush_totes': list_flush_totes(),
+        'flush_type_options': get_discharge_type_options(),
+        'flush_totes': list_discharge_tests(),
     }
     return render(request, 'core/flush_totes.html', context)
 
