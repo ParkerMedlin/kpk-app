@@ -103,7 +103,7 @@ _Added to address revised user story: lab tech single-form entry + admin records
   - **Deliverable**: Interactive form with client-side validation.
   - **Verify**: Submitting form creates record and resets for next entry.
 
-- [ ] **7.3** Add entry form view
+- [x] **7.3** Add entry form view
   - **Do**: Add `flush_tote_entry_view` in `app/core/views/web.py`; restrict to lab technician group or staff.
   - **Deliverable**: View renders entry form template with options context.
 
@@ -138,10 +138,10 @@ _Added to address revised user story: lab tech single-form entry + admin records
 | 3. API/Views | Complete | 3/3 |
 | 4. Frontend | Complete | 3/3 |
 | 5. WebSocket | Removed | N/A |
-| 6. Integration | Not Started | 2/2 |
-| 7. Change Order | Not Started | 0/8 |
+| 6. Integration | Complete | 2/2 |
+| 7. Change Order | In Progress | 3/8 |
 
-**Overall**: 11/21 tasks (52%)
+**Overall**: 16/21 tasks (76%)
 
 ---
 
