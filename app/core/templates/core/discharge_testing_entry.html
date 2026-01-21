@@ -12,7 +12,7 @@
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
         <div>
             <h1 class="mb-1">Discharge Testing Entry</h1>
-            <p class="text-muted mb-0">Complete all fields in one session. Required: production line, flush type, line personnel.</p>
+            <p class="text-muted mb-0">Complete all fields in one session. Required: discharge source, flush type, line personnel.</p>
         </div>
         <span class="badge bg-secondary text-uppercase">pH range 5.1 - 10.9</span>
     </div>
@@ -22,9 +22,9 @@
             <form id="discharge-testing-entry-form" class="row gy-3">
                 {% csrf_token %}
                 <div class="col-md-4">
-                    <label class="form-label" for="discharge-testing-entry-production-line">Production Line</label>
-                    <select id="discharge-testing-entry-production-line" name="production_line" class="form-select" required>
-                        <option value="">Select line...</option>
+                    <label class="form-label" for="discharge-testing-entry-discharge-source">Discharge Source</label>
+                    <select id="discharge-testing-entry-discharge-source" name="discharge_source" class="form-select" required>
+                        <option value="">Select source...</option>
                         {% for value, label in production_line_choices %}
                             <option value="{{ value }}">{{ label }}</option>
                         {% endfor %}

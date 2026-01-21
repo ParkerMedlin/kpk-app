@@ -46,7 +46,7 @@
             <thead class="th-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
                 <tr>
                     <th scope="col" style="width: 140px;">Date/Time</th>
-                    <th scope="col">Production Line</th>
+                    <th scope="col">Discharge Source</th>
                     <th scope="col">Flush Type</th>
                     <th scope="col" style="width: 140px;">Initial pH</th>
                     <th scope="col" style="min-width: 220px;">Action Required</th>
@@ -63,8 +63,8 @@
                         <td data-field="date" data-value="{{ tote.date|date:'c' }}">
                             <div class="fw-semibold">{{ tote.date|date:'Y-m-d H:i' }}</div>
                         </td>
-                        <td data-field="production_line" data-edit-group="line" data-value="{{ tote.production_line }}">
-                            {{ tote.production_line }}
+                        <td data-field="discharge_source" data-edit-group="line" data-value="{{ tote.discharge_source }}">
+                            {{ tote.discharge_source }}
                         </td>
                         <td data-field="flush_type" data-edit-group="line" data-value="{{ tote.flush_type }}">
                             {{ tote.flush_type }}

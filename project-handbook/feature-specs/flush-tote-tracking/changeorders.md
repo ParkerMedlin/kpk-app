@@ -84,15 +84,15 @@ _All model changes (rename + field changes) followed by comprehensive rename acr
 
 ## Phase 10: Form & Interface Updates
 
-- [ ] **10.1** Update entry form for discharge_source rename
+- [x] **10.1** Update entry form for discharge_source rename
   - **Do**: In `discharge_testing_entry.html`, rename `production_line` field/label to `discharge_source`; update any associated help text.
   - **Deliverable**: Entry form uses new field name.
 
-- [ ] **10.2** Update records interface for discharge_source rename
+- [x] **10.2** Update records interface for discharge_source rename
   - **Do**: In `discharge_testing_records.html`, rename column header and field references from `production_line` to `discharge_source`.
   - **Deliverable**: Records table uses new field name.
 
-- [ ] **10.3** Update JS modules for discharge_source rename
+- [x] **10.3** Update JS modules for discharge_source rename
   - **Do**: In `DischargeTestingEntry.js` and `DischargeTestingRecords.js`, update field references from `production_line` to `discharge_source`.
   - **Deliverable**: JS uses new field name.
 
@@ -144,10 +144,10 @@ _All model changes (rename + field changes) followed by comprehensive rename acr
 |-------|--------|----------------|
 | 8. Model & Rename | Complete | 13/13 |
 | 9. Selector & Service Updates | Complete | 2/2 |
-| 10. Form & Interface | Pending | 0/9 |
+| 10. Form & Interface | Pending | 3/9 |
 | 11. Navigation | Pending | 0/2 |
 
-**Overall**: 15/26 tasks (58%)
+**Overall**: 18/26 tasks (69%)
 
 ---
 
