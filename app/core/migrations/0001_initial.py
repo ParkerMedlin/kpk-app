@@ -1111,23 +1111,6 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
-            name='FlushToteReading',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('date', models.DateTimeField(auto_now_add=True, db_index=True)),
-                ('production_line', models.CharField(choices=[('JB Line', 'JB Line'), ('INLINE', 'INLINE'), ('PD Line', 'PD Line')], max_length=20)),
-                ('flush_type', models.CharField(max_length=100)),
-                ('initial_pH', models.DecimalField(blank=True, decimal_places=2, max_digits=4, null=True)),
-                ('action_required', models.TextField(blank=True, null=True)),
-                ('final_pH', models.DecimalField(blank=True, decimal_places=2, max_digits=4, null=True)),
-                ('approval_status', models.CharField(choices=[('pending', 'Pending'), ('needs_action', 'Needs Action'), ('approved', 'Approved')], default='pending', max_length=20)),
-            ],
-            options={
-                'db_table': 'core_flush_tote_reading',
-                'ordering': ['-date', '-id'],
-            },
-        ),
-        migrations.CreateModel(
             name='FoamFactor',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
