@@ -2136,30 +2136,30 @@ def display_container_classifications(request):
 
 @login_required
 @ensure_csrf_cookie
-def flush_tote_entry_view(request):
-    """Render the flush tote entry form for lab technicians."""
+def discharge_testing_entry_view(request):
+    """Render the discharge testing entry form for lab technicians."""
     is_admin = request.user.is_staff or request.user.is_superuser
     is_lab = is_admin or request.user.groups.filter(name__iexact=GROUP_LAB_TECHNICIAN).exists()
     if not is_lab:
         return HttpResponseForbidden('Lab technician access required.')
 
     context = {
-        'production_line_choices': DischargeTestingRecord.PRODUCTION_LINE_CHOICES,
+        'production_line_choices': DischargeTestingRecord.DISCHARGE_SOURCE_CHOICES,
         'flush_type_options': get_discharge_type_options(),
     }
-    return render(request, 'core/flush_tote_entry.html', context)
+    return render(request, 'core/discharge_testing_entry.html', context)
 
 
 @login_required
 @ensure_csrf_cookie
-def flush_totes_view(request):
-    """Render the flush tote tracking page with initial options and data."""
+def discharge_testing_records_view(request):
+    """Render the discharge testing records page with initial options and data."""
     context = {
-        'production_line_choices': DischargeTestingRecord.PRODUCTION_LINE_CHOICES,
+        'production_line_choices': DischargeTestingRecord.DISCHARGE_SOURCE_CHOICES,
         'flush_type_options': get_discharge_type_options(),
         'flush_totes': list_discharge_tests(),
     }
-    return render(request, 'core/flush_totes.html', context)
+    return render(request, 'core/discharge_testing_records.html', context)
 
 
 @login_required
