@@ -2209,6 +2209,13 @@ def _user_display(user):
     return full_name or user.get_username()
 
 
+def _line_personnel_display(tote):
+    line_name = getattr(tote, 'line_personnel_name', None)
+    if line_name:
+        return line_name
+    return _user_display(tote.line_personnel)
+
+
 def _serialize_flush_tote_reading(tote):
     return {
         'id': tote.id,
@@ -2222,7 +2229,7 @@ def _serialize_flush_tote_reading(tote):
         'lab_technician_id': tote.lab_technician_id,
         'lab_technician_name': _user_display(tote.lab_technician),
         'line_personnel_id': tote.line_personnel_id,
-        'line_personnel_name': _user_display(tote.line_personnel),
+        'line_personnel_name': _line_personnel_display(tote),
     }
 
 
@@ -2271,6 +2278,7 @@ def flush_tote_list_api(request):
 
     production_line = (payload.get('production_line') or '').strip()
     flush_type = (payload.get('flush_type') or '').strip()
+    line_personnel_name = (payload.get('line_personnel_name') or '').strip()
     initial_ph = payload.get('initial_pH')
     action_required = payload.get('action_required')
     final_ph = payload.get('final_pH')
@@ -2279,6 +2287,7 @@ def flush_tote_list_api(request):
         tote = create_flush_tote_reading(
             production_line=production_line,
             flush_type=flush_type,
+            line_personnel_name=line_personnel_name,
             user=request.user,
             initial_pH=initial_ph,
             action_required=action_required,
