@@ -17,11 +17,6 @@
 >
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
         <h1 class="mb-0">Discharge Testing Records</h1>
-        <div class="d-flex flex-wrap gap-2">
-            <span class="badge bg-success text-uppercase">Approved</span>
-            <span class="badge bg-warning text-dark text-uppercase">Needs Action</span>
-            <span class="badge bg-secondary text-uppercase">Pending</span>
-        </div>
     </div>
 
     <form id="discharge-testing-csrf" style="display:none;" aria-hidden="true">{% csrf_token %}</form>
@@ -51,7 +46,6 @@
                     <th scope="col" style="width: 140px;">Initial pH</th>
                     <th scope="col" style="min-width: 220px;">Action Required</th>
                     <th scope="col" style="width: 140px;">Final pH</th>
-                    <th scope="col" style="width: 140px;">Status</th>
                     <th scope="col" style="width: 160px;">Line Personnel</th>
                     <th scope="col" style="width: 160px;">Lab Technician</th>
                     <th scope="col" class="text-center" style="width: 120px;"></th>
@@ -59,7 +53,7 @@
             </thead>
             <tbody>
                 {% for tote in flush_totes %}
-                    <tr class="discharge-testing-row filterableRow" data-tote-id="{{ tote.id }}" data-status="{{ tote.approval_status }}">
+                    <tr class="discharge-testing-row filterableRow" data-tote-id="{{ tote.id }}">
                         <td data-field="date" data-value="{{ tote.date|date:'c' }}">
                             <div class="fw-semibold">{{ tote.date|date:'Y-m-d H:i' }}</div>
                         </td>
@@ -106,15 +100,6 @@
                                 {{ tote.date|date:'Y-m-d H:i' }}
                             </div>
                         </td>
-                        <td data-field="approval_status" data-value="{{ tote.approval_status }}">
-                            {% if tote.approval_status == 'approved' %}
-                                <span class="badge bg-success text-uppercase">Approved</span>
-                            {% elif tote.approval_status == 'needs_action' %}
-                                <span class="badge bg-warning text-dark text-uppercase">Needs Action</span>
-                            {% else %}
-                                <span class="badge bg-secondary text-uppercase">Pending</span>
-                            {% endif %}
-                        </td>
                         <td
                             data-field="line_personnel_name"
                             data-value="{% if tote.line_personnel %}{{ tote.line_personnel.get_full_name|default:tote.line_personnel.username }}{% endif %}"
@@ -147,7 +132,7 @@
                     </tr>
                 {% empty %}
                     <tr>
-                        <td colspan="10" class="text-center py-4">No discharge tests recorded yet.</td>
+                        <td colspan="9" class="text-center py-4">No discharge tests recorded yet.</td>
                     </tr>
                 {% endfor %}
             </tbody>

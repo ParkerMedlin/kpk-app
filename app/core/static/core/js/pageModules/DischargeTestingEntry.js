@@ -1,11 +1,5 @@
 const API_ENDPOINT = '/core/api/discharge-testing/';
 
-const STATUS_LABELS = {
-  approved: 'Approved',
-  needs_action: 'Needs Action',
-  pending: 'Pending',
-};
-
 const DEFAULT_PH_MIN = 5.1;
 const DEFAULT_PH_MAX = 10.9;
 
@@ -487,7 +481,7 @@ class DischargeTestingEntryPage {
     this.setSubmitting(true);
 
     try {
-      const response = await this.requestJson(API_ENDPOINT, {
+      await this.requestJson(API_ENDPOINT, {
         method: 'POST',
         credentials: 'same-origin',
         headers: {
@@ -498,11 +492,7 @@ class DischargeTestingEntryPage {
         body: JSON.stringify(payload),
       });
 
-      const tote = response.tote || {};
-      const toastType = status === 'approved' ? 'success' : status === 'needs_action' ? 'warning' : 'info';
-      const message = `Entry saved. Status: ${statusLabel}.`;
-
-      showToast(toastType, 'Flush Tote Entry', message);
+      showToast('success', 'Discharge Testing Entry', 'Entry saved.');
       this.resetForm();
     } catch (error) {
       console.error(error);
