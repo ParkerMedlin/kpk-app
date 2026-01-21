@@ -98,7 +98,7 @@ _Added to address revised user story: lab tech single-form entry + admin records
   - **Deliverable**: Form page at `/flush-tote-entry/`.
   - **Requirement**: Single-session entry for lab technicians.
 
-- [ ] **7.2** Create entry form JS module
+- [x] **7.2** Create entry form JS module
   - **Do**: Create `app/core/static/core/js/pageModules/FlushToteEntry.js` with form validation, pH range feedback, async POST, success toast + form reset.
   - **Deliverable**: Interactive form with client-side validation.
   - **Verify**: Submitting form creates record and resets for next entry.
