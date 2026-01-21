@@ -45,11 +45,12 @@ def _serialize_discharge_test(tote: DischargeTestingRecord) -> Dict[str, Any]:
         {
             "id": tote.id,
             "date": tote.date,
-            "production_line": tote.production_line,
+            "discharge_source": tote.discharge_source,
             "flush_type": tote.flush_type,
             "initial_pH": tote.initial_pH,
             "action_required": tote.action_required,
             "final_pH": tote.final_pH,
+            "final_disposition": tote.final_disposition,
             "lab_technician_id": tote.lab_technician_id,
             "lab_technician_name": _user_display(tote.lab_technician),
             "line_personnel_id": tote.line_personnel_id,
@@ -127,8 +128,9 @@ def _broadcast_discharge_testing_event(event: str, tote: DischargeTestingRecord)
 
 def create_discharge_test(
     *,
-    production_line: str,
+    discharge_source: str,
     flush_type: str,
+    final_disposition: str,
     line_personnel_name: Optional[str] = None,
     user: Optional[User] = None,
     initial_pH: Any = None,
@@ -139,6 +141,12 @@ def create_discharge_test(
     Create a new discharge testing record with optional initial/final pH values.
     Assigns lab_technician to the submitting user and accepts line personnel name input.
     """
+    cleaned_source = (discharge_source or "").strip()
+    cleaned_flush_type = (flush_type or "").strip()
+    cleaned_disposition = (final_disposition or "").strip()
+    if not cleaned_disposition:
+        raise ValidationError({"final_disposition": "Final disposition is required."})
+
     initial_value = _parse_ph(initial_pH, "initial_pH")
     final_value = _parse_ph(final_pH, "final_pH")
 
@@ -156,9 +164,6 @@ def create_discharge_test(
         else:
             raise ValidationError({"line_personnel_name": "Line personnel name is required."})
 
-    status = DischargeTestingRecord.STATUS_PENDING
-    if initial_value is not None and not DischargeTestingRecord.is_ph_in_range(initial_value):
-        status = DischargeTestingRecord.STATUS_NEEDS_ACTION
     if final_value is not None:
         if (
             initial_value is not None
@@ -170,14 +175,14 @@ def create_discharge_test(
             raise ValidationError(
                 {"final_pH": f"Final pH must be between {DischargeTestingRecord.PH_MIN} and {DischargeTestingRecord.PH_MAX}."}
             )
-        status = DischargeTestingRecord.STATUS_APPROVED
 
     tote = DischargeTestingRecord(
-        production_line=production_line,
-        flush_type=flush_type,
+        discharge_source=cleaned_source,
+        flush_type=cleaned_flush_type,
         initial_pH=initial_value,
         action_required=cleaned_action,
-        final_pH=final_value
+        final_pH=final_value,
+        final_disposition=cleaned_disposition,
     )
 
     if hasattr(tote, "line_personnel_name") and cleaned_line_personnel:
@@ -244,7 +249,6 @@ def record_discharge_action_and_final_ph(
     """
     Record corrective action (if needed) and the final pH.
     Requires an initial pH to exist; final pH must be within allowed range.
-    Approves the tote when final pH is compliant.
     """
     instance = _resolve_discharge_test(tote)
     if instance.initial_pH is None:
@@ -277,7 +281,6 @@ def record_discharge_action_and_final_ph(
         instance.save(update_fields=[
             "action_required",
             "final_pH",
-            "approval_status",
             "lab_technician",
             "line_personnel",
         ])

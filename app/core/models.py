@@ -1476,11 +1476,5 @@ class DischargeTestingRecord(models.Model):
         if self.final_pH is not None and self.initial_pH is None:
             errors['final_pH'] = 'Initial pH must be recorded before final pH.'
 
-        if self.approval_status == self.STATUS_APPROVED:
-            if self.final_pH is None:
-                errors['final_pH'] = 'Final pH is required to approve a discharge test.'
-            elif not self.is_ph_in_range(self.final_pH):
-                errors['final_pH'] = f'Final pH must be within {self.PH_MIN} - {self.PH_MAX} to approve.'
-
         if errors:
             raise ValidationError(errors)
