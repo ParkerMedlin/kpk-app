@@ -54,7 +54,7 @@ def _serialize_flush_tote(tote: FlushToteReading) -> Dict[str, Any]:
             "lab_technician_id": tote.lab_technician_id,
             "lab_technician_name": _user_display(tote.lab_technician),
             "line_personnel_id": tote.line_personnel_id,
-            "line_personnel_name": _user_display(tote.line_personnel),
+            "line_personnel_name": _line_personnel_display(tote),
         }
     )
 
@@ -64,6 +64,39 @@ def _user_display(user: Optional[User]) -> Optional[str]:
         return None
     full_name = user.get_full_name()
     return full_name or user.username
+
+
+def _line_personnel_display(tote: FlushToteReading) -> Optional[str]:
+    line_name = getattr(tote, "line_personnel_name", None)
+    if line_name:
+        return line_name
+    return _user_display(tote.line_personnel)
+
+
+def _resolve_line_personnel(name: str) -> Optional[User]:
+    cleaned = (name or "").strip()
+    if not cleaned:
+        return None
+
+    user = User.objects.filter(username__iexact=cleaned).first()
+    if user:
+        return user
+
+    parts = cleaned.split()
+    if len(parts) >= 2:
+        first_name = parts[0]
+        last_name = " ".join(parts[1:])
+        user = User.objects.filter(first_name__iexact=first_name, last_name__iexact=last_name).first()
+        if user:
+            return user
+
+    return User.objects.filter(first_name__iexact=cleaned).first()
+
+
+def _is_lab_user(user: Optional[User]) -> bool:
+    if not user or not getattr(user, "is_authenticated", False):
+        return False
+    return user.is_staff or user.is_superuser or _user_in_group(user, GROUP_LAB_TECHNICIAN)
 
 
 def _broadcast_flush_tote_event(event: str, tote: FlushToteReading) -> None:
@@ -97,6 +130,7 @@ def create_flush_tote_reading(
     *,
     production_line: str,
     flush_type: str,
+    line_personnel_name: Optional[str] = None,
     user: Optional[User] = None,
     initial_pH: Any = None,
     action_required: Optional[str] = None,
@@ -104,7 +138,7 @@ def create_flush_tote_reading(
 ) -> FlushToteReading:
     """
     Create a new flush tote record with optional initial/final pH values.
-    Assigns line_personnel when the creator belongs to the line personnel group.
+    Assigns lab_technician to the submitting user and accepts line personnel name input.
     """
     initial_value = _parse_ph(initial_pH, "initial_pH")
     final_value = _parse_ph(final_pH, "final_pH")
@@ -112,10 +146,27 @@ def create_flush_tote_reading(
     if final_value is not None and initial_value is None:
         raise ValidationError({"final_pH": "Initial pH must be recorded before final pH."})
 
+    cleaned_action = (action_required or "").strip() or None
+    line_personnel_user = None
+    cleaned_line_personnel = (line_personnel_name or "").strip()
+
+    if not cleaned_line_personnel:
+        if _user_in_group(user, GROUP_LINE_PERSONNEL):
+            line_personnel_user = user
+            cleaned_line_personnel = _user_display(user) or ""
+        else:
+            raise ValidationError({"line_personnel_name": "Line personnel name is required."})
+
     status = FlushToteReading.STATUS_PENDING
     if initial_value is not None and not FlushToteReading.is_ph_in_range(initial_value):
         status = FlushToteReading.STATUS_NEEDS_ACTION
     if final_value is not None:
+        if (
+            initial_value is not None
+            and not FlushToteReading.is_ph_in_range(initial_value)
+            and not cleaned_action
+        ):
+            raise ValidationError({"action_required": "Action details are required when initial pH is out of range."})
         if not FlushToteReading.is_ph_in_range(final_value):
             raise ValidationError(
                 {"final_pH": f"Final pH must be between {FlushToteReading.PH_MIN} and {FlushToteReading.PH_MAX}."}
@@ -126,14 +177,23 @@ def create_flush_tote_reading(
         production_line=production_line,
         flush_type=flush_type,
         initial_pH=initial_value,
-        action_required=action_required,
+        action_required=cleaned_action,
         final_pH=final_value,
         approval_status=status,
     )
 
-    if _user_in_group(user, GROUP_LINE_PERSONNEL):
-        tote.line_personnel = user
-    if initial_value is not None and _user_in_group(user, GROUP_LAB_TECHNICIAN):
+    if hasattr(tote, "line_personnel_name") and cleaned_line_personnel:
+        tote.line_personnel_name = cleaned_line_personnel
+
+    if line_personnel_user is None and cleaned_line_personnel and not hasattr(tote, "line_personnel_name"):
+        line_personnel_user = _resolve_line_personnel(cleaned_line_personnel)
+        if line_personnel_user is None:
+            raise ValidationError({"line_personnel_name": "Line personnel not found."})
+
+    if line_personnel_user is not None:
+        tote.line_personnel = line_personnel_user
+
+    if _is_lab_user(user):
         tote.lab_technician = user
 
     tote.full_clean()
@@ -165,7 +225,7 @@ def record_initial_ph(
     elif instance.approval_status != FlushToteReading.STATUS_APPROVED:
         instance.approval_status = FlushToteReading.STATUS_PENDING
 
-    if _user_in_group(user, GROUP_LAB_TECHNICIAN):
+    if _is_lab_user(user):
         instance.lab_technician = user
 
     instance.full_clean()
@@ -216,7 +276,7 @@ def record_action_and_final_ph(
     instance.final_pH = final_value
     instance.approval_status = FlushToteReading.STATUS_APPROVED
 
-    if _user_in_group(user, GROUP_LAB_TECHNICIAN):
+    if _is_lab_user(user):
         instance.lab_technician = user
 
     instance.full_clean()

@@ -123,7 +123,7 @@ _Added to address revised user story: lab tech single-form entry + admin records
   - **Do**: In `app/templates/navbars/admin-navbar-items.html`, update link to point to `/flush-tote-records/`; add lab entry link to appropriate lab technician nav if applicable.
   - **Deliverable**: Nav links point to correct pages.
 
-- [ ] **7.8** Update services for simplified flow
+- [x] **7.8** Update services for simplified flow
   - **Do**: Review `flush_tote_services.py`; ensure `create_flush_tote_reading` sets `lab_technician` (not `line_personnel` FK) and accepts `line_personnel_name` as text if model uses FK; adjust as needed for single-submit flow.
   - **Deliverable**: Services support entry form use case.
 
@@ -139,10 +139,10 @@ _Added to address revised user story: lab tech single-form entry + admin records
 | 4. Frontend | Complete | 3/3 |
 | 5. WebSocket | Removed | N/A |
 | 6. Integration | Complete | 2/2 |
-| 7. Change Order | In Progress | 7/8 |
+| 7. Change Order | Complete | 8/8 |
 
-**Overall**: 20/21 tasks (95%)
+**Overall**: 21/21 tasks (100%)
 
 ---
 
-**Status**: In Progress
+**Status**: Complete
