@@ -499,8 +499,6 @@ class FlushToteEntryPage {
       });
 
       const tote = response.tote || {};
-      const status = tote.approval_status || 'pending';
-      const statusLabel = STATUS_LABELS[status] || STATUS_LABELS.pending;
       const toastType = status === 'approved' ? 'success' : status === 'needs_action' ? 'warning' : 'info';
       const message = `Entry saved. Status: ${statusLabel}.`;
 

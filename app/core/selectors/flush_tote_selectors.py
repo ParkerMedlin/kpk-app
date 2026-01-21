@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from django.db.models import QuerySet
 
-from core.models import BlendContainerClassification, FlushToteReading
+from core.models import BlendContainerClassification, DischargeTestingRecord
 
 
 def list_flush_totes(limit: Optional[int] = 200) -> QuerySet:
@@ -11,7 +11,7 @@ def list_flush_totes(limit: Optional[int] = 200) -> QuerySet:
     Includes related lab_technician and line_personnel for display.
     """
     queryset = (
-        FlushToteReading.objects.select_related('lab_technician', 'line_personnel')
+        DischargeTestingRecord.objects.select_related('lab_technician', 'line_personnel')
         .order_by('-date', '-id')
     )
 
@@ -20,10 +20,10 @@ def list_flush_totes(limit: Optional[int] = 200) -> QuerySet:
     return queryset
 
 
-def get_flush_tote(pk: int) -> FlushToteReading:
+def get_flush_tote(pk: int) -> DischargeTestingRecord:
     """Fetch a single flush tote reading by primary key."""
     return (
-        FlushToteReading.objects.select_related('lab_technician', 'line_personnel')
+        DischargeTestingRecord.objects.select_related('lab_technician', 'line_personnel')
         .get(pk=pk)
     )
 

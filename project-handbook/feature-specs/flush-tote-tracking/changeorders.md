@@ -13,7 +13,7 @@ Change orders for the flush tote tracking feature, now being renamed to **Discha
 _All model changes (rename + field changes) followed by comprehensive rename across services, selectors, views, URLs, templates, JS, and navigation._
 
 - [x] **8.1** Rename model class
-  - **Do**: Rename `FlushToteReading` → `DischargeTestingRecord` in `app/core/models.py`; update Meta class, related_name references.
+  - **Do**: Rename `DischargeTestingRecord` → `DischargeTestingRecord` in `app/core/models.py`; update Meta class, related_name references.
   - **Deliverable**: Model class renamed.
 
 - [x] **8.2** Add `final_disposition` field
@@ -28,7 +28,7 @@ _All model changes (rename + field changes) followed by comprehensive rename acr
   - **Do**: Remove `approval_status` field from `DischargeTestingRecord` model; remove any related choices/constants.
   - **Deliverable**: Field removed from model.
 
-- [ ] **8.5** Apply migrations (delegate to user)
+- [x] **8.5** Apply migrations (delegate to user)
   - **Do**: Prompt user to run migrations and delete old table if needed.
   - **Verify**: `python manage.py makemigrations` succeeds; migrations apply cleanly.
 

@@ -1448,8 +1448,7 @@ class DischargeTestingRecord(models.Model):
         db_table = 'core_dischargetestingrecord'
         ordering = ['-date', '-id']
         indexes = [
-            models.Index(fields=['discharge_source']),
-            models.Index(fields=['approval_status']),
+            models.Index(fields=['discharge_source'])
         ]
         constraints = [
             models.CheckConstraint(
