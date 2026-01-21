@@ -3,8 +3,6 @@
 {% block title %}<title>Counts and Transactions</title>{% endblock %}
 
 {% block scripts %}
-    {% comment %} <link rel="stylesheet" href="{% static 'core/css/thirdPartyLibraries/jquery.dataTables.min.css' %}"> {% endcomment %}
-    <script src="{% static 'core/js/thirdPartyLibraries/datatables/jquery.dataTables.min.js' %}"></script>
     <link rel="stylesheet" type="text/css" href="{% static 'core/css/countsAndTransactions.css' %}">
 {% endblock scripts %}
 
@@ -36,7 +34,7 @@
             <td>{{ item_info.item_description }}</td>
             <td>{{ item.entryno }}</td>
             <td>{{ item.counted_quantity|floatformat:4 }}{{ item.transactionqty|floatformat:0 }}</td>
-            <td>{{ item.counted_date }}{{ item.transactiondate }}</td>
+            <td data-order="{{ item.transactiondate|date:'Y-m-d' }}{{ item.counted_date|date:'Y-m-d' }}">{{ item.counted_date }}{{ item.transactiondate }}</td>
             <td>
                 {% if item.transactioncode == "II" %}
                     <b>{{ item.transactioncode }}</b><em> - Inventory Adjustment</em>
@@ -57,5 +55,6 @@
 {% endblock content %}
 
 {% block belowdeckscripts %}
-    <script src="{% static 'core/js/pageModules/countsAndTransactionsReport.js' %}"></script>
+    {% include 'core/partials/datatableprerequisites.html' %}
+    <script type="module" src="{% static 'core/js/pageModules/countsAndTransactionsReport.js' %}"></script>
 {% endblock %}
