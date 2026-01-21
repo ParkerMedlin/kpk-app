@@ -119,7 +119,7 @@ _Added to address revised user story: lab tech single-form entry + admin records
   - **Do**: Change routes in `app/core/urls.py`: `/flush-tote-entry/` → entry view, `/flush-tote-records/` → records view; keep API routes unchanged.
   - **Deliverable**: New URL structure active.
 
-- [ ] **7.7** Update navigation links
+- [x] **7.7** Update navigation links
   - **Do**: In `app/templates/navbars/admin-navbar-items.html`, update link to point to `/flush-tote-records/`; add lab entry link to appropriate lab technician nav if applicable.
   - **Deliverable**: Nav links point to correct pages.
 
@@ -139,9 +139,9 @@ _Added to address revised user story: lab tech single-form entry + admin records
 | 4. Frontend | Complete | 3/3 |
 | 5. WebSocket | Removed | N/A |
 | 6. Integration | Complete | 2/2 |
-| 7. Change Order | In Progress | 6/8 |
+| 7. Change Order | In Progress | 7/8 |
 
-**Overall**: 19/21 tasks (90%)
+**Overall**: 20/21 tasks (95%)
 
 ---
 
