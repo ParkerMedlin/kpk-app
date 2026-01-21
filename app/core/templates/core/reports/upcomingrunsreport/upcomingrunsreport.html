@@ -1,5 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
+
+
 {% block title %}<title>Upcoming Runs</title>{% endblock %}
 
 {% block content %}
@@ -8,4 +10,6 @@
     {% elif report_type == 'SubComponent' %}
         {% include 'core/reports/upcomingrunsreport/subcomponents.html' %}
     {% endif %}
+    {% include 'core/partials/datatableprerequisites.html' %}
+    <script type="module" src="{% static 'core/js/pageModules/upcomingRunsReport.js' %}"></script>
 {% endblock content %}
