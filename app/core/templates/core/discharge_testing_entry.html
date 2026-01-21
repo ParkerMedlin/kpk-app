@@ -21,7 +21,7 @@
         <div class="card-body">
             <form id="discharge-testing-entry-form" class="row gy-3">
                 {% csrf_token %}
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label class="form-label" for="discharge-testing-entry-discharge-source">Discharge Source</label>
                     <select id="discharge-testing-entry-discharge-source" name="discharge_source" class="form-select" required>
                         <option value="">Select source...</option>
@@ -30,7 +30,7 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label class="form-label" for="discharge-testing-entry-flush-type">Flush Type</label>
                     <select id="discharge-testing-entry-flush-type" name="flush_type" class="form-select" required>
                         <option value="">Select flush type...</option>
@@ -39,7 +39,7 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label class="form-label" for="discharge-testing-entry-line-personnel">Line Personnel</label>
                     <input
                         id="discharge-testing-entry-line-personnel"
@@ -49,6 +49,17 @@
                         placeholder="Name of line personnel"
                         autocomplete="name"
                         required
+                    />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="discharge-testing-entry-lab-technician">Lab Technician</label>
+                    <input
+                        id="discharge-testing-entry-lab-technician"
+                        class="form-control"
+                        type="text"
+                        value="{{ user.get_full_name|default:user.username }}"
+                        readonly
+                        aria-readonly="true"
                     />
                 </div>
                 <div class="col-md-4">
@@ -87,6 +98,17 @@
                         placeholder="Describe corrective action if initial pH is out of range."
                     ></textarea>
                     <div class="form-text">Required when initial pH is outside 5.1 to 10.9.</div>
+                </div>
+                <div class="col-12">
+                    <label class="form-label" for="discharge-testing-entry-final-disposition">Final Disposition</label>
+                    <textarea
+                        id="discharge-testing-entry-final-disposition"
+                        name="final_disposition"
+                        class="form-control"
+                        rows="3"
+                        placeholder="Describe what happens to the container after testing."
+                        required
+                    ></textarea>
                 </div>
                 <div class="col-12 d-flex flex-wrap gap-2 justify-content-end">
                     <button type="reset" class="btn btn-outline-secondary" id="discharge-testing-entry-reset">Clear</button>
