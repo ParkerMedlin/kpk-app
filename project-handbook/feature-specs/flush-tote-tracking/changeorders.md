@@ -96,15 +96,15 @@ _All model changes (rename + field changes) followed by comprehensive rename acr
   - **Do**: In `DischargeTestingEntry.js` and `DischargeTestingRecords.js`, update field references from `production_line` to `discharge_source`.
   - **Deliverable**: JS uses new field name.
 
-- [ ] **10.4** Remove approval_status from entry form
+- [x] **10.4** Remove approval_status from entry form
   - **Do**: In `discharge_testing_entry.html`, remove any approval_status field, badge, or related UI elements.
   - **Deliverable**: No approval_status on entry form.
 
-- [ ] **10.5** Remove approval_status from records interface
+- [x] **10.5** Remove approval_status from records interface
   - **Do**: In `discharge_testing_records.html`, remove approval_status column, badges, and any filter/sort options.
   - **Deliverable**: No approval_status in records view.
 
-- [ ] **10.6** Remove approval_status from JS modules
+- [x] **10.6** Remove approval_status from JS modules
   - **Do**: In `DischargeTestingEntry.js` and `DischargeTestingRecords.js`, remove any approval_status handling, validation, or display logic.
   - **Deliverable**: JS has no approval_status references.
 
@@ -144,10 +144,10 @@ _All model changes (rename + field changes) followed by comprehensive rename acr
 |-------|--------|----------------|
 | 8. Model & Rename | Complete | 13/13 |
 | 9. Selector & Service Updates | Complete | 2/2 |
-| 10. Form & Interface | Pending | 3/9 |
+| 10. Form & Interface | Pending | 6/9 |
 | 11. Navigation | Pending | 0/2 |
 
-**Overall**: 18/26 tasks (69%)
+**Overall**: 21/26 tasks (81%)
 
 ---
 

@@ -2,18 +2,6 @@ import { FilterForm } from '../objects/tableObjects.js';
 
 const API_BASE = '/core/api/discharge-testing/';
 
-const STATUS_LABELS = {
-  approved: 'Approved',
-  needs_action: 'Needs Action',
-  pending: 'Pending',
-};
-
-const STATUS_CLASSES = {
-  approved: 'bg-success',
-  needs_action: 'bg-warning text-dark',
-  pending: 'bg-secondary',
-};
-
 const PH_MIN = 5.1;
 const PH_MAX = 10.9;
 
@@ -119,12 +107,6 @@ function extractErrorMessage(data) {
   return 'Unable to process request.';
 }
 
-function buildStatusBadge(status) {
-  const label = STATUS_LABELS[status] || 'Pending';
-  const classes = STATUS_CLASSES[status] || STATUS_CLASSES.pending;
-  return `<span class="badge ${classes} text-uppercase">${escapeHtml(label)}</span>`;
-}
-
 class DischargeTestingRecordsPage {
   constructor() {
     this.root = document.getElementById('discharge-testing-records-app');
@@ -180,7 +162,6 @@ class DischargeTestingRecordsPage {
   getRowSnapshot(row) {
     const snapshot = {
       id: row.dataset.toteId || null,
-      status: row.dataset.status || 'pending',
       initial_updated_at: row.dataset.initialUpdatedAt || '',
       final_updated_at: row.dataset.finalUpdatedAt || '',
     };
@@ -560,7 +541,6 @@ class DischargeTestingRecordsPage {
       initial_pH: tote.initial_pH ?? '',
       action_required: tote.action_required ?? '',
       final_pH: tote.final_pH ?? '',
-      approval_status: tote.approval_status ?? row.dataset.status ?? 'pending',
       line_personnel_name: tote.line_personnel_name ?? '',
       lab_technician_name: tote.lab_technician_name ?? '',
     };
@@ -584,7 +564,6 @@ class DischargeTestingRecordsPage {
     }
 
     row.dataset.toteId = data.id ? String(data.id) : '';
-    row.dataset.status = data.approval_status;
     row.dataset.initialUpdatedAt = initialUpdatedAt || '';
     row.dataset.finalUpdatedAt = finalUpdatedAt || '';
 
@@ -605,12 +584,6 @@ class DischargeTestingRecordsPage {
     this.setPhCell(row, 'initial_pH', data.initial_pH, data.lab_technician_name, initialUpdatedAt, 'initial');
     this.setTextCell(row, 'action_required', data.action_required, true);
     this.setPhCell(row, 'final_pH', data.final_pH, data.lab_technician_name, finalUpdatedAt, 'final');
-
-    const statusCell = row.querySelector('[data-field="approval_status"]');
-    if (statusCell) {
-      statusCell.dataset.value = data.approval_status;
-      statusCell.innerHTML = buildStatusBadge(data.approval_status);
-    }
 
     this.setTextCell(row, 'line_personnel_name', data.line_personnel_name);
     this.setTextCell(row, 'lab_technician_name', data.lab_technician_name);
