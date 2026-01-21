@@ -78,7 +78,8 @@ urlpatterns = [
     path('tank-usage/<str:tank_identifier>/', web.display_tank_usage_monitor, name='tank-usage-monitor'),
     path('purchasing-aliases/', web.display_all_purchasing_aliases, name='display_all_purchasing_aliases'),
     path('container-classifications/', web.display_container_classifications, name='display_container_classifications'),
-    path('flush-totes/', web.flush_totes_view, name='flush-totes'),
+    path('flush-tote-entry/', web.flush_tote_entry_view, name='flush-tote-entry'),
+    path('flush-tote-records/', web.flush_totes_view, name='flush-tote-records'),
     path('production-holidays/', web.display_production_holidays, name='production-holidays'),
     path('desk-labor-rates/', web.display_desk_labor_rates, name='desk-labor-rates'),
 

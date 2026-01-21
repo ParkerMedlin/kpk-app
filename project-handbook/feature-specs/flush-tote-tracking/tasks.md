@@ -115,7 +115,7 @@ _Added to address revised user story: lab tech single-form entry + admin records
   - **Do**: Remove WebSocket code and reconnect banner; simplify to inline edit only; add search/filter support.
   - **Deliverable**: Clean admin table JS without WebSocket dependencies.
 
-- [ ] **7.6** Update URL routes
+- [x] **7.6** Update URL routes
   - **Do**: Change routes in `app/core/urls.py`: `/flush-tote-entry/` → entry view, `/flush-tote-records/` → records view; keep API routes unchanged.
   - **Deliverable**: New URL structure active.
 
@@ -139,9 +139,9 @@ _Added to address revised user story: lab tech single-form entry + admin records
 | 4. Frontend | Complete | 3/3 |
 | 5. WebSocket | Removed | N/A |
 | 6. Integration | Complete | 2/2 |
-| 7. Change Order | In Progress | 5/8 |
+| 7. Change Order | In Progress | 6/8 |
 
-**Overall**: 18/21 tasks (86%)
+**Overall**: 19/21 tasks (90%)
 
 ---
 
