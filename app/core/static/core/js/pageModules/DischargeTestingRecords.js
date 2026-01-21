@@ -1,6 +1,6 @@
 import { FilterForm } from '../objects/tableObjects.js';
 
-const API_BASE = '/core/api/flush-totes/';
+const API_BASE = '/core/api/discharge-testing/';
 
 const STATUS_LABELS = {
   approved: 'Approved',
@@ -125,20 +125,20 @@ function buildStatusBadge(status) {
   return `<span class="badge ${classes} text-uppercase">${escapeHtml(label)}</span>`;
 }
 
-class FlushTotesPage {
+class DischargeTestingRecordsPage {
   constructor() {
-    this.root = document.getElementById('flush-totes-app');
+    this.root = document.getElementById('discharge-testing-records-app');
     if (!this.root) {
       return;
     }
-    this.table = document.getElementById('flush-tote-table');
+    this.table = document.getElementById('discharge-testing-records-table');
     this.tableBody = this.table ? this.table.querySelector('tbody') : null;
 
     this.canEdit = this.root.dataset.roleLine === 'true' || this.root.dataset.roleLab === 'true';
 
     this.activeRow = null;
     this.filterForm = new FilterForm({
-      tableSelector: '#flush-tote-table',
+      tableSelector: '#discharge-testing-records-table',
       rowSelector: 'tr.filterableRow',
       ignoreSelectors: ['[data-is-input="true"]'],
     });
@@ -148,7 +148,7 @@ class FlushTotesPage {
 
   init() {
     if (this.tableBody) {
-      this.tableBody.querySelectorAll('tr.flush-tote-row').forEach((row) => {
+      this.tableBody.querySelectorAll('tr.discharge-testing-row').forEach((row) => {
         this.normalizeRowTimestamps(row);
         this.attachRowEvents(row);
       });
@@ -518,7 +518,7 @@ class FlushTotesPage {
     try {
       const toteId = row.dataset.toteId;
       if (!toteId) {
-        throw new Error('Unable to determine which flush tote to update.');
+        throw new Error('Unable to determine which discharge test to update.');
       }
       const response = await this.requestJson(`${API_BASE}${toteId}/`, {
         method: 'PATCH',
@@ -659,7 +659,7 @@ class FlushTotesPage {
 
 function init() {
   document.addEventListener('DOMContentLoaded', () => {
-    new FlushTotesPage();
+    new DischargeTestingRecordsPage();
   });
 }
 

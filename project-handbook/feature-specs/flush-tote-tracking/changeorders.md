@@ -55,11 +55,11 @@ _All model changes (rename + field changes) followed by comprehensive rename acr
   - **Deliverable**: New URL structure active.
   - **Verify**: `python manage.py show_urls` shows new paths.
 
-- [ ] **8.11** Rename templates
+- [x] **8.11** Rename templates
   - **Do**: Rename `flush_tote_entry.html` → `discharge_testing_entry.html`, `flush_totes.html` → `discharge_testing_records.html`; update internal references, page titles, headings.
   - **Deliverable**: Templates with new names and content.
 
-- [ ] **8.12** Rename JS modules
+- [x] **8.12** Rename JS modules
   - **Do**: Rename `FlushToteEntry.js` → `DischargeTestingEntry.js`, `FlushTotes.js` → `DischargeTestingRecords.js`; update internal function names, API endpoint URLs, module registration.
   - **Deliverable**: JS modules with new names.
   - **Verify**: Page loads without JS errors.
@@ -142,12 +142,12 @@ _All model changes (rename + field changes) followed by comprehensive rename acr
 
 | Phase | Status | Tasks Complete |
 |-------|--------|----------------|
-| 8. Model & Rename | In Progress | 8/13 |
+| 8. Model & Rename | In Progress | 10/13 |
 | 9. Selector & Service Updates | Pending | 0/2 |
 | 10. Form & Interface | Pending | 0/9 |
 | 11. Navigation | Pending | 0/2 |
 
-**Overall**: 8/26 tasks (31%)
+**Overall**: 10/26 tasks (38%)
 
 ---
 

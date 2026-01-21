@@ -1,4 +1,4 @@
-const API_ENDPOINT = '/core/api/flush-totes/';
+const API_ENDPOINT = '/core/api/discharge-testing/';
 
 const STATUS_LABELS = {
   approved: 'Approved',
@@ -72,7 +72,7 @@ function extractErrorMessage(data) {
 }
 
 function showToast(type, title, message, delay = 4000) {
-  const toastId = `flush-tote-entry-toast-${Date.now()}`;
+  const toastId = `discharge-testing-entry-toast-${Date.now()}`;
   const bgClass = type === 'success'
     ? 'bg-success'
     : type === 'warning'
@@ -88,10 +88,10 @@ function showToast(type, title, message, delay = 4000) {
         ? 'fa-info-circle'
         : 'fa-exclamation-circle';
 
-  document.querySelectorAll('.flush-tote-entry-toast').forEach((el) => el.remove());
+  document.querySelectorAll('.discharge-testing-entry-toast').forEach((el) => el.remove());
 
   const toastHtml = `
-    <div id="${toastId}" class="toast-container flush-tote-entry-toast position-fixed top-0 end-0 p-3" style="z-index: 1090;">
+    <div id="${toastId}" class="toast-container discharge-testing-entry-toast position-fixed top-0 end-0 p-3" style="z-index: 1090;">
       <div class="toast show ${bgClass} text-white" role="alert" aria-live="assertive" aria-atomic="true">
         <div class="toast-header ${bgClass} text-white border-0">
           <i class="fas ${iconClass} me-2"></i>
@@ -122,23 +122,23 @@ function showToast(type, title, message, delay = 4000) {
   }
 }
 
-class FlushToteEntryPage {
+class DischargeTestingEntryPage {
   constructor() {
-    this.root = document.getElementById('flush-tote-entry-app');
+    this.root = document.getElementById('discharge-testing-entry-app');
     if (!this.root) {
       return;
     }
 
-    this.form = document.getElementById('flush-tote-entry-form');
-    this.submitButton = document.getElementById('flush-tote-entry-submit');
-    this.resetButton = document.getElementById('flush-tote-entry-reset');
+    this.form = document.getElementById('discharge-testing-entry-form');
+    this.submitButton = document.getElementById('discharge-testing-entry-submit');
+    this.resetButton = document.getElementById('discharge-testing-entry-reset');
 
-    this.productionLine = document.getElementById('flush-tote-entry-production-line');
-    this.flushType = document.getElementById('flush-tote-entry-flush-type');
-    this.linePersonnel = document.getElementById('flush-tote-entry-line-personnel');
-    this.initialPh = document.getElementById('flush-tote-entry-initial-ph');
-    this.finalPh = document.getElementById('flush-tote-entry-final-ph');
-    this.actionRequired = document.getElementById('flush-tote-entry-action-required');
+    this.productionLine = document.getElementById('discharge-testing-entry-production-line');
+    this.flushType = document.getElementById('discharge-testing-entry-flush-type');
+    this.linePersonnel = document.getElementById('discharge-testing-entry-line-personnel');
+    this.initialPh = document.getElementById('discharge-testing-entry-initial-ph');
+    this.finalPh = document.getElementById('discharge-testing-entry-final-ph');
+    this.actionRequired = document.getElementById('discharge-testing-entry-action-required');
     this.actionRequiredGroup = this.form
       ? this.form.querySelector('[data-role="action-required-group"]')
       : null;
@@ -518,7 +518,7 @@ class FlushToteEntryPage {
 
 function init() {
   document.addEventListener('DOMContentLoaded', () => {
-    new FlushToteEntryPage();
+    new DischargeTestingEntryPage();
   });
 }
 
