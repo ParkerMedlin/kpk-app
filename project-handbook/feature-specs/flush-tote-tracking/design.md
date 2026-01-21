@@ -2,7 +2,7 @@
 
 ## Overview
 
-Add a flush tote tracking workflow so line personnel and lab technicians can record pH checks, corrective actions, and approvals with real-time visibility. Implement a new `FlushToteReading` table, API, web page, and WebSocket channel so both roles see updates instantly as totes move from creation to approval for discharge.
+Add a flush tote tracking workflow so lab technicians can record pH checks, corrective actions, and approvals. Implement a `FlushToteReading` table, API, and two web pages: a single-instance entry form for lab techs and an admin table view for staff to review/edit historical records.
 
 ## Affected Components
 
@@ -10,25 +10,22 @@ Add a flush tote tracking workflow so line personnel and lab technicians can rec
 | File | Changes |
 |------|---------|
 | `app/core/models.py` | Add `FlushToteReading` model with fields/choices and validation helpers. |
-| `app/core/forms.py` | Form(s) for create/update with role-aware field enablement and pH validation. |
 | `app/core/selectors/__init__.py` | Export new selector functions. |
 | `app/core/services/__init__.py` | Export new service functions. |
-| `app/core/views/web.py` | New web view to render flush tote page with context options. |
+| `app/core/views/web.py` | Web views for entry form and admin records page. |
 | `app/core/views/api.py` | JSON endpoints for list/create/update flush totes. |
 | `app/core/urls.py` | Routes for web and API endpoints. |
-| `app/websockets/routing.py` | Include flush tote WebSocket routes. |
-| `app/core/static/core/js/pageModules/base.js` | If needed, register new page module hook. |
-| `app/core/templates/base.html` | Ensure static/js include for new page module (only if global loader needed). |
+| `app/templates/navbars/admin-navbar-items.html` | Nav link for admin records page. |
 
 ### New Files to Create
 | File | Purpose |
 |------|---------|
 | `app/core/services/flush_tote_services.py` | Business logic for create/update, status transitions, and validation. |
 | `app/core/selectors/flush_tote_selectors.py` | Data access for list/detail and option lookups. |
-| `app/core/templates/core/flush_totes.html` | Page UI for line personnel + lab tech workflows. |
-| `app/core/static/core/js/pageModules/FlushTotes.js` | Front-end logic: form handling, API calls, WebSocket events. |
-| `app/core/websockets/flush_totes/consumer.py` | Channels consumer to broadcast tote events. |
-| `app/core/websockets/flush_totes/routes.py` | WebSocket URL patterns for flush totes. |
+| `app/core/templates/core/flush_totes.html` | Admin table view with inline editing (staff only). |
+| `app/core/templates/core/flush_tote_entry.html` | Single-instance entry form for lab technicians. |
+| `app/core/static/core/js/pageModules/FlushTotes.js` | Front-end logic for admin table: inline edits, API calls. |
+| `app/core/static/core/js/pageModules/FlushToteEntry.js` | Front-end logic for entry form: validation, submission. |
 
 ## Data Model
 
@@ -66,8 +63,7 @@ class FlushToteReading(models.Model):
         ordering = ("-date",)
 ```
 
-Validation rules (service-level and/or `clean()`):
-- Initial pH required before final pH can be entered.
+Validation rules (service-level):
 - pH values must be numeric; range for approval is 5.1–10.9 inclusive.
 - If initial pH outside range, set status to `needs_action` until action text + compliant final pH are provided.
 - Approve only when final pH exists and is in range; set status `approved`.
@@ -79,18 +75,11 @@ Option sourcing:
 
 ```python
 # app/core/urls.py
-path("flush-totes/", views.flush_totes_view, name="flush_totes"),
-path("api/flush-totes/", views.api_flush_totes, name="api_flush_totes"),
-path("api/flush-totes/<int:pk>/", views.api_flush_tote_detail, name="api_flush_tote_detail"),
+path("flush-tote-entry/", views.flush_tote_entry_view, name="flush_tote_entry"),
+path("flush-tote-records/", views.flush_tote_records_view, name="flush_tote_records"),
+path("api/flush-totes/", views.flush_tote_list_api, name="flush_tote_list_api"),
+path("api/flush-totes/<int:pk>/", views.flush_tote_detail_api, name="flush_tote_detail_api"),
 ```
-
-WebSocket:
-```python
-# app/core/websockets/flush_totes/routes.py
-re_path(r"ws/flush_totes/$", FlushToteConsumer.as_asgi()),
-re_path(r"ws/flush_totes/(?P<tote_id>\\d+)/$", FlushToteConsumer.as_asgi()),
-```
-Included in `app/websockets/routing.py`.
 
 ## Layer Design
 
@@ -110,81 +99,82 @@ def get_flush_type_options() -> List[str]:
 ```python
 def create_flush_tote_reading(data, user) -> FlushToteReading:
     """
-    - set line_personnel=user when user in line personnel group
-    - default status pending
+    - set lab_technician=user
+    - compute approval_status based on pH values
+    - default status pending if no pH, needs_action if out of range, approved if in range
     """
 
-def record_initial_ph(tote: FlushToteReading, ph_value, user) -> FlushToteReading:
+def update_flush_tote_reading(tote: FlushToteReading, data, user) -> FlushToteReading:
     """
-    - store lab_technician=user
-    - update status to needs_action if out of range
-    """
-
-def record_action_and_final_ph(tote, action_text, final_ph, user) -> FlushToteReading:
-    """
-    - require action_text if status needs_action
-    - approve when final pH within range
+    - update fields from data
+    - recompute approval_status based on pH values
+    - set lab_technician=user if updating pH fields
     """
 ```
-
-All services emit WebSocket events after save (via publisher helper or consumer group send).
 
 ### Views
 ```python
-def flush_totes_view(request):
-    """Render page with production line options, flush type list, and initial table data."""
+def flush_tote_entry_view(request):
+    """Render single-instance entry form for lab technicians."""
+
+def flush_tote_records_view(request):
+    """Render admin table with all records and inline editing (staff only)."""
 
 @require_http_methods(["GET", "POST"])
-def api_flush_totes(request):
+def flush_tote_list_api(request):
     """GET: list recent totes. POST: create new tote."""
 
 @require_http_methods(["PATCH", "PUT"])
-def api_flush_tote_detail(request, pk):
-    """Update fields depending on role (initial pH, action, final pH, status)."""
+def flush_tote_detail_api(request, pk):
+    """Update fields for a tote."""
 ```
-Role checks: use existing Django groups “lab technician” and “line personnel” to toggle allowed fields server-side and client-side.
 
-### WebSocket
-```python
-# Consumer: FlushToteConsumer
-# Groups:
-#   "flush_totes_all" for list updates
-#   "flush_tote_<id>" for focused updates (optional, reuse same consumer)
-# Events:
-#   tote_created, tote_updated, status_changed
-# Payload: serialized tote (id, timestamps, users, pH, status, action_required)
-```
-Flow: HTTP mutations persist data; service layer also publishes to channel layer; consumer relays to all subscribed clients so their table/form updates live. Redis-backed persistence mirrors existing pattern (`RedisBackedConsumer`).
+Access control:
+- Entry form: lab technician group or staff
+- Records page: staff only
+- API: lab technician group or staff
 
 ## Frontend
 
-### Template Structure
+### Entry Form (flush_tote_entry.html)
+```
+flush_tote_entry.html
+├── extends base.html
+├── single form with all fields:
+│   - production_line (select)
+│   - flush_type (select)
+│   - line_personnel_name (text input - lab tech enters who brought the tote)
+│   - initial_pH (number input)
+│   - action_required (textarea, shown/required when pH out of range)
+│   - final_pH (number input)
+├── client-side validation for pH range with visual feedback
+├── submit creates record and shows success/reset for next entry
+└── loads static/core/js/pageModules/FlushToteEntry.js
+```
+
+### Admin Records (flush_totes.html)
 ```
 flush_totes.html
 ├── extends base.html
-├── filters/create form (line personnel) with production_line & flush_type selects
-├── table of totes (recent) with status badges and last-updated info
+├── search/filter controls
+├── table of totes with status badges
 ├── inline row edit controls (no modal) similar to container-classification page
-│   - row switches to inputs for pH/action fields; line column editable only for creator role
 └── loads static/core/js/pageModules/FlushTotes.js
 ```
 
 ### JavaScript
 ```javascript
-// pageModules/FlushTotes.js
-// - open WebSocket ws/flush_totes/; subscribe to tote updates
-// - inline row edit UX patterned after containerClassificationRecords.js:
-//     * click edit toggles inputs in-row for pH/action/status fields
-//     * save triggers async POST/PATCH to api/flush-totes/<id>/ (field-level delta)
-//     * cancel restores prior snapshot; new row creation inline
-// - handle create form submit (POST api/flush-totes/), optimistic row add
-// - handle lab tech actions (initial pH, action text, final pH) via PATCH
-// - update table rows on websocket events; show status badges/colors
-// - basic reconnect + offline banner when websocket drops
-```
-Uses jQuery + Bootstrap 5 consistent with codebase; leverages existing `apiClient` helpers if available in base.js.
+// pageModules/FlushToteEntry.js
+// - form validation: pH range check, required fields
+// - show/hide action_required field based on pH value
+// - async POST to api/flush-totes/
+// - success: show toast, reset form for next entry
 
-Inline editing reference: mirror patterns from `app/core/templates/core/lotnumbers/containerclassificationrecords.html` and `app/core/static/core/js/pageModules/containerClassificationRecords.js` (row-level edit buttons, snapshot/restore, async save/delete) adapted to Flush Tote fields.
+// pageModules/FlushTotes.js (admin table)
+// - inline row edit UX patterned after containerClassificationRecords.js
+// - search/filter functionality
+// - async PATCH to api/flush-totes/<id>/
+```
 
 ## Error Handling
 
@@ -193,19 +183,19 @@ Inline editing reference: mirror patterns from `app/core/templates/core/lotnumbe
 | Missing required fields or non-numeric pH | Return 400 with field errors; show inline messages. |
 | Initial pH out of range | Set status `needs_action`, require action text before final pH approval. |
 | Final pH still out of range | Keep status `needs_action`; block approval; toast message. |
-| Redis/WebSocket unavailable | Allow HTTP save; show reconnect banner; poll fallback (optional short-term). |
-| Unauthorized role editing restricted fields | Return 403; client hides/locks disallowed inputs. |
+| Unauthorized access | Return 403; redirect to login or show permission error. |
 
 ## Requirements Traceability
 
 | Requirement | Addressed By |
 |-------------|--------------|
-| Auto-fill date/time, require line + flush type | `create_flush_tote_reading` service, create form defaults |
-| Initial pH check + action if outside 5.1–10.9 | `record_initial_ph` service, validation, UI status |
-| Final pH within range before approval | `record_action_and_final_ph` service; approval_status logic |
-| Real-time visibility for both roles | WebSocket consumer + JS live updates |
+| Auto-fill date/time, require line + flush type + line personnel | `create_flush_tote_reading` service, entry form validation |
+| Initial pH check + action if outside 5.1–10.9 | Service validation, UI feedback |
+| Final pH within range before approval | Service approval_status logic |
+| Single-session entry for lab techs | Entry form page design |
+| Admin review/edit capability | Records page with inline editing |
 | Flush type options from BlendContainerClassification | `get_flush_type_options` selector feeding form select |
 
 ---
 
-**Status**: Approved
+**Status**: Approved (Revised)
