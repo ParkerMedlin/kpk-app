@@ -127,12 +127,12 @@ _All model changes (rename + field changes) followed by comprehensive rename acr
 
 ## Phase 11: Navigation Reorganization
 
-- [ ] **11.1** Move nav item to Blending dropdown
+- [x] **11.1** Move nav item to Blending dropdown
   - **Do**: In `admin-navbar-items.html` and any other navbar templates, move Discharge Testing link from standalone item into Blending dropdown menu.
   - **Deliverable**: Nav item nested under Blending.
   - **Verify**: Link appears in Blending dropdown for appropriate users.
 
-- [ ] **11.2** Remove standalone nav entries
+- [x] **11.2** Remove standalone nav entries
   - **Do**: Remove any remaining standalone "Flush Tote" or "Discharge Testing" nav items outside Blending dropdown.
   - **Deliverable**: Clean nav structure.
 
@@ -145,10 +145,10 @@ _All model changes (rename + field changes) followed by comprehensive rename acr
 | 8. Model & Rename | Complete | 13/13 |
 | 9. Selector & Service Updates | Complete | 2/2 |
 | 10. Form & Interface | Complete | 9/9 |
-| 11. Navigation | Pending | 0/2 |
+| 11. Navigation | Complete | 2/2 |
 
-**Overall**: 24/26 tasks (92%)
+**Overall**: 26/26 tasks (100%)
 
 ---
 
-**Status**: In Progress
+**Status**: Complete
