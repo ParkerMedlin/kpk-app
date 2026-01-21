@@ -49,8 +49,12 @@ from django.db import connection
 from core.selectors.inventory_selectors import get_count_record_model
 from core.services.tank_levels_services import get_tank_levels_html, extract_all_tank_levels
 from core.services import reports_services
-from core.services import create_flush_tote_reading, record_action_and_final_ph, record_initial_ph
-from core.services.flush_tote_services import GROUP_LAB_TECHNICIAN, GROUP_LINE_PERSONNEL
+from core.services import (
+    create_discharge_test,
+    record_discharge_action_and_final_ph,
+    record_discharge_initial_ph,
+)
+from core.services.discharge_testing_services import GROUP_LAB_TECHNICIAN, GROUP_LINE_PERSONNEL
 from core.services.bom_costing_service import (
     BomCostingService,
     CircularBomReferenceError,
@@ -2284,7 +2288,7 @@ def flush_tote_list_api(request):
     final_ph = payload.get('final_pH')
 
     try:
-        tote = create_flush_tote_reading(
+        tote = create_discharge_test(
             production_line=production_line,
             flush_type=flush_type,
             line_personnel_name=line_personnel_name,
@@ -2352,10 +2356,10 @@ def flush_tote_detail_api(request, pk):
             tote.save(update_fields=updated_fields)
 
         if 'initial_pH' in requested_lab_fields:
-            tote = record_initial_ph(tote, ph_value=payload.get('initial_pH'), user=request.user)
+            tote = record_discharge_initial_ph(tote, ph_value=payload.get('initial_pH'), user=request.user)
 
         if 'final_pH' in requested_lab_fields:
-            tote = record_action_and_final_ph(
+            tote = record_discharge_action_and_final_ph(
                 tote,
                 action_text=payload.get('action_required'),
                 final_ph=payload.get('final_pH'),

@@ -40,7 +40,7 @@ def _parse_ph(value: Any, field_name: str) -> Optional[Decimal]:
     return parsed
 
 
-def _serialize_flush_tote(tote: DischargeTestingRecord) -> Dict[str, Any]:
+def _serialize_discharge_test(tote: DischargeTestingRecord) -> Dict[str, Any]:
     return serialize_for_websocket(
         {
             "id": tote.id,
@@ -98,7 +98,7 @@ def _is_lab_user(user: Optional[User]) -> bool:
     return user.is_staff or user.is_superuser or _user_in_group(user, GROUP_LAB_TECHNICIAN)
 
 
-def _broadcast_flush_tote_event(event: str, tote: DischargeTestingRecord) -> None:
+def _broadcast_discharge_testing_event(event: str, tote: DischargeTestingRecord) -> None:
     """
     Broadcast a flush tote event to shared and per-tote websocket groups.
     """
@@ -110,7 +110,7 @@ def _broadcast_flush_tote_event(event: str, tote: DischargeTestingRecord) -> Non
     payload = {
         "type": "flush_tote_event",
         "event": event,
-        "data": base_consumer.sanitize_payload(_serialize_flush_tote(tote)),
+        "data": base_consumer.sanitize_payload(_serialize_discharge_test(tote)),
     }
 
     group_names: Iterable[str] = {
@@ -125,7 +125,7 @@ def _broadcast_flush_tote_event(event: str, tote: DischargeTestingRecord) -> Non
             logger.exception("Failed to broadcast flush tote event to %s", group_name)
 
 
-def create_flush_tote_reading(
+def create_discharge_test(
     *,
     production_line: str,
     flush_type: str,
@@ -136,7 +136,7 @@ def create_flush_tote_reading(
     final_pH: Any = None,
 ) -> DischargeTestingRecord:
     """
-    Create a new flush tote record with optional initial/final pH values.
+    Create a new discharge testing record with optional initial/final pH values.
     Assigns lab_technician to the submitting user and accepts line personnel name input.
     """
     initial_value = _parse_ph(initial_pH, "initial_pH")
@@ -198,11 +198,11 @@ def create_flush_tote_reading(
 
     with transaction.atomic():
         tote.save()
-        transaction.on_commit(lambda: _broadcast_flush_tote_event("tote_created", tote))
+        transaction.on_commit(lambda: _broadcast_discharge_testing_event("tote_created", tote))
     return tote
 
 
-def record_initial_ph(
+def record_discharge_initial_ph(
     tote: Union[int, DischargeTestingRecord],
     *,
     ph_value: Any,
@@ -212,7 +212,7 @@ def record_initial_ph(
     Record the initial pH measurement.
     Sets status to needs_action when out of range; otherwise keeps/returns pending.
     """
-    instance = _resolve_tote(tote)
+    instance = _resolve_discharge_test(tote)
     initial_value = _parse_ph(ph_value, "initial_pH")
     if initial_value is None:
         raise ValidationError({"initial_pH": "Initial pH is required."})
@@ -230,11 +230,11 @@ def record_initial_ph(
             "lab_technician",
             "line_personnel",
         ])
-        transaction.on_commit(lambda: _broadcast_flush_tote_event("initial_ph_recorded", instance))
+        transaction.on_commit(lambda: _broadcast_discharge_testing_event("initial_ph_recorded", instance))
     return instance
 
 
-def record_action_and_final_ph(
+def record_discharge_action_and_final_ph(
     tote: Union[int, DischargeTestingRecord],
     *,
     action_text: Optional[str],
@@ -246,7 +246,7 @@ def record_action_and_final_ph(
     Requires an initial pH to exist; final pH must be within allowed range.
     Approves the tote when final pH is compliant.
     """
-    instance = _resolve_tote(tote)
+    instance = _resolve_discharge_test(tote)
     if instance.initial_pH is None:
         raise ValidationError({"final_pH": "Initial pH must be recorded before final pH."})
 
@@ -281,11 +281,11 @@ def record_action_and_final_ph(
             "lab_technician",
             "line_personnel",
         ])
-        transaction.on_commit(lambda: _broadcast_flush_tote_event("final_ph_recorded", instance))
+        transaction.on_commit(lambda: _broadcast_discharge_testing_event("final_ph_recorded", instance))
     return instance
 
 
-def _resolve_tote(tote: Union[int, DischargeTestingRecord]) -> DischargeTestingRecord:
+def _resolve_discharge_test(tote: Union[int, DischargeTestingRecord]) -> DischargeTestingRecord:
     if isinstance(tote, DischargeTestingRecord):
         return tote
     try:

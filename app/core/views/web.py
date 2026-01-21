@@ -52,7 +52,7 @@ from core.kpkapp_utils.string_utils import get_unencoded_item_code
 from core.services.lot_numbers_services import generate_next_lot_number
 from core.services.blend_scheduling_services import get_blend_schedule_querysets, prepare_blend_schedule_queryset
 from core.services.purchasing_alias_services import normalize_supply_type
-from core.services.flush_tote_services import GROUP_LAB_TECHNICIAN
+from core.services.discharge_testing_services import GROUP_LAB_TECHNICIAN
 from django.core.paginator import Paginator
 from core.selectors.batch_issue_selectors import (
     get_batch_issue_runs,

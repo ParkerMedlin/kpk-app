@@ -37,7 +37,7 @@ _All model changes (rename + field changes) followed by comprehensive rename acr
   - **Deliverable**: Selector module with new names.
   - **Verify**: Imports resolve in shell.
 
-- [ ] **8.7** Rename services
+- [x] **8.7** Rename services
   - **Do**: Rename `flush_tote_services.py` → `discharge_testing_services.py`; rename all functions (`create_flush_tote_reading` → `create_discharge_test`, etc.); update `__init__.py` exports.
   - **Deliverable**: Service module with new names.
   - **Verify**: Imports resolve; functions callable in shell.
@@ -142,12 +142,12 @@ _All model changes (rename + field changes) followed by comprehensive rename acr
 
 | Phase | Status | Tasks Complete |
 |-------|--------|----------------|
-| 8. Model & Rename | In Progress | 4/13 |
+| 8. Model & Rename | In Progress | 5/13 |
 | 9. Selector & Service Updates | Pending | 0/2 |
 | 10. Form & Interface | Pending | 0/9 |
 | 11. Navigation | Pending | 0/2 |
 
-**Overall**: 4/26 tasks (15%)
+**Overall**: 5/26 tasks (19%)
 
 ---
 
