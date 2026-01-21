@@ -16,15 +16,15 @@ _All model changes (rename + field changes) followed by comprehensive rename acr
   - **Do**: Rename `FlushToteReading` → `DischargeTestingRecord` in `app/core/models.py`; update Meta class, related_name references.
   - **Deliverable**: Model class renamed.
 
-- [ ] **8.2** Add `final_disposition` field
+- [x] **8.2** Add `final_disposition` field
   - **Do**: Add `final_disposition` TextField (required) to `DischargeTestingRecord` model; purpose is to record what happens to container after testing.
   - **Deliverable**: Field added to model.
 
-- [ ] **8.3** Rename `production_line` → `discharge_source`
+- [x] **8.3** Rename `production_line` → `discharge_source`
   - **Do**: Rename field `production_line` to `discharge_source` in `DischargeTestingRecord` model; update any related_name or verbose_name.
   - **Deliverable**: Field renamed in model.
 
-- [ ] **8.4** Remove `approval_status` field
+- [x] **8.4** Remove `approval_status` field
   - **Do**: Remove `approval_status` field from `DischargeTestingRecord` model; remove any related choices/constants.
   - **Deliverable**: Field removed from model.
 
@@ -142,12 +142,12 @@ _All model changes (rename + field changes) followed by comprehensive rename acr
 
 | Phase | Status | Tasks Complete |
 |-------|--------|----------------|
-| 8. Model & Rename | In Progress | 1/13 |
+| 8. Model & Rename | In Progress | 3/13 |
 | 9. Selector & Service Updates | Pending | 0/2 |
 | 10. Form & Interface | Pending | 0/9 |
 | 11. Navigation | Pending | 0/2 |
 
-**Overall**: 1/26 tasks (4%)
+**Overall**: 3/26 tasks (12%)
 
 ---
 

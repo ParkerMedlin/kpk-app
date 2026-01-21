@@ -1411,31 +1411,24 @@ class DischargeTestingRecord(models.Model):
     PRODUCTION_LINE_JB = 'JB Line'
     PRODUCTION_LINE_INLINE = 'INLINE'
     PRODUCTION_LINE_PD = 'PD Line'
-    PRODUCTION_LINE_CHOICES = [
+    WAREHOUSE = 'Warehouse'
+    DISCHARGE_SOURCE_CHOICES = [
         (PRODUCTION_LINE_JB, 'JB Line'),
         (PRODUCTION_LINE_INLINE, 'INLINE'),
         (PRODUCTION_LINE_PD, 'PD Line'),
-    ]
-
-    STATUS_PENDING = 'pending'
-    STATUS_NEEDS_ACTION = 'needs_action'
-    STATUS_APPROVED = 'approved'
-    STATUS_CHOICES = [
-        (STATUS_PENDING, 'Pending'),
-        (STATUS_NEEDS_ACTION, 'Needs Action'),
-        (STATUS_APPROVED, 'Approved'),
+        (WAREHOUSE, 'Warehouse'),
     ]
 
     PH_MIN = Decimal('5.10')
     PH_MAX = Decimal('10.90')
 
     date = models.DateTimeField(auto_now_add=True, db_index=True)
-    production_line = models.CharField(max_length=20, choices=PRODUCTION_LINE_CHOICES)
+    discharge_source = models.CharField(max_length=20, choices=DISCHARGE_SOURCE_CHOICES)
     flush_type = models.CharField(max_length=100)
     initial_pH = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
     action_required = models.TextField(blank=True, null=True)
     final_pH = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
-    approval_status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING)
+    final_disposition = models.TextField()
     lab_technician = models.ForeignKey(
         User,
         related_name='discharge_tests_lab',
@@ -1455,7 +1448,7 @@ class DischargeTestingRecord(models.Model):
         db_table = 'core_dischargetestingrecord'
         ordering = ['-date', '-id']
         indexes = [
-            models.Index(fields=['production_line']),
+            models.Index(fields=['discharge_source']),
             models.Index(fields=['approval_status']),
         ]
         constraints = [
@@ -1472,7 +1465,7 @@ class DischargeTestingRecord(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.flush_type} ({self.production_line}) @ {self.date.strftime('%Y-%m-%d %H:%M')}"
+        return f"{self.flush_type} ({self.discharge_source}) @ {self.date.strftime('%Y-%m-%d %H:%M')}"
 
     @classmethod
     def is_ph_in_range(cls, value):
