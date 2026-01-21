@@ -8,7 +8,7 @@
         <h1>All Upcoming Runs for Startron Blends</h1>
     </div>
     <div class="table-responsive-sm">
-        <table class="table text-left table-bordered">
+        <table id="startronReportTable" class="table text-left table-bordered">
             <thead class="thead-dark">
                 <tr>
                     <th scope="col">Blend</th>
@@ -22,7 +22,7 @@
             </thead>
             {% for run in startron_runs %}
                 <tr>
-                    {% if item.oh_after_run < 0 %}
+                    {% if run.oh_after_run < 0 %}
                         <td style="background-color:#FE620E">{{ run.component_item_code }}</td>
                         <td style="background-color:#FE620E">{{ run.component_item_description }}</td>
                         <td style="background-color:#FE620E">{{ run.adjustedrunqty|floatformat:2 }}</td>
@@ -43,4 +43,6 @@
             {% endfor %}
         </table>
     </div>
+    {% include 'core/partials/datatableprerequisites.html' %}
+    <script type="module" src="{% static 'core/js/pageModules/startronReport.js' %}"></script>
 {% endblock content %}

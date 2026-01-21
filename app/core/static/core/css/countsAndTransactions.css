@@ -1,6 +1,9 @@
-.debitRow {
+.debitRow > td {
     background-color: rgb(196, 255, 196);
 }
-.creditRow {
+.creditRow > td {
     background-color: rgb(255, 203, 203);
+}
+#countsAndTransactionsTable {
+    padding-top: 10px;
 }
