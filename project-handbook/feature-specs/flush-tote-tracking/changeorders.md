@@ -108,17 +108,17 @@ _All model changes (rename + field changes) followed by comprehensive rename acr
   - **Do**: In `DischargeTestingEntry.js` and `DischargeTestingRecords.js`, remove any approval_status handling, validation, or display logic.
   - **Deliverable**: JS has no approval_status references.
 
-- [ ] **10.7** Add lab personnel field to entry form
+- [x] **10.7** Add lab personnel field to entry form
   - **Do**: Add `lab_technician` display field to entry form; autopopulate with current user; make readonly.
   - **Deliverable**: Lab tech sees their name on form.
   - **Requirement**: Visual confirmation of who is recording.
 
-- [ ] **10.8** Add final_disposition field to forms
+- [x] **10.8** Add final_disposition field to forms
   - **Do**: Add `final_disposition` textarea to entry form and records edit interface; mark as required.
   - **Deliverable**: Field appears on both forms.
   - **Verify**: Form validation requires field.
 
-- [ ] **10.9** Show action_required by default
+- [x] **10.9** Show action_required by default
   - **Do**: In `DischargeTestingEntry.js`, remove JS that conditionally hides `action_required` field; display field at all times.
   - **Deliverable**: Action required field always visible.
   - **Verify**: Field shows on page load without interaction.
@@ -144,10 +144,10 @@ _All model changes (rename + field changes) followed by comprehensive rename acr
 |-------|--------|----------------|
 | 8. Model & Rename | Complete | 13/13 |
 | 9. Selector & Service Updates | Complete | 2/2 |
-| 10. Form & Interface | Pending | 6/9 |
+| 10. Form & Interface | Complete | 9/9 |
 | 11. Navigation | Pending | 0/2 |
 
-**Overall**: 21/26 tasks (81%)
+**Overall**: 24/26 tasks (92%)
 
 ---
 

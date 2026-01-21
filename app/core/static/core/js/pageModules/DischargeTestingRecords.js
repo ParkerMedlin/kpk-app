@@ -267,7 +267,7 @@ class DischargeTestingRecordsPage {
 
       const currentValue = cell.dataset.value ?? '';
       let input;
-      if (field === 'action_required') {
+      if (field === 'action_required' || field === 'final_disposition') {
         input = this.createTextarea(field, currentValue);
       } else if (field === 'initial_pH' || field === 'final_pH') {
         input = this.createTextInput(field, currentValue, {
@@ -393,6 +393,7 @@ class DischargeTestingRecordsPage {
 
     const initialInput = row.querySelector('[data-field="initial_pH"] [data-is-input="true"]');
     const actionInput = row.querySelector('[data-field="action_required"] [data-is-input="true"]');
+    const dispositionInput = row.querySelector('[data-field="final_disposition"] [data-is-input="true"]');
     const finalInput = row.querySelector('[data-field="final_pH"] [data-is-input="true"]');
 
     if (initialInput) {
@@ -423,6 +424,19 @@ class DischargeTestingRecordsPage {
       if (normalizeText(actionValue) !== normalizeText(snapshot.action_required)) {
         payload.action_required = actionValue;
         updatedFields.push('action_required');
+      }
+    }
+
+    if (dispositionInput) {
+      const dispositionValue = normalizeText(dispositionInput.value);
+      if (!dispositionValue) {
+        dispositionInput.classList.add('is-invalid');
+        this.applyValidationErrors(row, { final_disposition: 'Final disposition is required.' });
+        return;
+      }
+      if (dispositionValue !== normalizeText(snapshot.final_disposition)) {
+        payload.final_disposition = dispositionValue;
+        updatedFields.push('final_disposition');
       }
     }
 
@@ -540,6 +554,7 @@ class DischargeTestingRecordsPage {
       flush_type: tote.flush_type ?? '',
       initial_pH: tote.initial_pH ?? '',
       action_required: tote.action_required ?? '',
+      final_disposition: tote.final_disposition ?? '',
       final_pH: tote.final_pH ?? '',
       line_personnel_name: tote.line_personnel_name ?? '',
       lab_technician_name: tote.lab_technician_name ?? '',
@@ -583,6 +598,7 @@ class DischargeTestingRecordsPage {
 
     this.setPhCell(row, 'initial_pH', data.initial_pH, data.lab_technician_name, initialUpdatedAt, 'initial');
     this.setTextCell(row, 'action_required', data.action_required, true);
+    this.setTextCell(row, 'final_disposition', data.final_disposition, true);
     this.setPhCell(row, 'final_pH', data.final_pH, data.lab_technician_name, finalUpdatedAt, 'final');
 
     this.setTextCell(row, 'line_personnel_name', data.line_personnel_name);

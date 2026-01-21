@@ -45,6 +45,7 @@
                     <th scope="col">Flush Type</th>
                     <th scope="col" style="width: 140px;">Initial pH</th>
                     <th scope="col" style="min-width: 220px;">Action Required</th>
+                    <th scope="col" style="min-width: 220px;">Final Disposition</th>
                     <th scope="col" style="width: 140px;">Final pH</th>
                     <th scope="col" style="width: 160px;">Line Personnel</th>
                     <th scope="col" style="width: 160px;">Lab Technician</th>
@@ -81,6 +82,13 @@
                         <td data-field="action_required" data-edit-group="lab" data-value="{{ tote.action_required|default_if_none:'' }}" class="text-break">
                             {% if tote.action_required %}
                                 {{ tote.action_required }}
+                            {% else %}
+                                --
+                            {% endif %}
+                        </td>
+                        <td data-field="final_disposition" data-edit-group="lab" data-value="{{ tote.final_disposition|default_if_none:'' }}" class="text-break">
+                            {% if tote.final_disposition %}
+                                {{ tote.final_disposition }}
                             {% else %}
                                 --
                             {% endif %}
@@ -132,7 +140,7 @@
                     </tr>
                 {% empty %}
                     <tr>
-                        <td colspan="9" class="text-center py-4">No discharge tests recorded yet.</td>
+                        <td colspan="10" class="text-center py-4">No discharge tests recorded yet.</td>
                     </tr>
                 {% endfor %}
             </tbody>

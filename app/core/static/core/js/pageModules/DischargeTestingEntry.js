@@ -133,6 +133,7 @@ class DischargeTestingEntryPage {
     this.initialPh = document.getElementById('discharge-testing-entry-initial-ph');
     this.finalPh = document.getElementById('discharge-testing-entry-final-ph');
     this.actionRequired = document.getElementById('discharge-testing-entry-action-required');
+    this.finalDisposition = document.getElementById('discharge-testing-entry-final-disposition');
     this.actionRequiredGroup = this.form
       ? this.form.querySelector('[data-role="action-required-group"]')
       : null;
@@ -168,6 +169,7 @@ class DischargeTestingEntryPage {
       this.flushType,
       this.linePersonnel,
       this.actionRequired,
+      this.finalDisposition,
     ].forEach((input) => {
       if (!input) {
         return;
@@ -217,13 +219,7 @@ class DischargeTestingEntryPage {
   syncActionRequired() {
     const initialParsed = parsePhValue(this.initialPh ? this.initialPh.value : '');
     const initialValue = initialParsed.error ? null : initialParsed.value;
-    const actionHasValue = normalizeText(this.actionRequired ? this.actionRequired.value : '') !== '';
     const outOfRange = initialValue !== null && !isPhInRange(initialValue, this.phMin, this.phMax);
-    const shouldShow = outOfRange || actionHasValue;
-
-    if (this.actionRequiredGroup) {
-      this.actionRequiredGroup.classList.toggle('d-none', !shouldShow);
-    }
     if (this.actionRequired) {
       this.actionRequired.required = outOfRange;
       if (outOfRange) {
@@ -321,6 +317,8 @@ class DischargeTestingEntryPage {
         input = this.actionRequired;
       } else if (field === 'final_pH') {
         input = this.finalPh;
+      } else if (field === 'final_disposition') {
+        input = this.finalDisposition;
       }
 
       if (!input) {
@@ -337,6 +335,7 @@ class DischargeTestingEntryPage {
     const flushType = normalizeText(this.flushType ? this.flushType.value : '');
     const linePersonnel = normalizeText(this.linePersonnel ? this.linePersonnel.value : '');
     const actionRequired = normalizeText(this.actionRequired ? this.actionRequired.value : '');
+    const finalDisposition = normalizeText(this.finalDisposition ? this.finalDisposition.value : '');
 
     const initialParsed = parsePhValue(this.initialPh ? this.initialPh.value : '');
     const finalParsed = parsePhValue(this.finalPh ? this.finalPh.value : '');
@@ -351,6 +350,9 @@ class DischargeTestingEntryPage {
     }
     if (!linePersonnel) {
       errors.line_personnel_name = 'Line personnel name is required.';
+    }
+    if (!finalDisposition) {
+      errors.final_disposition = 'Final disposition is required.';
     }
 
     if (initialParsed.error) {
@@ -387,6 +389,7 @@ class DischargeTestingEntryPage {
         initial_pH: this.initialPh,
         action_required: this.actionRequired,
         final_pH: this.finalPh,
+        final_disposition: this.finalDisposition,
       }[firstErrorField];
       if (firstInput && typeof firstInput.focus === 'function') {
         firstInput.focus();
@@ -401,6 +404,7 @@ class DischargeTestingEntryPage {
       initial_pH: initialValue,
       action_required: actionRequired,
       final_pH: finalValue,
+      final_disposition: finalDisposition,
     };
   }
 
@@ -452,6 +456,7 @@ class DischargeTestingEntryPage {
     this.clearFieldFeedback(this.initialPh);
     this.clearFieldFeedback(this.finalPh);
     this.clearFieldFeedback(this.actionRequired);
+    this.clearFieldFeedback(this.finalDisposition);
     this.syncActionRequired();
     if (this.dischargeSource && typeof this.dischargeSource.focus === 'function') {
       this.dischargeSource.focus();
