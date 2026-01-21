@@ -2254,7 +2254,7 @@ def _validation_error_payload(exc):
 
 @login_required
 @require_http_methods(["GET", "POST"])
-def flush_tote_list_api(request):
+def discharge_testing_list_api(request):
     if request.method == "GET":
         limit_param = (request.GET.get("limit") or "").strip()
         limit = None
@@ -2311,7 +2311,7 @@ def flush_tote_list_api(request):
 
 @login_required
 @require_http_methods(["PATCH", "PUT"])
-def flush_tote_detail_api(request, pk):
+def discharge_testing_detail_api(request, pk):
     try:
         payload = _parse_flush_tote_payload(request)
     except ValueError as exc:

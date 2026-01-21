@@ -42,7 +42,7 @@ _All model changes (rename + field changes) followed by comprehensive rename acr
   - **Deliverable**: Service module with new names.
   - **Verify**: Imports resolve; functions callable in shell.
 
-- [ ] **8.8** Rename API views
+- [x] **8.8** Rename API views
   - **Do**: In `app/core/views/api.py`, rename `flush_tote_list_api` → `discharge_testing_list_api`, `flush_tote_detail_api` → `discharge_testing_detail_api`; update imports to use renamed services/selectors.
   - **Deliverable**: API views with new names.
 
@@ -142,12 +142,12 @@ _All model changes (rename + field changes) followed by comprehensive rename acr
 
 | Phase | Status | Tasks Complete |
 |-------|--------|----------------|
-| 8. Model & Rename | In Progress | 5/13 |
+| 8. Model & Rename | In Progress | 6/13 |
 | 9. Selector & Service Updates | Pending | 0/2 |
 | 10. Form & Interface | Pending | 0/9 |
 | 11. Navigation | Pending | 0/2 |
 
-**Overall**: 5/26 tasks (19%)
+**Overall**: 6/26 tasks (23%)
 
 ---
 
