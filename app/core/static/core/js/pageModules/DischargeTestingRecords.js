@@ -389,14 +389,14 @@ class DischargeTestingRecordsPage {
     const payload = {};
     const updatedFields = [];
 
-    const lineInput = row.querySelector('[data-field="production_line"] [data-is-input="true"]');
+    const sourceInput = row.querySelector('[data-field="discharge_source"] [data-is-input="true"]');
     const flushInput = row.querySelector('[data-field="flush_type"] [data-is-input="true"]');
 
-    if (lineInput) {
-      const value = normalizeText(lineInput.value);
-      if (value !== normalizeText(snapshot.production_line)) {
-        payload.production_line = value;
-        updatedFields.push('production_line');
+    if (sourceInput) {
+      const value = normalizeText(sourceInput.value);
+      if (value !== normalizeText(snapshot.discharge_source)) {
+        payload.discharge_source = value;
+        updatedFields.push('discharge_source');
       }
     }
     if (flushInput) {
@@ -555,7 +555,7 @@ class DischargeTestingRecordsPage {
     const data = {
       id: tote.id ?? row.dataset.toteId ?? null,
       date: tote.date ?? row.querySelector('[data-field="date"]')?.dataset?.value ?? '',
-      production_line: tote.production_line ?? '',
+      discharge_source: tote.discharge_source ?? '',
       flush_type: tote.flush_type ?? '',
       initial_pH: tote.initial_pH ?? '',
       action_required: tote.action_required ?? '',
@@ -599,7 +599,7 @@ class DischargeTestingRecordsPage {
       }
     }
 
-    this.setTextCell(row, 'production_line', data.production_line);
+    this.setTextCell(row, 'discharge_source', data.discharge_source);
     this.setTextCell(row, 'flush_type', data.flush_type);
 
     this.setPhCell(row, 'initial_pH', data.initial_pH, data.lab_technician_name, initialUpdatedAt, 'initial');
