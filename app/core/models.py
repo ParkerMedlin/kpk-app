@@ -1405,8 +1405,8 @@ class PurchasingAlias(models.Model):
         return f"{self.vendor_name} - {self.vendor_part_number} (for {self.internal_item_code or 'N/A'})"
 
 
-class FlushToteReading(models.Model):
-    """Tracks pH testing, actions, and approval of flush totes."""
+class DischargeTestingRecord(models.Model):
+    """Tracks pH testing, actions, and approval of discharged materials."""
 
     PRODUCTION_LINE_JB = 'JB Line'
     PRODUCTION_LINE_INLINE = 'INLINE'
@@ -1438,21 +1438,21 @@ class FlushToteReading(models.Model):
     approval_status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING)
     lab_technician = models.ForeignKey(
         User,
-        related_name='flush_totes_lab',
+        related_name='discharge_tests_lab',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
     )
     line_personnel = models.ForeignKey(
         User,
-        related_name='flush_totes_line',
+        related_name='discharge_tests_line',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
     )
 
     class Meta:
-        db_table = 'core_flush_tote_reading'
+        db_table = 'core_dischargetestingrecord'
         ordering = ['-date', '-id']
         indexes = [
             models.Index(fields=['production_line']),
@@ -1460,7 +1460,7 @@ class FlushToteReading(models.Model):
         ]
         constraints = [
             models.CheckConstraint(
-                name='flush_tote_final_ph_range',
+                name='discharge_testing_final_ph_range',
                 check=(
                     models.Q(final_pH__isnull=True)
                     | (
@@ -1486,7 +1486,7 @@ class FlushToteReading(models.Model):
 
         if self.approval_status == self.STATUS_APPROVED:
             if self.final_pH is None:
-                errors['final_pH'] = 'Final pH is required to approve a flush tote.'
+                errors['final_pH'] = 'Final pH is required to approve a discharge test.'
             elif not self.is_ph_in_range(self.final_pH):
                 errors['final_pH'] = f'Final pH must be within {self.PH_MIN} - {self.PH_MAX} to approve.'
 
