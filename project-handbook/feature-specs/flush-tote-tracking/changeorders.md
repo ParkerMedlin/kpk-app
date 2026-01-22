@@ -142,19 +142,19 @@ _All model changes (rename + field changes) followed by comprehensive rename acr
 
 _Rename field across model, services, selectors, views, templates, and JS._
 
-- [ ] **12.1** Rename model field
+- [x] **12.1** Rename model field
   - **Do**: In `app/core/models.py`, rename field `line_personnel` to `sampling_personnel` in `DischargeTestingRecord` model; update `related_name` from `discharge_tests_line` to `discharge_tests_sampling`.
   - **Deliverable**: Model field renamed.
 
-- [ ] **12.2** Create migration
+- [x] **12.2** Create migration
   - **Do**: Create migration to rename `line_personnel` → `sampling_personnel` column.
   - **Verify**: `python manage.py makemigrations` succeeds.
 
-- [ ] **12.3** Apply migration (delegate to user)
+- [x] **12.3** Apply migration (delegate to user)
   - **Do**: Prompt user to run migrations.
   - **Verify**: Migration applies cleanly.
 
-- [ ] **12.4** Update selectors
+- [x] **12.4** Update selectors
   - **Do**: In `discharge_testing_selectors.py`, update `select_related` calls from `line_personnel` to `sampling_personnel`; update any docstrings.
   - **Deliverable**: Selectors use new field name.
 
@@ -200,9 +200,9 @@ _Rename field across model, services, selectors, views, templates, and JS._
 | 9. Selector & Service Updates | Complete | 2/2 |
 | 10. Form & Interface | Complete | 9/9 |
 | 11. Navigation | Complete | 2/2 |
-| 12. Rename line_personnel | Pending | 0/12 |
+| 12. Rename line_personnel | In Progress | 4/12 |
 
-**Overall**: 26/38 tasks (68%)
+**Overall**: 30/38 tasks (79%)
 
 ---
 
