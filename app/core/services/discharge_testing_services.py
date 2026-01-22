@@ -53,8 +53,8 @@ def _serialize_discharge_test(tote: DischargeTestingRecord) -> Dict[str, Any]:
             "final_disposition": tote.final_disposition,
             "lab_technician_id": tote.lab_technician_id,
             "lab_technician_name": _user_display(tote.lab_technician),
-            "line_personnel_id": tote.line_personnel_id,
-            "line_personnel_name": _line_personnel_display(tote),
+            "sampling_personnel_id": tote.sampling_personnel_id,
+            "sampling_personnel_name": _sampling_personnel_display(tote),
         }
     )
 
@@ -66,14 +66,14 @@ def _user_display(user: Optional[User]) -> Optional[str]:
     return full_name or user.username
 
 
-def _line_personnel_display(tote: DischargeTestingRecord) -> Optional[str]:
-    line_name = getattr(tote, "line_personnel_name", None)
-    if line_name:
-        return line_name
-    return _user_display(tote.line_personnel)
+def _sampling_personnel_display(tote: DischargeTestingRecord) -> Optional[str]:
+    sampling_name = getattr(tote, "sampling_personnel_name", None)
+    if sampling_name:
+        return sampling_name
+    return _user_display(tote.sampling_personnel)
 
 
-def _resolve_line_personnel(name: str) -> Optional[User]:
+def _resolve_sampling_personnel(name: str) -> Optional[User]:
     cleaned = (name or "").strip()
     if not cleaned:
         return None
@@ -131,7 +131,7 @@ def create_discharge_test(
     discharge_source: str,
     flush_type: str,
     final_disposition: str,
-    line_personnel_name: Optional[str] = None,
+    sampling_personnel_name: Optional[str] = None,
     user: Optional[User] = None,
     initial_pH: Any = None,
     action_required: Optional[str] = None,
@@ -139,7 +139,7 @@ def create_discharge_test(
 ) -> DischargeTestingRecord:
     """
     Create a new discharge testing record with optional initial/final pH values.
-    Assigns lab_technician to the submitting user and accepts line personnel name input.
+    Assigns lab_technician to the submitting user and accepts sampling personnel name input.
     """
     cleaned_source = (discharge_source or "").strip()
     cleaned_flush_type = (flush_type or "").strip()
@@ -154,15 +154,15 @@ def create_discharge_test(
         raise ValidationError({"final_pH": "Initial pH must be recorded before final pH."})
 
     cleaned_action = (action_required or "").strip() or None
-    line_personnel_user = None
-    cleaned_line_personnel = (line_personnel_name or "").strip()
+    sampling_personnel_user = None
+    cleaned_sampling_personnel = (sampling_personnel_name or "").strip()
 
-    if not cleaned_line_personnel:
+    if not cleaned_sampling_personnel:
         if _user_in_group(user, GROUP_LINE_PERSONNEL):
-            line_personnel_user = user
-            cleaned_line_personnel = _user_display(user) or ""
+            sampling_personnel_user = user
+            cleaned_sampling_personnel = _user_display(user) or ""
         else:
-            raise ValidationError({"line_personnel_name": "Line personnel name is required."})
+            raise ValidationError({"sampling_personnel_name": "Sampling personnel name is required."})
 
     if final_value is not None:
         if (
@@ -185,16 +185,16 @@ def create_discharge_test(
         final_disposition=cleaned_disposition,
     )
 
-    if hasattr(tote, "line_personnel_name") and cleaned_line_personnel:
-        tote.line_personnel_name = cleaned_line_personnel
+    if hasattr(tote, "sampling_personnel_name") and cleaned_sampling_personnel:
+        tote.sampling_personnel_name = cleaned_sampling_personnel
 
-    if line_personnel_user is None and cleaned_line_personnel and not hasattr(tote, "line_personnel_name"):
-        line_personnel_user = _resolve_line_personnel(cleaned_line_personnel)
-        if line_personnel_user is None:
-            raise ValidationError({"line_personnel_name": "Line personnel not found."})
+    if sampling_personnel_user is None and cleaned_sampling_personnel and not hasattr(tote, "sampling_personnel_name"):
+        sampling_personnel_user = _resolve_sampling_personnel(cleaned_sampling_personnel)
+        if sampling_personnel_user is None:
+            raise ValidationError({"sampling_personnel_name": "Sampling personnel not found."})
 
-    if line_personnel_user is not None:
-        tote.line_personnel = line_personnel_user
+    if sampling_personnel_user is not None:
+        tote.sampling_personnel = sampling_personnel_user
 
     if _is_lab_user(user):
         tote.lab_technician = user
@@ -233,7 +233,7 @@ def record_discharge_initial_ph(
         instance.save(update_fields=[
             "initial_pH",
             "lab_technician",
-            "line_personnel",
+            "sampling_personnel",
         ])
         transaction.on_commit(lambda: _broadcast_discharge_testing_event("initial_ph_recorded", instance))
     return instance
@@ -282,7 +282,7 @@ def record_discharge_action_and_final_ph(
             "action_required",
             "final_pH",
             "lab_technician",
-            "line_personnel",
+            "sampling_personnel",
         ])
         transaction.on_commit(lambda: _broadcast_discharge_testing_event("final_ph_recorded", instance))
     return instance
