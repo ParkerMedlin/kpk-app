@@ -138,6 +138,60 @@ _All model changes (rename + field changes) followed by comprehensive rename acr
 
 ---
 
+## Phase 12: Rename line_personnel → sampling_personnel
+
+_Rename field across model, services, selectors, views, templates, and JS._
+
+- [ ] **12.1** Rename model field
+  - **Do**: In `app/core/models.py`, rename field `line_personnel` to `sampling_personnel` in `DischargeTestingRecord` model; update `related_name` from `discharge_tests_line` to `discharge_tests_sampling`.
+  - **Deliverable**: Model field renamed.
+
+- [ ] **12.2** Create migration
+  - **Do**: Create migration to rename `line_personnel` → `sampling_personnel` column.
+  - **Verify**: `python manage.py makemigrations` succeeds.
+
+- [ ] **12.3** Apply migration (delegate to user)
+  - **Do**: Prompt user to run migrations.
+  - **Verify**: Migration applies cleanly.
+
+- [ ] **12.4** Update selectors
+  - **Do**: In `discharge_testing_selectors.py`, update `select_related` calls from `line_personnel` to `sampling_personnel`; update any docstrings.
+  - **Deliverable**: Selectors use new field name.
+
+- [ ] **12.5** Rename service helper functions
+  - **Do**: In `discharge_testing_services.py`, rename `_line_personnel_display` → `_sampling_personnel_display`, `_resolve_line_personnel` → `_resolve_sampling_personnel`.
+  - **Deliverable**: Helper functions renamed.
+
+- [ ] **12.6** Update service field references
+  - **Do**: In `discharge_testing_services.py`, update all references: `line_personnel_id` → `sampling_personnel_id`, `line_personnel_name` → `sampling_personnel_name`, `line_personnel` → `sampling_personnel`; update validation error messages.
+  - **Deliverable**: Service uses new field names throughout.
+
+- [ ] **12.7** Rename API view helper functions
+  - **Do**: In `app/core/views/api.py`, rename `_line_personnel_display` → `_sampling_personnel_display`.
+  - **Deliverable**: API helper function renamed.
+
+- [ ] **12.8** Update API view field references
+  - **Do**: In `app/core/views/api.py`, update all references: `line_personnel_id` → `sampling_personnel_id`, `line_personnel_name` → `sampling_personnel_name`, `line_personnel` → `sampling_personnel` in serialization and payload handling.
+  - **Deliverable**: API uses new field names.
+
+- [ ] **12.9** Update entry form template
+  - **Do**: In `discharge_testing_entry.html`, rename input field `name="line_personnel_name"` to `name="sampling_personnel_name"`; update any labels or help text.
+  - **Deliverable**: Entry form uses new field name.
+
+- [ ] **12.10** Update records template
+  - **Do**: In `discharge_testing_records.html`, update `data-field` attributes, `data-value` references, and display logic from `line_personnel` to `sampling_personnel`.
+  - **Deliverable**: Records table uses new field name.
+
+- [ ] **12.11** Update DischargeTestingEntry.js
+  - **Do**: In `DischargeTestingEntry.js`, update field references from `line_personnel_name` to `sampling_personnel_name`; update validation messages; rename any related variables (e.g., `linePersonnel` → `samplingPersonnel`).
+  - **Deliverable**: Entry JS uses new field names.
+
+- [ ] **12.12** Update DischargeTestingRecords.js
+  - **Do**: In `DischargeTestingRecords.js`, update field references from `line_personnel_name` to `sampling_personnel_name` in edit logic, rendering, and data handling.
+  - **Deliverable**: Records JS uses new field names.
+
+---
+
 ## Progress
 
 | Phase | Status | Tasks Complete |
@@ -146,9 +200,10 @@ _All model changes (rename + field changes) followed by comprehensive rename acr
 | 9. Selector & Service Updates | Complete | 2/2 |
 | 10. Form & Interface | Complete | 9/9 |
 | 11. Navigation | Complete | 2/2 |
+| 12. Rename line_personnel | Pending | 0/12 |
 
-**Overall**: 26/26 tasks (100%)
+**Overall**: 26/38 tasks (68%)
 
 ---
 
-**Status**: Complete
+**Status**: In Progress
