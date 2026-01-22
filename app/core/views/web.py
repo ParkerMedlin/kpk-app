@@ -2145,7 +2145,7 @@ def discharge_testing_entry_view(request):
 
     context = {
         'production_line_choices': DischargeTestingRecord.DISCHARGE_SOURCE_CHOICES,
-        'flush_type_options': get_discharge_type_options(),
+        'discharge_type_options': get_discharge_type_options(),
     }
     return render(request, 'core/discharge_testing_entry.html', context)
 
@@ -2156,7 +2156,7 @@ def discharge_testing_records_view(request):
     """Render the discharge testing records page with initial options and data."""
     context = {
         'production_line_choices': DischargeTestingRecord.DISCHARGE_SOURCE_CHOICES,
-        'flush_type_options': get_discharge_type_options(),
+        'discharge_type_options': get_discharge_type_options(),
         'flush_totes': list_discharge_tests(),
     }
     return render(request, 'core/discharge_testing_records.html', context)
