@@ -1436,9 +1436,9 @@ class DischargeTestingRecord(models.Model):
         null=True,
         blank=True,
     )
-    line_personnel = models.ForeignKey(
+    sampling_personnel = models.ForeignKey(
         User,
-        related_name='discharge_tests_line',
+        related_name='discharge_tests_sampling',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
