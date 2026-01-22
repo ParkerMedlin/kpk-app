@@ -42,7 +42,7 @@
                 <tr>
                     <th scope="col" style="width: 140px;">Date/Time</th>
                     <th scope="col">Discharge Source</th>
-                    <th scope="col">Flush Type</th>
+                    <th scope="col">Discharge Type</th>
                     <th scope="col" style="width: 140px;">Initial pH</th>
                     <th scope="col" style="min-width: 220px;">Action Required</th>
                     <th scope="col" style="min-width: 220px;">Final Disposition</th>
@@ -61,8 +61,8 @@
                         <td data-field="discharge_source" data-edit-group="line" data-value="{{ tote.discharge_source }}">
                             {{ tote.discharge_source }}
                         </td>
-                        <td data-field="flush_type" data-edit-group="line" data-value="{{ tote.flush_type }}">
-                            {{ tote.flush_type }}
+                        <td data-field="discharge_type" data-edit-group="line" data-value="{{ tote.discharge_type }}">
+                            {{ tote.discharge_type }}
                         </td>
                         <td data-field="initial_pH" data-edit-group="lab" data-value="{{ tote.initial_pH|default_if_none:'' }}">
                             <div class="fw-semibold">
