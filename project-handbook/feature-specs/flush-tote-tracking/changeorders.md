@@ -250,19 +250,19 @@ _Rename field across model, services, selectors, views, templates, and JS._
 
 _Replace dynamic options lookup with predefined model choices._
 
-- [ ] **14.1** Define DISCHARGE_TYPE_CHOICES in model
+- [x] **14.1** Define DISCHARGE_TYPE_CHOICES in model
   - **Do**: In `app/core/models.py`, add `DISCHARGE_TYPE_CHOICES` constant to `DischargeTestingRecord` with tuples: `('Acid', 'Acid'), ('Base', 'Base'), ('Soap', 'Soap'), ('Polish', 'Polish'), ('Oil', 'Oil')`.
   - **Deliverable**: Choices constant defined.
 
-- [ ] **14.2** Update discharge_type field to use choices
+- [x] **14.2** Update discharge_type field to use choices
   - **Do**: In `app/core/models.py`, update `discharge_type` field: add `choices=DISCHARGE_TYPE_CHOICES`, adjust `max_length` if needed (current is 100, max choice length is 6).
   - **Deliverable**: Field uses predefined choices.
 
-- [ ] **14.3** Create migration
+- [x] **14.3** Create migration
   - **Do**: Create migration for choices constraint.
   - **Verify**: `python manage.py makemigrations` succeeds.
 
-- [ ] **14.4** Apply migration (delegate to user)
+- [x] **14.4** Apply migration (delegate to user)
   - **Do**: Prompt user to run migrations.
   - **Verify**: Migration applies cleanly.
 
@@ -294,9 +294,9 @@ _Replace dynamic options lookup with predefined model choices._
 | 11. Navigation | Complete | 2/2 |
 | 12. Rename line_personnel | Complete | 12/12 |
 | 13. Rename flush_type | Complete | 12/12 |
-| 14. Model-Defined Choices | Pending | 0/8 |
+| 14. Model-Defined Choices | In Progress | 4/8 |
 
-**Overall**: 49/58 tasks (84%)
+**Overall**: 53/58 tasks (91%)
 
 ---
 
