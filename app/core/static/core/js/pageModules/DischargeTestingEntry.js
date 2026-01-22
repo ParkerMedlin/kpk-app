@@ -129,7 +129,7 @@ class DischargeTestingEntryPage {
 
     this.dischargeSource = document.getElementById('discharge-testing-entry-discharge-source');
     this.flushType = document.getElementById('discharge-testing-entry-flush-type');
-    this.linePersonnel = document.getElementById('discharge-testing-entry-line-personnel');
+    this.samplingPersonnel = document.getElementById('discharge-testing-entry-sampling-personnel');
     this.initialPh = document.getElementById('discharge-testing-entry-initial-ph');
     this.finalPh = document.getElementById('discharge-testing-entry-final-ph');
     this.actionRequired = document.getElementById('discharge-testing-entry-action-required');
@@ -167,7 +167,7 @@ class DischargeTestingEntryPage {
     [
       this.dischargeSource,
       this.flushType,
-      this.linePersonnel,
+      this.samplingPersonnel,
       this.actionRequired,
       this.finalDisposition,
     ].forEach((input) => {
@@ -309,8 +309,8 @@ class DischargeTestingEntryPage {
         input = this.dischargeSource;
       } else if (field === 'flush_type') {
         input = this.flushType;
-      } else if (field === 'line_personnel_name') {
-        input = this.linePersonnel;
+      } else if (field === 'sampling_personnel_name') {
+        input = this.samplingPersonnel;
       } else if (field === 'initial_pH') {
         input = this.initialPh;
       } else if (field === 'action_required') {
@@ -333,7 +333,7 @@ class DischargeTestingEntryPage {
   collectPayload() {
     const dischargeSource = normalizeText(this.dischargeSource ? this.dischargeSource.value : '');
     const flushType = normalizeText(this.flushType ? this.flushType.value : '');
-    const linePersonnel = normalizeText(this.linePersonnel ? this.linePersonnel.value : '');
+    const samplingPersonnel = normalizeText(this.samplingPersonnel ? this.samplingPersonnel.value : '');
     const actionRequired = normalizeText(this.actionRequired ? this.actionRequired.value : '');
     const finalDisposition = normalizeText(this.finalDisposition ? this.finalDisposition.value : '');
 
@@ -348,8 +348,8 @@ class DischargeTestingEntryPage {
     if (!flushType) {
       errors.flush_type = 'Flush type is required.';
     }
-    if (!linePersonnel) {
-      errors.line_personnel_name = 'Line personnel name is required.';
+    if (!samplingPersonnel) {
+      errors.sampling_personnel_name = 'Sampling personnel name is required.';
     }
     if (!finalDisposition) {
       errors.final_disposition = 'Final disposition is required.';
@@ -385,7 +385,7 @@ class DischargeTestingEntryPage {
       const firstInput = {
         discharge_source: this.dischargeSource,
         flush_type: this.flushType,
-        line_personnel_name: this.linePersonnel,
+        sampling_personnel_name: this.samplingPersonnel,
         initial_pH: this.initialPh,
         action_required: this.actionRequired,
         final_pH: this.finalPh,
@@ -400,7 +400,7 @@ class DischargeTestingEntryPage {
     return {
       discharge_source: dischargeSource,
       flush_type: flushType,
-      line_personnel_name: linePersonnel,
+      sampling_personnel_name: samplingPersonnel,
       initial_pH: initialValue,
       action_required: actionRequired,
       final_pH: finalValue,
@@ -452,7 +452,7 @@ class DischargeTestingEntryPage {
     }
     this.clearFieldFeedback(this.dischargeSource);
     this.clearFieldFeedback(this.flushType);
-    this.clearFieldFeedback(this.linePersonnel);
+    this.clearFieldFeedback(this.samplingPersonnel);
     this.clearFieldFeedback(this.initialPh);
     this.clearFieldFeedback(this.finalPh);
     this.clearFieldFeedback(this.actionRequired);

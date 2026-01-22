@@ -47,7 +47,7 @@
                     <th scope="col" style="min-width: 220px;">Action Required</th>
                     <th scope="col" style="min-width: 220px;">Final Disposition</th>
                     <th scope="col" style="width: 140px;">Final pH</th>
-                    <th scope="col" style="width: 160px;">Line Personnel</th>
+                    <th scope="col" style="width: 160px;">Sampling Personnel</th>
                     <th scope="col" style="width: 160px;">Lab Technician</th>
                     <th scope="col" class="text-center" style="width: 120px;"></th>
                 </tr>
@@ -109,11 +109,11 @@
                             </div>
                         </td>
                         <td
-                            data-field="line_personnel_name"
-                            data-value="{% if tote.line_personnel %}{{ tote.line_personnel.get_full_name|default:tote.line_personnel.username }}{% endif %}"
+                            data-field="sampling_personnel_name"
+                            data-value="{% if tote.sampling_personnel %}{{ tote.sampling_personnel.get_full_name|default:tote.sampling_personnel.username }}{% endif %}"
                         >
-                            {% if tote.line_personnel %}
-                                {{ tote.line_personnel.get_full_name|default:tote.line_personnel.username }}
+                            {% if tote.sampling_personnel %}
+                                {{ tote.sampling_personnel.get_full_name|default:tote.sampling_personnel.username }}
                             {% else %}
                                 --
                             {% endif %}
