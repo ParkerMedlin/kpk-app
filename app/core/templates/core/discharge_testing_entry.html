@@ -41,15 +41,17 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label" for="discharge-testing-entry-sampling-personnel">Sampling Personnel</label>
-                    <input
+                    <select
                         id="discharge-testing-entry-sampling-personnel"
-                        name="sampling_personnel_name"
-                        class="form-control"
-                        type="text"
-                        placeholder="Name of sampling personnel"
-                        autocomplete="name"
+                        name="sampling_personnel_id"
+                        class="form-select"
                         required
-                    />
+                    >
+                        <option value="">Select sampling personnel...</option>
+                        {% for id, name in sampling_personnel_options %}
+                            <option value="{{ id }}">{{ name }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label" for="discharge-testing-entry-lab-technician">Lab Technician</label>

@@ -309,7 +309,7 @@ class DischargeTestingEntryPage {
         input = this.dischargeSource;
       } else if (field === 'discharge_type') {
         input = this.dischargeType;
-      } else if (field === 'sampling_personnel_name') {
+      } else if (field === 'sampling_personnel_id' || field === 'sampling_personnel_name') {
         input = this.samplingPersonnel;
       } else if (field === 'initial_pH') {
         input = this.initialPh;
@@ -333,7 +333,11 @@ class DischargeTestingEntryPage {
   collectPayload() {
     const dischargeSource = normalizeText(this.dischargeSource ? this.dischargeSource.value : '');
     const dischargeType = normalizeText(this.dischargeType ? this.dischargeType.value : '');
-    const samplingPersonnel = normalizeText(this.samplingPersonnel ? this.samplingPersonnel.value : '');
+    const samplingPersonnelId = normalizeText(this.samplingPersonnel ? this.samplingPersonnel.value : '');
+    const samplingPersonnelLabel = normalizeText(
+      this.samplingPersonnel?.selectedOptions?.[0]?.textContent,
+    );
+    const samplingPersonnelName = samplingPersonnelId ? samplingPersonnelLabel : '';
     const actionRequired = normalizeText(this.actionRequired ? this.actionRequired.value : '');
     const finalDisposition = normalizeText(this.finalDisposition ? this.finalDisposition.value : '');
 
@@ -348,8 +352,8 @@ class DischargeTestingEntryPage {
     if (!dischargeType) {
       errors.discharge_type = 'Discharge type is required.';
     }
-    if (!samplingPersonnel) {
-      errors.sampling_personnel_name = 'Sampling personnel name is required.';
+    if (!samplingPersonnelId) {
+      errors.sampling_personnel_id = 'Sampling personnel is required.';
     }
     if (!finalDisposition) {
       errors.final_disposition = 'Final disposition is required.';
@@ -385,7 +389,7 @@ class DischargeTestingEntryPage {
       const firstInput = {
         discharge_source: this.dischargeSource,
         discharge_type: this.dischargeType,
-        sampling_personnel_name: this.samplingPersonnel,
+        sampling_personnel_id: this.samplingPersonnel,
         initial_pH: this.initialPh,
         action_required: this.actionRequired,
         final_pH: this.finalPh,
@@ -400,7 +404,8 @@ class DischargeTestingEntryPage {
     return {
       discharge_source: dischargeSource,
       discharge_type: dischargeType,
-      sampling_personnel_name: samplingPersonnel,
+      sampling_personnel_id: samplingPersonnelId,
+      sampling_personnel_name: samplingPersonnelName,
       initial_pH: initialValue,
       action_required: actionRequired,
       final_pH: finalValue,

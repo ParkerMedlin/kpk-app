@@ -288,23 +288,23 @@ _Replace dynamic options lookup with predefined model choices._
 
 _Replace free-text input with user selection dropdown._
 
-- [ ] **15.1** Create selector for eligible users
+- [x] **15.1** Create selector for eligible users
   - **Do**: In `discharge_testing_selectors.py`, add `get_sampling_personnel_options()` function that returns active users as list of `(id, display_name)` tuples, ordered by display name.
   - **Deliverable**: Selector function returns user options.
 
-- [ ] **15.2** Update selector exports
+- [x] **15.2** Update selector exports
   - **Do**: In `app/core/selectors/__init__.py`, add `get_sampling_personnel_options` to imports and exports.
   - **Deliverable**: Function exported from selectors package.
 
-- [ ] **15.3** Add user options to web views context
+- [x] **15.3** Add user options to web views context
   - **Do**: In `app/core/views/web.py`, import `get_sampling_personnel_options`; add `'sampling_personnel_options': get_sampling_personnel_options()` to context in both discharge testing views.
   - **Deliverable**: User options available in template context.
 
-- [ ] **15.4** Update entry form template
+- [x] **15.4** Update entry form template
   - **Do**: In `discharge_testing_entry.html`, replace text input for sampling_personnel with `<select>` dropdown; iterate `sampling_personnel_options` with `value="{{ id }}"` and display name; change field name to `sampling_personnel_id`.
   - **Deliverable**: Entry form uses dropdown.
 
-- [ ] **15.5** Update DischargeTestingEntry.js
+- [x] **15.5** Update DischargeTestingEntry.js
   - **Do**: In `DischargeTestingEntry.js`, update field references from `sampling_personnel_name` to `sampling_personnel_id`; update validation to check for selected value; update payload building.
   - **Deliverable**: Entry JS handles dropdown selection.
 
@@ -341,9 +341,9 @@ _Replace free-text input with user selection dropdown._
 | 12. Rename line_personnel | Complete | 12/12 |
 | 13. Rename flush_type | Complete | 12/12 |
 | 14. Model-Defined Choices | Complete | 8/8 |
-| 15. Sampling Personnel Dropdown | Pending | 0/10 |
+| 15. Sampling Personnel Dropdown | In Progress | 5/10 |
 
-**Overall**: 58/68 tasks (85%)
+**Overall**: 63/68 tasks (93%)
 
 ---
 
