@@ -1421,10 +1421,17 @@ class DischargeTestingRecord(models.Model):
 
     PH_MIN = Decimal('5.10')
     PH_MAX = Decimal('10.90')
+    DISCHARGE_TYPE_CHOICES = [
+        ('Acid', 'Acid'),
+        ('Base', 'Base'),
+        ('Soap', 'Soap'),
+        ('Polish', 'Polish'),
+        ('Oil', 'Oil'),
+    ]
 
     date = models.DateTimeField(auto_now_add=True, db_index=True)
     discharge_source = models.CharField(max_length=20, choices=DISCHARGE_SOURCE_CHOICES)
-    discharge_type = models.CharField(max_length=100)
+    discharge_type = models.CharField(max_length=100, choices=DISCHARGE_TYPE_CHOICES)
     initial_pH = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
     action_required = models.TextField(blank=True, null=True)
     final_pH = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
