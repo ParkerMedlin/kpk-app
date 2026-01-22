@@ -1424,7 +1424,7 @@ class DischargeTestingRecord(models.Model):
 
     date = models.DateTimeField(auto_now_add=True, db_index=True)
     discharge_source = models.CharField(max_length=20, choices=DISCHARGE_SOURCE_CHOICES)
-    flush_type = models.CharField(max_length=100)
+    discharge_type = models.CharField(max_length=100)
     initial_pH = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
     action_required = models.TextField(blank=True, null=True)
     final_pH = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
@@ -1464,7 +1464,7 @@ class DischargeTestingRecord(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.flush_type} ({self.discharge_source}) @ {self.date.strftime('%Y-%m-%d %H:%M')}"
+        return f"{self.discharge_type} ({self.discharge_source}) @ {self.date.strftime('%Y-%m-%d %H:%M')}"
 
     @classmethod
     def is_ph_in_range(cls, value):
