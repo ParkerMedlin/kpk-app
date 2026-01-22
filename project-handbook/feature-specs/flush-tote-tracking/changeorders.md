@@ -158,11 +158,11 @@ _Rename field across model, services, selectors, views, templates, and JS._
   - **Do**: In `discharge_testing_selectors.py`, update `select_related` calls from `line_personnel` to `sampling_personnel`; update any docstrings.
   - **Deliverable**: Selectors use new field name.
 
-- [ ] **12.5** Rename service helper functions
+- [x] **12.5** Rename service helper functions
   - **Do**: In `discharge_testing_services.py`, rename `_line_personnel_display` → `_sampling_personnel_display`, `_resolve_line_personnel` → `_resolve_sampling_personnel`.
   - **Deliverable**: Helper functions renamed.
 
-- [ ] **12.6** Update service field references
+- [x] **12.6** Update service field references
   - **Do**: In `discharge_testing_services.py`, update all references: `line_personnel_id` → `sampling_personnel_id`, `line_personnel_name` → `sampling_personnel_name`, `line_personnel` → `sampling_personnel`; update validation error messages.
   - **Deliverable**: Service uses new field names throughout.
 
@@ -200,9 +200,9 @@ _Rename field across model, services, selectors, views, templates, and JS._
 | 9. Selector & Service Updates | Complete | 2/2 |
 | 10. Form & Interface | Complete | 9/9 |
 | 11. Navigation | Complete | 2/2 |
-| 12. Rename line_personnel | In Progress | 4/12 |
+| 12. Rename line_personnel | In Progress | 6/12 |
 
-**Overall**: 30/38 tasks (79%)
+**Overall**: 32/38 tasks (84%)
 
 ---
 
