@@ -34,8 +34,8 @@
                     <label class="form-label" for="discharge-testing-entry-discharge-type">Discharge Type</label>
                     <select id="discharge-testing-entry-discharge-type" name="discharge_type" class="form-select" required>
                         <option value="">Select discharge type...</option>
-                        {% for discharge_type in discharge_type_options %}
-                            <option value="{{ discharge_type }}">{{ discharge_type }}</option>
+                        {% for value, label in discharge_type_options %}
+                            <option value="{{ value }}">{{ label }}</option>
                         {% endfor %}
                     </select>
                 </div>

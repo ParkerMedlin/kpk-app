@@ -266,19 +266,19 @@ _Replace dynamic options lookup with predefined model choices._
   - **Do**: Prompt user to run migrations.
   - **Verify**: Migration applies cleanly.
 
-- [ ] **14.5** Remove get_discharge_type_options selector
+- [x] **14.5** Remove get_discharge_type_options selector
   - **Do**: In `discharge_testing_selectors.py`, delete `get_discharge_type_options` function.
   - **Deliverable**: Selector function removed.
 
-- [ ] **14.6** Update selector exports
+- [x] **14.6** Update selector exports
   - **Do**: In `app/core/selectors/__init__.py`, remove `get_discharge_type_options` from imports and exports.
   - **Deliverable**: Export removed.
 
-- [ ] **14.7** Update web views to use model choices
+- [x] **14.7** Update web views to use model choices
   - **Do**: In `app/core/views/web.py`, remove import of `get_discharge_type_options`; change context to `'discharge_type_options': DischargeTestingRecord.DISCHARGE_TYPE_CHOICES`.
   - **Deliverable**: Views use model choices directly.
 
-- [ ] **14.8** Update entry form template for choices format
+- [x] **14.8** Update entry form template for choices format
   - **Do**: In `discharge_testing_entry.html`, update options loop to handle tuple format: `{% for value, label in discharge_type_options %}` with `value="{{ value }}"` and display `{{ label }}`.
   - **Deliverable**: Template iterates model choices correctly.
 
@@ -294,9 +294,9 @@ _Replace dynamic options lookup with predefined model choices._
 | 11. Navigation | Complete | 2/2 |
 | 12. Rename line_personnel | Complete | 12/12 |
 | 13. Rename flush_type | Complete | 12/12 |
-| 14. Model-Defined Choices | In Progress | 4/8 |
+| 14. Model-Defined Choices | Complete | 8/8 |
 
-**Overall**: 53/58 tasks (91%)
+**Overall**: 57/58 tasks (98%)
 
 ---
 

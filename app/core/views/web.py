@@ -47,7 +47,7 @@ from core.services.inventory_services import (
 from core.selectors.production_planning_selectors import get_schedulable_blend_shortages
 from core.selectors.inventory_selectors import *
 from core.selectors.reports_selectors import *
-from core.selectors import get_discharge_type_options, list_discharge_tests
+from core.selectors import list_discharge_tests
 from core.kpkapp_utils.string_utils import get_unencoded_item_code
 from core.services.lot_numbers_services import generate_next_lot_number
 from core.services.blend_scheduling_services import get_blend_schedule_querysets, prepare_blend_schedule_queryset
@@ -2145,7 +2145,7 @@ def discharge_testing_entry_view(request):
 
     context = {
         'production_line_choices': DischargeTestingRecord.DISCHARGE_SOURCE_CHOICES,
-        'discharge_type_options': get_discharge_type_options(),
+        'discharge_type_options': DischargeTestingRecord.DISCHARGE_TYPE_CHOICES,
     }
     return render(request, 'core/discharge_testing_entry.html', context)
 
@@ -2156,7 +2156,7 @@ def discharge_testing_records_view(request):
     """Render the discharge testing records page with initial options and data."""
     context = {
         'production_line_choices': DischargeTestingRecord.DISCHARGE_SOURCE_CHOICES,
-        'discharge_type_options': get_discharge_type_options(),
+        'discharge_type_options': DischargeTestingRecord.DISCHARGE_TYPE_CHOICES,
         'flush_totes': list_discharge_tests(),
     }
     return render(request, 'core/discharge_testing_records.html', context)
