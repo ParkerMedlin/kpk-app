@@ -46,7 +46,7 @@ def _serialize_discharge_test(tote: DischargeTestingRecord) -> Dict[str, Any]:
             "id": tote.id,
             "date": tote.date,
             "discharge_source": tote.discharge_source,
-            "flush_type": tote.flush_type,
+            "discharge_type": tote.discharge_type,
             "initial_pH": tote.initial_pH,
             "action_required": tote.action_required,
             "final_pH": tote.final_pH,
@@ -129,7 +129,7 @@ def _broadcast_discharge_testing_event(event: str, tote: DischargeTestingRecord)
 def create_discharge_test(
     *,
     discharge_source: str,
-    flush_type: str,
+    discharge_type: str,
     final_disposition: str,
     sampling_personnel_name: Optional[str] = None,
     user: Optional[User] = None,
@@ -142,7 +142,7 @@ def create_discharge_test(
     Assigns lab_technician to the submitting user and accepts sampling personnel name input.
     """
     cleaned_source = (discharge_source or "").strip()
-    cleaned_flush_type = (flush_type or "").strip()
+    cleaned_discharge_type = (discharge_type or "").strip()
     cleaned_disposition = (final_disposition or "").strip()
     if not cleaned_disposition:
         raise ValidationError({"final_disposition": "Final disposition is required."})
@@ -178,7 +178,7 @@ def create_discharge_test(
 
     tote = DischargeTestingRecord(
         discharge_source=cleaned_source,
-        flush_type=cleaned_flush_type,
+        discharge_type=cleaned_discharge_type,
         initial_pH=initial_value,
         action_required=cleaned_action,
         final_pH=final_value,

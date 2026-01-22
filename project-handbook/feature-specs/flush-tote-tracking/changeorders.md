@@ -208,15 +208,15 @@ _Rename field across model, services, selectors, views, templates, and JS._
   - **Do**: Create migration to rename `flush_type` → `discharge_type` column.
   - **Verify**: `python manage.py makemigrations` succeeds.
 
-- [ ] **13.4** Apply migration (delegate to user)
+- [x] **13.4** Apply migration (delegate to user)
   - **Do**: Prompt user to run migrations.
   - **Verify**: Migration applies cleanly.
 
-- [ ] **13.5** Update selector docstring
+- [x] **13.5** Update selector docstring
   - **Do**: In `discharge_testing_selectors.py`, update `get_discharge_type_options` docstring to say "discharge type" instead of "flush type".
   - **Deliverable**: Docstring updated.
 
-- [ ] **13.6** Update service field references
+- [x] **13.6** Update service field references
   - **Do**: In `discharge_testing_services.py`, update all references: `flush_type` → `discharge_type`, including parameter names, validation, and model assignment.
   - **Deliverable**: Service uses new field name throughout.
 
@@ -293,10 +293,10 @@ _Replace dynamic options lookup with predefined model choices._
 | 10. Form & Interface | Complete | 9/9 |
 | 11. Navigation | Complete | 2/2 |
 | 12. Rename line_personnel | Complete | 12/12 |
-| 13. Rename flush_type | In Progress | 3/12 |
+| 13. Rename flush_type | In Progress | 5/12 |
 | 14. Model-Defined Choices | Pending | 0/8 |
 
-**Overall**: 41/58 tasks (71%)
+**Overall**: 43/58 tasks (74%)
 
 ---
 
