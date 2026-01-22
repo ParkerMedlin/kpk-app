@@ -1,8 +1,8 @@
-from typing import List, Optional
+from typing import Optional
 
 from django.db.models import QuerySet
 
-from core.models import BlendContainerClassification, DischargeTestingRecord
+from core.models import DischargeTestingRecord
 
 
 def list_discharge_tests(limit: Optional[int] = 200) -> QuerySet:
@@ -27,16 +27,3 @@ def get_discharge_test(pk: int) -> DischargeTestingRecord:
         .get(pk=pk)
     )
 
-
-def get_discharge_type_options() -> List[str]:
-    """
-    Return distinct non-empty discharge type values sourced
-    from BlendContainerClassification.flush_tote.
-    """
-    return list(
-        BlendContainerClassification.objects.exclude(flush_tote__isnull=True)
-        .exclude(flush_tote__exact='')
-        .values_list('flush_tote', flat=True)
-        .distinct()
-        .order_by('flush_tote')
-    )
