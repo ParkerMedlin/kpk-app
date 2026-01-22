@@ -2213,11 +2213,11 @@ def _user_display(user):
     return full_name or user.get_username()
 
 
-def _line_personnel_display(tote):
-    line_name = getattr(tote, 'line_personnel_name', None)
-    if line_name:
-        return line_name
-    return _user_display(tote.line_personnel)
+def _sampling_personnel_display(tote):
+    sampling_name = getattr(tote, 'sampling_personnel_name', None)
+    if sampling_name:
+        return sampling_name
+    return _user_display(tote.sampling_personnel)
 
 
 def _serialize_flush_tote_reading(tote):
@@ -2233,8 +2233,8 @@ def _serialize_flush_tote_reading(tote):
         'final_disposition': tote.final_disposition,
         'lab_technician_id': tote.lab_technician_id,
         'lab_technician_name': _user_display(tote.lab_technician),
-        'line_personnel_id': tote.line_personnel_id,
-        'line_personnel_name': _line_personnel_display(tote),
+        'sampling_personnel_id': tote.sampling_personnel_id,
+        'sampling_personnel_name': _sampling_personnel_display(tote),
     }
 
 
@@ -2284,7 +2284,7 @@ def discharge_testing_list_api(request):
     discharge_source = (payload.get('discharge_source') or payload.get('production_line') or '').strip()
     flush_type = (payload.get('flush_type') or '').strip()
     final_disposition = (payload.get('final_disposition') or '').strip()
-    line_personnel_name = (payload.get('line_personnel_name') or '').strip()
+    sampling_personnel_name = (payload.get('sampling_personnel_name') or '').strip()
     initial_ph = payload.get('initial_pH')
     action_required = payload.get('action_required')
     final_ph = payload.get('final_pH')
@@ -2294,7 +2294,7 @@ def discharge_testing_list_api(request):
             discharge_source=discharge_source,
             flush_type=flush_type,
             final_disposition=final_disposition,
-            line_personnel_name=line_personnel_name,
+            sampling_personnel_name=sampling_personnel_name,
             user=request.user,
             initial_pH=initial_ph,
             action_required=action_required,
