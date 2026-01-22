@@ -261,7 +261,7 @@ class DischargeTestingRecordsPage {
         this.renderEditButtons(row, cell);
         return;
       }
-      if (!field || field === 'date' || field === 'line_personnel_name' || field === 'lab_technician_name') {
+      if (!field || field === 'date' || field === 'sampling_personnel_name' || field === 'lab_technician_name') {
         return;
       }
 
@@ -556,7 +556,7 @@ class DischargeTestingRecordsPage {
       action_required: tote.action_required ?? '',
       final_disposition: tote.final_disposition ?? '',
       final_pH: tote.final_pH ?? '',
-      line_personnel_name: tote.line_personnel_name ?? '',
+      sampling_personnel_name: tote.sampling_personnel_name ?? '',
       lab_technician_name: tote.lab_technician_name ?? '',
     };
 
@@ -601,7 +601,7 @@ class DischargeTestingRecordsPage {
     this.setTextCell(row, 'final_disposition', data.final_disposition, true);
     this.setPhCell(row, 'final_pH', data.final_pH, data.lab_technician_name, finalUpdatedAt, 'final');
 
-    this.setTextCell(row, 'line_personnel_name', data.line_personnel_name);
+    this.setTextCell(row, 'sampling_personnel_name', data.sampling_personnel_name);
     this.setTextCell(row, 'lab_technician_name', data.lab_technician_name);
 
     const actionsCell = row.querySelector('[data-field="actions"]');

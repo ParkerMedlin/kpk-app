@@ -174,19 +174,19 @@ _Rename field across model, services, selectors, views, templates, and JS._
   - **Do**: In `app/core/views/api.py`, update all references: `line_personnel_id` → `sampling_personnel_id`, `line_personnel_name` → `sampling_personnel_name`, `line_personnel` → `sampling_personnel` in serialization and payload handling.
   - **Deliverable**: API uses new field names.
 
-- [ ] **12.9** Update entry form template
+- [x] **12.9** Update entry form template
   - **Do**: In `discharge_testing_entry.html`, rename input field `name="line_personnel_name"` to `name="sampling_personnel_name"`; update any labels or help text.
   - **Deliverable**: Entry form uses new field name.
 
-- [ ] **12.10** Update records template
+- [x] **12.10** Update records template
   - **Do**: In `discharge_testing_records.html`, update `data-field` attributes, `data-value` references, and display logic from `line_personnel` to `sampling_personnel`.
   - **Deliverable**: Records table uses new field name.
 
-- [ ] **12.11** Update DischargeTestingEntry.js
+- [x] **12.11** Update DischargeTestingEntry.js
   - **Do**: In `DischargeTestingEntry.js`, update field references from `line_personnel_name` to `sampling_personnel_name`; update validation messages; rename any related variables (e.g., `linePersonnel` → `samplingPersonnel`).
   - **Deliverable**: Entry JS uses new field names.
 
-- [ ] **12.12** Update DischargeTestingRecords.js
+- [x] **12.12** Update DischargeTestingRecords.js
   - **Do**: In `DischargeTestingRecords.js`, update field references from `line_personnel_name` to `sampling_personnel_name` in edit logic, rendering, and data handling.
   - **Deliverable**: Records JS uses new field names.
 
@@ -200,10 +200,10 @@ _Rename field across model, services, selectors, views, templates, and JS._
 | 9. Selector & Service Updates | Complete | 2/2 |
 | 10. Form & Interface | Complete | 9/9 |
 | 11. Navigation | Complete | 2/2 |
-| 12. Rename line_personnel | In Progress | 8/12 |
+| 12. Rename line_personnel | Complete | 12/12 |
 
-**Overall**: 34/38 tasks (89%)
+**Overall**: 38/38 tasks (100%)
 
 ---
 
-**Status**: In Progress
+**Status**: Complete
