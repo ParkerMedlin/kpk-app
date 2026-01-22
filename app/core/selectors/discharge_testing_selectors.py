@@ -1,8 +1,11 @@
-from typing import Optional
+from typing import List, Optional, Tuple
 
+from django.contrib.auth import get_user_model
 from django.db.models import QuerySet
 
 from core.models import DischargeTestingRecord
+
+User = get_user_model()
 
 
 def list_discharge_tests(limit: Optional[int] = 200) -> QuerySet:
@@ -27,3 +30,15 @@ def get_discharge_test(pk: int) -> DischargeTestingRecord:
         .get(pk=pk)
     )
 
+
+def get_sampling_personnel_options() -> List[Tuple[int, str]]:
+    """
+    Return active users as (id, display_name) tuples, ordered by display name.
+    """
+    options: List[Tuple[int, str]] = []
+    for user in User.objects.filter(is_active=True).only('id', 'first_name', 'last_name', 'username'):
+        display_name = user.get_full_name() or user.get_username()
+        options.append((user.id, display_name))
+
+    options.sort(key=lambda option: option[1].lower())
+    return options
