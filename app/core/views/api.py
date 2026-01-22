@@ -2226,7 +2226,7 @@ def _serialize_flush_tote_reading(tote):
         'date': tote.date.isoformat() if tote.date else None,
         'discharge_source': tote.discharge_source,
         'production_line': tote.discharge_source,
-        'flush_type': tote.flush_type,
+        'discharge_type': tote.discharge_type,
         'initial_pH': _safe_float(tote.initial_pH),
         'action_required': tote.action_required or '',
         'final_pH': _safe_float(tote.final_pH),
@@ -2282,7 +2282,7 @@ def discharge_testing_list_api(request):
         return JsonResponse({'status': 'error', 'error': str(exc)}, status=400)
 
     discharge_source = (payload.get('discharge_source') or payload.get('production_line') or '').strip()
-    flush_type = (payload.get('flush_type') or '').strip()
+    discharge_type = (payload.get('discharge_type') or '').strip()
     final_disposition = (payload.get('final_disposition') or '').strip()
     sampling_personnel_name = (payload.get('sampling_personnel_name') or '').strip()
     initial_ph = payload.get('initial_pH')
@@ -2292,7 +2292,7 @@ def discharge_testing_list_api(request):
     try:
         tote = create_discharge_test(
             discharge_source=discharge_source,
-            flush_type=flush_type,
+            discharge_type=discharge_type,
             final_disposition=final_disposition,
             sampling_personnel_name=sampling_personnel_name,
             user=request.user,
@@ -2332,7 +2332,7 @@ def discharge_testing_detail_api(request, pk):
     is_line = is_admin or _user_in_group(request.user, GROUP_LINE_PERSONNEL)
     is_lab = is_admin or _user_in_group(request.user, GROUP_LAB_TECHNICIAN)
 
-    line_fields = {'discharge_source', 'production_line', 'flush_type'}
+    line_fields = {'discharge_source', 'production_line', 'discharge_type'}
     lab_fields = {'initial_pH', 'final_pH', 'action_required'}
 
     requested_line_fields = line_fields.intersection(payload.keys())
@@ -2353,9 +2353,9 @@ def discharge_testing_detail_api(request, pk):
                     payload.get('discharge_source') or payload.get('production_line') or ''
                 ).strip()
                 updated_fields.append('discharge_source')
-            if 'flush_type' in requested_line_fields:
-                tote.flush_type = (payload.get('flush_type') or '').strip()
-                updated_fields.append('flush_type')
+            if 'discharge_type' in requested_line_fields:
+                tote.discharge_type = (payload.get('discharge_type') or '').strip()
+                updated_fields.append('discharge_type')
 
             tote.full_clean()
             tote.save(update_fields=updated_fields)

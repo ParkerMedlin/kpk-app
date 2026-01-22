@@ -220,15 +220,15 @@ _Rename field across model, services, selectors, views, templates, and JS._
   - **Do**: In `discharge_testing_services.py`, update all references: `flush_type` → `discharge_type`, including parameter names, validation, and model assignment.
   - **Deliverable**: Service uses new field name throughout.
 
-- [ ] **13.7** Update API view field references
+- [x] **13.7** Update API view field references
   - **Do**: In `app/core/views/api.py`, update all references: `flush_type` → `discharge_type` in serialization, payload handling, and `line_fields` set.
   - **Deliverable**: API uses new field name.
 
-- [ ] **13.8** Update web views context key
+- [x] **13.8** Update web views context key
   - **Do**: In `app/core/views/web.py`, rename context key `flush_type_options` → `discharge_type_options` in both discharge testing views.
   - **Deliverable**: Context uses new key name.
 
-- [ ] **13.9** Update entry form template
+- [x] **13.9** Update entry form template
   - **Do**: In `discharge_testing_entry.html`, update: field `name="flush_type"` → `name="discharge_type"`, `id` attribute, label text "Flush Type" → "Discharge Type", loop variable `flush_type` → `discharge_type`, context variable `flush_type_options` → `discharge_type_options`.
   - **Deliverable**: Entry form uses new field name.
 
@@ -293,10 +293,10 @@ _Replace dynamic options lookup with predefined model choices._
 | 10. Form & Interface | Complete | 9/9 |
 | 11. Navigation | Complete | 2/2 |
 | 12. Rename line_personnel | Complete | 12/12 |
-| 13. Rename flush_type | In Progress | 5/12 |
+| 13. Rename flush_type | In Progress | 8/12 |
 | 14. Model-Defined Choices | Pending | 0/8 |
 
-**Overall**: 43/58 tasks (74%)
+**Overall**: 46/58 tasks (79%)
 
 ---
 
