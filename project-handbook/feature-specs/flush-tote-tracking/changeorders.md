@@ -192,6 +192,98 @@ _Rename field across model, services, selectors, views, templates, and JS._
 
 ---
 
+## Phase 13: Rename flush_type → discharge_type
+
+_Rename field across model, services, selectors, views, templates, and JS._
+
+- [x] **13.1** Rename model field
+  - **Do**: In `app/core/models.py`, rename field `flush_type` to `discharge_type` in `DischargeTestingRecord` model.
+  - **Deliverable**: Model field renamed.
+
+- [x] **13.2** Update model `__str__` method
+  - **Do**: In `app/core/models.py`, update `DischargeTestingRecord.__str__` to reference `self.discharge_type` instead of `self.flush_type`.
+  - **Deliverable**: String representation uses new field name.
+
+- [x] **13.3** Create migration
+  - **Do**: Create migration to rename `flush_type` → `discharge_type` column.
+  - **Verify**: `python manage.py makemigrations` succeeds.
+
+- [ ] **13.4** Apply migration (delegate to user)
+  - **Do**: Prompt user to run migrations.
+  - **Verify**: Migration applies cleanly.
+
+- [ ] **13.5** Update selector docstring
+  - **Do**: In `discharge_testing_selectors.py`, update `get_discharge_type_options` docstring to say "discharge type" instead of "flush type".
+  - **Deliverable**: Docstring updated.
+
+- [ ] **13.6** Update service field references
+  - **Do**: In `discharge_testing_services.py`, update all references: `flush_type` → `discharge_type`, including parameter names, validation, and model assignment.
+  - **Deliverable**: Service uses new field name throughout.
+
+- [ ] **13.7** Update API view field references
+  - **Do**: In `app/core/views/api.py`, update all references: `flush_type` → `discharge_type` in serialization, payload handling, and `line_fields` set.
+  - **Deliverable**: API uses new field name.
+
+- [ ] **13.8** Update web views context key
+  - **Do**: In `app/core/views/web.py`, rename context key `flush_type_options` → `discharge_type_options` in both discharge testing views.
+  - **Deliverable**: Context uses new key name.
+
+- [ ] **13.9** Update entry form template
+  - **Do**: In `discharge_testing_entry.html`, update: field `name="flush_type"` → `name="discharge_type"`, `id` attribute, label text "Flush Type" → "Discharge Type", loop variable `flush_type` → `discharge_type`, context variable `flush_type_options` → `discharge_type_options`.
+  - **Deliverable**: Entry form uses new field name.
+
+- [ ] **13.10** Update records template
+  - **Do**: In `discharge_testing_records.html`, update `data-field="flush_type"` → `data-field="discharge_type"`, `data-value` references.
+  - **Deliverable**: Records table uses new field name.
+
+- [ ] **13.11** Update DischargeTestingEntry.js
+  - **Do**: In `DischargeTestingEntry.js`, update: field references `flush_type` → `discharge_type`, validation error key, variable name `flushType` → `dischargeType`, getter mapping.
+  - **Deliverable**: Entry JS uses new field names.
+
+- [ ] **13.12** Update DischargeTestingRecords.js
+  - **Do**: In `DischargeTestingRecords.js`, update: field references `flush_type` → `discharge_type` in selectors, snapshot, payload building, and rendering.
+  - **Deliverable**: Records JS uses new field names.
+
+---
+
+## Phase 14: Convert discharge_type to Model-Defined Choices
+
+_Replace dynamic options lookup with predefined model choices._
+
+- [ ] **14.1** Define DISCHARGE_TYPE_CHOICES in model
+  - **Do**: In `app/core/models.py`, add `DISCHARGE_TYPE_CHOICES` constant to `DischargeTestingRecord` with tuples: `('Acid', 'Acid'), ('Base', 'Base'), ('Soap', 'Soap'), ('Polish', 'Polish'), ('Oil', 'Oil')`.
+  - **Deliverable**: Choices constant defined.
+
+- [ ] **14.2** Update discharge_type field to use choices
+  - **Do**: In `app/core/models.py`, update `discharge_type` field: add `choices=DISCHARGE_TYPE_CHOICES`, adjust `max_length` if needed (current is 100, max choice length is 6).
+  - **Deliverable**: Field uses predefined choices.
+
+- [ ] **14.3** Create migration
+  - **Do**: Create migration for choices constraint.
+  - **Verify**: `python manage.py makemigrations` succeeds.
+
+- [ ] **14.4** Apply migration (delegate to user)
+  - **Do**: Prompt user to run migrations.
+  - **Verify**: Migration applies cleanly.
+
+- [ ] **14.5** Remove get_discharge_type_options selector
+  - **Do**: In `discharge_testing_selectors.py`, delete `get_discharge_type_options` function.
+  - **Deliverable**: Selector function removed.
+
+- [ ] **14.6** Update selector exports
+  - **Do**: In `app/core/selectors/__init__.py`, remove `get_discharge_type_options` from imports and exports.
+  - **Deliverable**: Export removed.
+
+- [ ] **14.7** Update web views to use model choices
+  - **Do**: In `app/core/views/web.py`, remove import of `get_discharge_type_options`; change context to `'discharge_type_options': DischargeTestingRecord.DISCHARGE_TYPE_CHOICES`.
+  - **Deliverable**: Views use model choices directly.
+
+- [ ] **14.8** Update entry form template for choices format
+  - **Do**: In `discharge_testing_entry.html`, update options loop to handle tuple format: `{% for value, label in discharge_type_options %}` with `value="{{ value }}"` and display `{{ label }}`.
+  - **Deliverable**: Template iterates model choices correctly.
+
+---
+
 ## Progress
 
 | Phase | Status | Tasks Complete |
@@ -201,9 +293,11 @@ _Rename field across model, services, selectors, views, templates, and JS._
 | 10. Form & Interface | Complete | 9/9 |
 | 11. Navigation | Complete | 2/2 |
 | 12. Rename line_personnel | Complete | 12/12 |
+| 13. Rename flush_type | In Progress | 3/12 |
+| 14. Model-Defined Choices | Pending | 0/8 |
 
-**Overall**: 38/38 tasks (100%)
+**Overall**: 41/58 tasks (71%)
 
 ---
 
-**Status**: Complete
+**Status**: In Progress
