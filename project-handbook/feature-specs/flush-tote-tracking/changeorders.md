@@ -232,15 +232,15 @@ _Rename field across model, services, selectors, views, templates, and JS._
   - **Do**: In `discharge_testing_entry.html`, update: field `name="flush_type"` → `name="discharge_type"`, `id` attribute, label text "Flush Type" → "Discharge Type", loop variable `flush_type` → `discharge_type`, context variable `flush_type_options` → `discharge_type_options`.
   - **Deliverable**: Entry form uses new field name.
 
-- [ ] **13.10** Update records template
+- [x] **13.10** Update records template
   - **Do**: In `discharge_testing_records.html`, update `data-field="flush_type"` → `data-field="discharge_type"`, `data-value` references.
   - **Deliverable**: Records table uses new field name.
 
-- [ ] **13.11** Update DischargeTestingEntry.js
+- [x] **13.11** Update DischargeTestingEntry.js
   - **Do**: In `DischargeTestingEntry.js`, update: field references `flush_type` → `discharge_type`, validation error key, variable name `flushType` → `dischargeType`, getter mapping.
   - **Deliverable**: Entry JS uses new field names.
 
-- [ ] **13.12** Update DischargeTestingRecords.js
+- [x] **13.12** Update DischargeTestingRecords.js
   - **Do**: In `DischargeTestingRecords.js`, update: field references `flush_type` → `discharge_type` in selectors, snapshot, payload building, and rendering.
   - **Deliverable**: Records JS uses new field names.
 
@@ -293,10 +293,10 @@ _Replace dynamic options lookup with predefined model choices._
 | 10. Form & Interface | Complete | 9/9 |
 | 11. Navigation | Complete | 2/2 |
 | 12. Rename line_personnel | Complete | 12/12 |
-| 13. Rename flush_type | In Progress | 8/12 |
+| 13. Rename flush_type | Complete | 12/12 |
 | 14. Model-Defined Choices | Pending | 0/8 |
 
-**Overall**: 46/58 tasks (79%)
+**Overall**: 49/58 tasks (84%)
 
 ---
 

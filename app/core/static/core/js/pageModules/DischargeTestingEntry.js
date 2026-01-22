@@ -128,7 +128,7 @@ class DischargeTestingEntryPage {
     this.resetButton = document.getElementById('discharge-testing-entry-reset');
 
     this.dischargeSource = document.getElementById('discharge-testing-entry-discharge-source');
-    this.flushType = document.getElementById('discharge-testing-entry-flush-type');
+    this.dischargeType = document.getElementById('discharge-testing-entry-discharge-type');
     this.samplingPersonnel = document.getElementById('discharge-testing-entry-sampling-personnel');
     this.initialPh = document.getElementById('discharge-testing-entry-initial-ph');
     this.finalPh = document.getElementById('discharge-testing-entry-final-ph');
@@ -166,7 +166,7 @@ class DischargeTestingEntryPage {
 
     [
       this.dischargeSource,
-      this.flushType,
+      this.dischargeType,
       this.samplingPersonnel,
       this.actionRequired,
       this.finalDisposition,
@@ -307,8 +307,8 @@ class DischargeTestingEntryPage {
       let input = null;
       if (field === 'discharge_source') {
         input = this.dischargeSource;
-      } else if (field === 'flush_type') {
-        input = this.flushType;
+      } else if (field === 'discharge_type') {
+        input = this.dischargeType;
       } else if (field === 'sampling_personnel_name') {
         input = this.samplingPersonnel;
       } else if (field === 'initial_pH') {
@@ -332,7 +332,7 @@ class DischargeTestingEntryPage {
 
   collectPayload() {
     const dischargeSource = normalizeText(this.dischargeSource ? this.dischargeSource.value : '');
-    const flushType = normalizeText(this.flushType ? this.flushType.value : '');
+    const dischargeType = normalizeText(this.dischargeType ? this.dischargeType.value : '');
     const samplingPersonnel = normalizeText(this.samplingPersonnel ? this.samplingPersonnel.value : '');
     const actionRequired = normalizeText(this.actionRequired ? this.actionRequired.value : '');
     const finalDisposition = normalizeText(this.finalDisposition ? this.finalDisposition.value : '');
@@ -345,8 +345,8 @@ class DischargeTestingEntryPage {
     if (!dischargeSource) {
       errors.discharge_source = 'Discharge source is required.';
     }
-    if (!flushType) {
-      errors.flush_type = 'Flush type is required.';
+    if (!dischargeType) {
+      errors.discharge_type = 'Discharge type is required.';
     }
     if (!samplingPersonnel) {
       errors.sampling_personnel_name = 'Sampling personnel name is required.';
@@ -384,7 +384,7 @@ class DischargeTestingEntryPage {
       const firstErrorField = Object.keys(errors)[0];
       const firstInput = {
         discharge_source: this.dischargeSource,
-        flush_type: this.flushType,
+        discharge_type: this.dischargeType,
         sampling_personnel_name: this.samplingPersonnel,
         initial_pH: this.initialPh,
         action_required: this.actionRequired,
@@ -399,7 +399,7 @@ class DischargeTestingEntryPage {
 
     return {
       discharge_source: dischargeSource,
-      flush_type: flushType,
+      discharge_type: dischargeType,
       sampling_personnel_name: samplingPersonnel,
       initial_pH: initialValue,
       action_required: actionRequired,
@@ -451,7 +451,7 @@ class DischargeTestingEntryPage {
       this.form.reset();
     }
     this.clearFieldFeedback(this.dischargeSource);
-    this.clearFieldFeedback(this.flushType);
+    this.clearFieldFeedback(this.dischargeType);
     this.clearFieldFeedback(this.samplingPersonnel);
     this.clearFieldFeedback(this.initialPh);
     this.clearFieldFeedback(this.finalPh);

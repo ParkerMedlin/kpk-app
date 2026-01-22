@@ -238,7 +238,7 @@ class DischargeTestingRecordsPage {
 
     if (this.activeRow && this.activeRow !== row) {
       const currentData = this.getRowSnapshot(this.activeRow);
-      const identifier = currentData.flush_type || `ID ${this.activeRow.dataset.toteId}`;
+      const identifier = currentData.discharge_type || `ID ${this.activeRow.dataset.toteId}`;
       const abandon = window.confirm(`You have unsaved changes on ${identifier}. Abandon them?`);
       if (!abandon) {
         return;
@@ -371,7 +371,7 @@ class DischargeTestingRecordsPage {
     const updatedFields = [];
 
     const sourceInput = row.querySelector('[data-field="discharge_source"] [data-is-input="true"]');
-    const flushInput = row.querySelector('[data-field="flush_type"] [data-is-input="true"]');
+    const dischargeTypeInput = row.querySelector('[data-field="discharge_type"] [data-is-input="true"]');
 
     if (sourceInput) {
       const value = normalizeText(sourceInput.value);
@@ -380,11 +380,11 @@ class DischargeTestingRecordsPage {
         updatedFields.push('discharge_source');
       }
     }
-    if (flushInput) {
-      const value = normalizeText(flushInput.value);
-      if (value !== normalizeText(snapshot.flush_type)) {
-        payload.flush_type = value;
-        updatedFields.push('flush_type');
+    if (dischargeTypeInput) {
+      const value = normalizeText(dischargeTypeInput.value);
+      if (value !== normalizeText(snapshot.discharge_type)) {
+        payload.discharge_type = value;
+        updatedFields.push('discharge_type');
       }
     }
 
@@ -551,7 +551,7 @@ class DischargeTestingRecordsPage {
       id: tote.id ?? row.dataset.toteId ?? null,
       date: tote.date ?? row.querySelector('[data-field="date"]')?.dataset?.value ?? '',
       discharge_source: tote.discharge_source ?? '',
-      flush_type: tote.flush_type ?? '',
+      discharge_type: tote.discharge_type ?? '',
       initial_pH: tote.initial_pH ?? '',
       action_required: tote.action_required ?? '',
       final_disposition: tote.final_disposition ?? '',
@@ -594,7 +594,7 @@ class DischargeTestingRecordsPage {
     }
 
     this.setTextCell(row, 'discharge_source', data.discharge_source);
-    this.setTextCell(row, 'flush_type', data.flush_type);
+    this.setTextCell(row, 'discharge_type', data.discharge_type);
 
     this.setPhCell(row, 'initial_pH', data.initial_pH, data.lab_technician_name, initialUpdatedAt, 'initial');
     this.setTextCell(row, 'action_required', data.action_required, true);
