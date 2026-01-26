@@ -619,35 +619,35 @@ _Two enhancements: (1) Show bold alert when a pH-active component is detected in
 
 ### Oil Discharge Type - Hide pH Fields
 
-- [ ] **18.12** Add pH fields group wrapper in template
+- [x] **18.12** Add pH fields group wrapper in template
   - **Do**: In `discharge_testing_entry.html`, wrap Initial pH, Final pH, and Action Required fields in a container `<div data-role="ph-fields-group">...</div>`.
   - **Deliverable**: pH-related fields wrapped in identifiable container.
 
-- [ ] **18.13** Add phFieldsGroup element reference
+- [x] **18.13** Add phFieldsGroup element reference
   - **Do**: In `DischargeTestingEntry.js`, add `this.phFieldsGroup = this.form ? this.form.querySelector('[data-role="ph-fields-group"]') : null;` in constructor.
   - **Deliverable**: Element reference available.
 
-- [ ] **18.14** Add OIL_TYPE constant
+- [x] **18.14** Add OIL_TYPE constant
   - **Do**: In `DischargeTestingEntry.js`, add `const OIL_TYPE = 'Oil';` near other type constants.
   - **Deliverable**: Constant defined.
 
-- [ ] **18.15** Implement syncPhFieldsVisibility method
+- [x] **18.15** Implement syncPhFieldsVisibility method
   - **Do**: In `DischargeTestingEntry.js`, add `syncPhFieldsVisibility()` method: if `dischargeType.value === OIL_TYPE`, hide `phFieldsGroup` and clear pH/action fields; otherwise show `phFieldsGroup`.
   - **Deliverable**: pH fields hide/show based on type.
 
-- [ ] **18.16** Call syncPhFieldsVisibility on discharge type change
+- [x] **18.16** Call syncPhFieldsVisibility on discharge type change
   - **Do**: In `DischargeTestingEntry.js`, in the discharge type change handler, add call to `this.syncPhFieldsVisibility()`.
   - **Deliverable**: Visibility syncs on type change.
 
-- [ ] **18.17** Call syncPhFieldsVisibility on page load
+- [x] **18.17** Call syncPhFieldsVisibility on page load
   - **Do**: In `DischargeTestingEntry.js`, in constructor after `registerEvents()`, add call to `this.syncPhFieldsVisibility()`.
   - **Deliverable**: Correct initial visibility.
 
-- [ ] **18.18** Skip pH validation when Oil selected
+- [x] **18.18** Skip pH validation when Oil selected
   - **Do**: In `DischargeTestingEntry.js`, update `collectPayload()`: if `dischargeType === OIL_TYPE`, skip pH and action_required validation; set pH values to null in payload.
   - **Deliverable**: No pH validation errors for Oil type.
 
-- [ ] **18.19** Update service validation for Oil type
+- [x] **18.19** Update service validation for Oil type
   - **Do**: In `discharge_testing_services.py`, update `create_discharge_test`: if `discharge_type == 'Oil'`, skip pH range validation and action_required requirement.
   - **Deliverable**: Server allows null pH for Oil.
 
@@ -667,10 +667,10 @@ _Two enhancements: (1) Show bold alert when a pH-active component is detected in
 | 15. Sampling Personnel Dropdown | Complete | 10/10 |
 | 16. Acid/Base Material Autocomplete | Complete | 31/31 |
 | 17. pH Active Component Tracking | Complete | 12/12 |
-| 18. Form UX Enhancements | In Progress | 11/19 |
+| 18. Form UX Enhancements | Complete | 19/19 |
 
-**Overall**: 122/130 tasks (94%)
+**Overall**: 130/130 tasks (100%)
 
 ---
 
-**Status**: In Progress
+**Status**: Complete
