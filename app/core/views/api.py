@@ -2332,8 +2332,16 @@ def discharge_material_search_api(request):
 @require_GET
 def discharge_material_ph_check_api(request):
     code = (request.GET.get("code") or "").strip()
-    component_code = find_ph_active_component(code)
-    return JsonResponse({"status": "ok", "ph_active_component": component_code})
+    component = find_ph_active_component(code)
+    component_code = component.get("code") if component else None
+    component_desc = component.get("description") if component else None
+    return JsonResponse(
+        {
+            "status": "ok",
+            "ph_active_component": component_code,
+            "ph_active_component_desc": component_desc,
+        }
+    )
 
 
 @login_required

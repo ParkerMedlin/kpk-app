@@ -188,7 +188,7 @@ def create_discharge_test(
     if cleaned_material_code:
         ph_component = find_ph_active_component(cleaned_material_code)
         if ph_component:
-            tote.ph_active_component = ph_component
+            tote.ph_active_component = ph_component.get("code")
 
     if sampling_personnel_user is not None:
         tote.sampling_personnel = sampling_personnel_user
