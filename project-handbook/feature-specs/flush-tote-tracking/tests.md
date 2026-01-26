@@ -111,21 +111,21 @@
 
 - [x] Entering valid pH (5.1-10.9) shows success indicator
 - [x] Entering pH below 5.1 shows warning: "Initial pH is outside 5.1 - 10.9. Action is required."
-- [ ] Entering pH above 10.9 shows warning
-- [ ] Entering non-numeric value shows error: "Enter a valid pH value."
-- [ ] Leaving field empty shows no error (optional field)
+- [x] Entering pH above 10.9 shows warning
+- [x] Entering non-numeric value shows error: "Enter a valid pH value."
+- [x] Leaving field empty shows no error (optional field)
 
 ### Final pH Feedback
 
-- [ ] Entering final pH without initial pH shows error: "Initial pH must be recorded before final pH."
-- [ ] Entering final pH outside range shows error: "Final pH must be between 5.1 and 10.9."
-- [ ] Entering valid final pH (with valid initial pH) shows success indicator
+- [x] Entering final pH without initial pH shows error: "Initial pH must be recorded before final pH."
+- [x] Entering final pH outside range shows error: "Final pH must be between 5.1 and 10.9."
+- [x] Entering valid final pH (with valid initial pH) shows success indicator
 
 ### Action Required Validation
 
-- [ ] Action Required not required when initial pH in range
-- [ ] Action Required becomes required when initial pH out of range
-- [ ] Submitting with out-of-range initial pH but no action text shows error
+- [x] Action Required not required when initial pH in range
+- [x] Action Required becomes required when initial pH out of range
+- [x] Submitting with out-of-range initial pH but no action text shows error
 
 ---
 
@@ -133,27 +133,27 @@
 
 ### Basic Submission (Soap/Polish Type)
 
-- [ ] Submit with: Discharge Source, Discharge Type (Soap), Sampling Personnel, Final Disposition
-- [ ] Record created successfully
-- [ ] Success toast appears: "Entry saved."
-- [ ] Form resets after successful submission
-- [ ] Focus returns to Discharge Source field
+- [x] Submit with: Discharge Source, Discharge Type (Soap), Sampling Personnel, Final Disposition
+- [x] Record created successfully
+- [x] Success toast appears: "Entry saved."
+- [x] Form resets after successful submission
+- [x] Focus returns to Discharge Source field
 
 ### Submission with pH (In Range)
 
-- [ ] Submit with initial pH = 7.0, final pH = 7.5 → record created
-- [ ] pH values stored correctly in database
+- [x] Submit with initial pH = 7.0, final pH = 7.5 → record created
+- [x] pH values stored correctly in database
 
 ### Submission with pH (Out of Range + Action)
 
-- [ ] Submit with initial pH = 4.5 (out of range), action text provided, final pH = 7.0 → record created
-- [ ] Action Required text stored in database
+- [x] Submit with initial pH = 4.5 (out of range), action text provided, final pH = 7.0 → record created
+- [x] Action Required text stored in database
 
 ### Acid/Base Submission
 
-- [ ] Submit Acid type with material selected → record created with discharge_material_code
-- [ ] Submit Base type with material selected → record created with discharge_material_code
-- [ ] ph_active_component auto-populated if material matches watch list
+- [x] Submit Acid type with material selected → record created with discharge_material_code
+- [x] Submit Base type with material selected → record created with discharge_material_code
+- [x] ph_active_component auto-populated if material matches watch list
 
 ### Oil Submission
 
