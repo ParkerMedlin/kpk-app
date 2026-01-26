@@ -18,7 +18,6 @@ User = get_user_model()
 
 GROUP_LAB_TECHNICIAN = "lab"
 
-
 def _user_in_group(user: Optional[User], group_name: str) -> bool:
     if not user or not getattr(user, "is_authenticated", False):
         return False

@@ -2361,7 +2361,7 @@ def discharge_testing_detail_api(request, pk):
         return JsonResponse({'status': 'error', 'error': 'Flush tote not found.'}, status=404)
 
     is_admin = request.user.is_staff or request.user.is_superuser
-    is_line = request.user.is_authenticated
+    is_line = request.user and request.user.pk is not None
     is_lab = is_admin or _user_in_group(request.user, GROUP_LAB_TECHNICIAN)
 
     line_fields = {'discharge_source', 'production_line', 'discharge_type', 'sampling_personnel_id'}

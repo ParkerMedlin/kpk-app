@@ -12,4 +12,5 @@
 ISSUES
  - Any user can access (and edit) the Discharge testing records. Should be restricted to staff only.
  - /core/discharge-testing/ does not allow lab non-staff to access. Should be open to anyone with lab group status. 
- - there is no "line personnel" user group. anyone in the entire db could be the sampling personnel. just 
+ - there is no "line personnel" user group. anyone in the entire db could be the sampling personnel. just need to verify that they are a legit user. 
+ - the Clear button on the form causes all fields to be unclickable
