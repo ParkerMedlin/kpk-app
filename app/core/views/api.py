@@ -18,6 +18,7 @@ from core.models import (
     SoSalesOrderDetail,
     ProductionHoliday,
     DeskLaborRate,
+    ProductionLineRun,
 )
 from prodverse.models import SpecSheetData
 from django.http import JsonResponse, HttpRequest
@@ -25,7 +26,7 @@ from django.core.cache import cache
 from django.conf import settings
 import json, math, logging, re
 from decimal import Decimal, InvalidOperation
-from django.db.models import Q, Max, F, DecimalField, ExpressionWrapper
+from django.db.models import Q, Max, Min, F, DecimalField, ExpressionWrapper
 from core.services.production_planning_services import (
     get_component_consumption,
     project_datetime_from_production_hours,
@@ -2187,6 +2188,121 @@ def get_json_cost_impact_analysis(request):
         'affectedBlends': result.affected_blends,
         'affectedFinishedGoods': result.affected_finished_goods,
         'salesOrderImpacts': result.sales_order_impacts,
+    }
+
+    return JsonResponse(payload)
+
+
+@require_http_methods(["GET"])
+def get_json_production_value_forecast(request):
+    """Return projected revenue from scheduled production runs over a rolling time horizon."""
+    import time
+    from collections import defaultdict
+
+    started = time.perf_counter()
+
+    # Get time horizon parameter (default 40 hours)
+    try:
+        next_hours = Decimal(request.GET.get('next_hours', '40'))
+        if next_hours <= 0:
+            return JsonResponse({'error': 'next_hours must be positive'}, status=400)
+    except (ValueError, InvalidOperation):
+        return JsonResponse({'error': 'next_hours must be a valid number'}, status=400)
+
+    # Query production schedule - filter by start_time within time window
+    # start_time is in hours from some epoch, we want runs starting soon
+    # Get the minimum start_time to establish a baseline
+    min_start_time = ProductionLineRun.objects.aggregate(
+        min_start=Min('start_time')
+    )['min_start'] or Decimal('0')
+
+    # Filter runs within the next_hours window from the minimum start time
+    production_runs = ProductionLineRun.objects.filter(
+        start_time__isnull=False,
+        start_time__lt=min_start_time + next_hours,
+        po_number__isnull=False
+    ).exclude(
+        po_number=''
+    ).order_by('start_time', 'prod_line').values(
+        'po_number',
+        'item_code',
+        'item_description',
+        'item_run_qty',
+        'run_time',
+        'start_time',
+        'prod_line'
+    )
+
+    runs_list = list(production_runs)
+
+    # Collect unique PO numbers to query sales orders
+    po_numbers = {run['po_number'] for run in runs_list if run['po_number']}
+
+    # Query matching sales orders
+    sales_orders = {}
+    if po_numbers:
+        so_qs = SoSalesOrderDetail.objects.filter(
+            salesorderno__in=po_numbers
+        ).values('salesorderno', 'itemcode', 'unitprice')
+
+        for so in so_qs:
+            key = (so['salesorderno'], so['itemcode'])
+            sales_orders[key] = so['unitprice']
+
+    # Calculate revenue projections
+    total_value = Decimal('0')
+    matched_runs = []
+    line_breakdown = defaultdict(lambda: {'value': Decimal('0'), 'count': 0})
+
+    for run in runs_list:
+        po_num = run['po_number']
+        item = run['item_code']
+        key = (po_num, item)
+
+        # Match to sales order
+        if key in sales_orders:
+            unit_price = sales_orders[key] or Decimal('0')
+            qty = run['item_run_qty'] or Decimal('0')
+            extended_value = qty * unit_price
+
+            total_value += extended_value
+            prod_line = run['prod_line'] or 'Unknown'
+            line_breakdown[prod_line]['value'] += extended_value
+            line_breakdown[prod_line]['count'] += 1
+
+            matched_runs.append({
+                'poNumber': po_num,
+                'itemCode': item,
+                'itemDescription': run['item_description'] or '',
+                'prodLine': prod_line,
+                'startTime': float(run['start_time'] or 0),
+                'runTime': float(run['run_time'] or 0),
+                'qty': float(qty),
+                'unitPrice': float(unit_price),
+                'extendedValue': float(extended_value),
+            })
+
+    elapsed_ms = round((time.perf_counter() - started) * 1000, 2)
+
+    # Format line breakdown
+    line_summary = [
+        {
+            'prodLine': line,
+            'value': float(data['value']),
+            'count': data['count']
+        }
+        for line, data in sorted(line_breakdown.items())
+    ]
+
+    payload = {
+        'summary': {
+            'totalValue': float(total_value),
+            'runCount': len(matched_runs),
+            'lineBreakdown': line_summary,
+        },
+        'runs': matched_runs,
+        'elapsedMs': elapsed_ms,
+        'nextHours': float(next_hours),
     }
 
     return JsonResponse(payload)

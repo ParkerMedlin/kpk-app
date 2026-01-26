@@ -1,0 +1,432 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}<title>Production Value Forecast</title>{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<style>
+    :root { color-scheme: light; }
+    .production-forecast {
+        font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        margin: 0;
+        background: #f4f4f9;
+        color: #1a202c;
+        padding-bottom: 20px;
+    }
+    .production-forecast .card-shell {
+        max-width: 1300px;
+        margin: 0 auto;
+        background: #fff;
+        padding: 32px;
+        border-radius: 14px;
+        box-shadow: 0 20px 50px rgba(15, 23, 42, 0.12);
+    }
+    .production-forecast .page-header {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 24px;
+    }
+    .production-forecast .page-header h1 {
+        margin: 0;
+        font-size: 28px;
+        color: #0f172a;
+    }
+    .production-forecast .page-header p {
+        margin: 0;
+        color: #475569;
+    }
+    .production-forecast .control-wrap {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+    .production-forecast .control-box {
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 18px;
+        background: #fff;
+    }
+    .production-forecast label {
+        font-size: 13px;
+        font-weight: 600;
+        display: block;
+        margin-bottom: 8px;
+        color: #1f2937;
+    }
+    .production-forecast input[type="number"] {
+        width: 100%;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 12px;
+        font-size: 14px;
+    }
+    .production-forecast button.primary {
+        appearance: none;
+        border: none;
+        border-radius: 10px;
+        padding: 14px;
+        font-size: 15px;
+        font-weight: 600;
+        color: #fff;
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        cursor: pointer;
+        box-shadow: 0 12px 30px rgba(37, 99, 235, 0.35);
+        transition: transform 0.1s ease, opacity 0.2s ease;
+        width: 100%;
+    }
+    .production-forecast button.primary:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+    .production-forecast button.primary:not(:disabled):active { transform: translateY(1px); }
+    .ghost-btn {
+        border: 1px solid #2563eb;
+        color: #2563eb;
+        background: transparent;
+        border-radius: 8px;
+        padding: 10px 18px;
+        font-weight: 600;
+        cursor: pointer;
+        width: 100%;
+    }
+    .ghost-btn:disabled {
+        border-color: #cbd5e1;
+        color: #94a3b8;
+        cursor: not-allowed;
+    }
+    .alert {
+        border-radius: 10px;
+        padding: 12px 16px;
+        font-size: 14px;
+        margin: 18px 0;
+    }
+    .alert.error {
+        background: #fff5f5;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
+    }
+    .alert.hidden { display: none; }
+    .kpi-box {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 12px;
+        margin: 24px 0 12px;
+    }
+    .kpi {
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 14px;
+        text-align: center;
+        background: #fafafa;
+    }
+    .kpi .value {
+        font-size: 22px;
+        font-weight: 700;
+        color: #0f172a;
+    }
+    .kpi .label {
+        margin-top: 6px;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: #94a3b8;
+    }
+    .table-container {
+        margin-top: 10px;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        overflow: hidden;
+        background: #fff;
+    }
+    .table-container table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+    }
+    .table-container th,
+    .table-container td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .table-container th {
+        background: #0f172a;
+        color: #fff;
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        text-align: left;
+    }
+    .table-container tr:nth-child(even) { background: #fafafa; }
+    .table-container tr:hover { background: #eef2ff; }
+    .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .results-placeholder {
+        padding: 80px 20px;
+        text-align: center;
+        color: #94a3b8;
+        font-size: 14px;
+    }
+    .line-group-header {
+        background: #eff6ff !important;
+        font-weight: 600;
+        color: #1e40af;
+        cursor: pointer;
+        user-select: none;
+    }
+    .line-group-header:hover {
+        background: #dbeafe !important;
+    }
+    .line-group-row {
+        display: table-row;
+    }
+    .line-group-row.collapsed {
+        display: none;
+    }
+</style>
+{% endblock scripts %}
+
+{% block content %}
+<div class="production-forecast">
+    <div class="card-shell">
+        <div class="page-header">
+            <h1>Production Value Forecast</h1>
+            <p>Project revenue from scheduled production runs matched to sales orders over an adjustable time horizon.</p>
+        </div>
+
+        <div class="control-wrap">
+            <div class="control-box">
+                <label>Time Horizon (Hours)</label>
+                <input type="number" id="nextHoursInput" value="40" min="1" step="1">
+                <div style="font-size: 12px; color: #64748b; margin-top: 6px;">
+                    Default: 40 work hours
+                </div>
+            </div>
+            <div class="control-box">
+                <label>Analysis</label>
+                <button type="button" class="primary" id="analyzeBtn">Analyze Production Schedule</button>
+                <button type="button" class="ghost-btn" id="downloadBtn" disabled style="margin-top: 8px;">Download CSV</button>
+            </div>
+        </div>
+
+        <div id="alertBox" class="alert hidden"></div>
+
+        <div class="kpi-box" id="summaryStrip">
+            <div class="kpi">
+                <div class="value">$0.00</div>
+                <div class="label">Total Revenue</div>
+            </div>
+            <div class="kpi">
+                <div class="value">0</div>
+                <div class="label">Production Runs</div>
+            </div>
+            <div class="kpi">
+                <div class="value">0 ms</div>
+                <div class="label">Query Time</div>
+            </div>
+        </div>
+
+        <div class="table-container" id="resultsTable">
+            <div class="results-placeholder">
+                Run the analysis to view projected revenue from scheduled production.
+            </div>
+        </div>
+    </div>
+</div>
+
+<form id="csrfProxyForm" style="display:none;">{% csrf_token %}</form>
+{% endblock content %}
+
+{% block belowdeckscripts %}
+{{ block.super }}
+<script>
+(() => {
+    const API_URL = '/api/production-value-forecast/';
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const nextHoursInput = document.getElementById('nextHoursInput');
+    const alertBox = document.getElementById('alertBox');
+    const resultsTable = document.getElementById('resultsTable');
+    const summaryStrip = document.getElementById('summaryStrip');
+
+    let cachedData = null;
+    let isLoading = false;
+
+    analyzeBtn.addEventListener('click', runAnalysis);
+    downloadBtn.addEventListener('click', downloadCsv);
+
+    resultsTable.addEventListener('click', (e) => {
+        const header = e.target.closest('.line-group-header');
+        if (!header) return;
+
+        const lineGroup = header.dataset.line;
+        const rows = document.querySelectorAll(`.line-group-row[data-line="${lineGroup}"]`);
+        rows.forEach(row => row.classList.toggle('collapsed'));
+    });
+
+    function setLoading(state) {
+        isLoading = state;
+        analyzeBtn.disabled = state;
+        analyzeBtn.textContent = state ? 'Analyzing…' : 'Analyze Production Schedule';
+        clearAlert();
+    }
+
+    function showAlert(message) {
+        alertBox.textContent = message;
+        alertBox.className = 'alert error';
+    }
+
+    function clearAlert() {
+        alertBox.textContent = '';
+        alertBox.className = 'alert hidden';
+    }
+
+    async function runAnalysis() {
+        if (isLoading) return;
+        setLoading(true);
+
+        const nextHours = parseFloat(nextHoursInput.value) || 40;
+
+        try {
+            const params = new URLSearchParams({ next_hours: nextHours });
+            const response = await fetch(`${API_URL}?${params.toString()}`, {
+                headers: { 'Accept': 'application/json' },
+                credentials: 'same-origin',
+            });
+
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(payload.error || 'Unable to analyze production schedule.');
+            }
+
+            cachedData = payload;
+            renderSummary(payload);
+            renderTable(payload);
+            downloadBtn.disabled = false;
+        } catch (error) {
+            console.error(error);
+            showAlert(error.message || 'Unexpected error occurred while analyzing.');
+            resultsTable.innerHTML = '<div class="results-placeholder">Unable to load results.</div>';
+            cachedData = null;
+            downloadBtn.disabled = true;
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    function renderSummary(payload) {
+        const summary = payload.summary || {};
+        const totalRevenue = formatCurrency(summary.totalValue);
+        const runCount = Number(summary.runCount) || 0;
+        const elapsed = `${Math.round(Number(payload.elapsedMs) || 0)} ms`;
+
+        summaryStrip.innerHTML = `
+            <div class="kpi"><div class="value">${totalRevenue}</div><div class="label">Total Revenue</div></div>
+            <div class="kpi"><div class="value">${runCount}</div><div class="label">Production Runs</div></div>
+            <div class="kpi"><div class="value">${elapsed}</div><div class="label">Query Time</div></div>
+        `;
+    }
+
+    function renderTable(payload) {
+        const runs = payload.runs || [];
+        if (!runs.length) {
+            resultsTable.innerHTML = '<div class="results-placeholder">No production runs matched to sales orders in this time window.</div>';
+            downloadBtn.disabled = true;
+            return;
+        }
+
+        // Group by production line
+        const lineGroups = {};
+        runs.forEach(run => {
+            const line = run.prodLine || 'Unknown';
+            if (!lineGroups[line]) {
+                lineGroups[line] = [];
+            }
+            lineGroups[line].push(run);
+        });
+
+        let tableHtml = '<div style="overflow-x:auto; max-height:600px;"><table><thead><tr>';
+        tableHtml += '<th>Production Line</th><th>PO #</th><th>Item</th><th>Description</th>';
+        tableHtml += '<th class="num">Qty</th><th class="num">Unit Price</th><th class="num">Extended Value</th>';
+        tableHtml += '</tr></thead><tbody>';
+
+        Object.keys(lineGroups).sort().forEach(line => {
+            const runs = lineGroups[line];
+            const lineTotal = runs.reduce((sum, r) => sum + r.extendedValue, 0);
+
+            // Line group header
+            tableHtml += `<tr class="line-group-header" data-line="${line}">`;
+            tableHtml += `<td colspan="4"><strong>${line}</strong> (${runs.length} runs)</td>`;
+            tableHtml += `<td colspan="3" class="num"><strong>${formatCurrency(lineTotal)}</strong></td>`;
+            tableHtml += '</tr>';
+
+            // Line group rows
+            runs.forEach(run => {
+                tableHtml += `<tr class="line-group-row" data-line="${line}">`;
+                tableHtml += `<td></td>`;
+                tableHtml += `<td>${run.poNumber || ''}</td>`;
+                tableHtml += `<td>${run.itemCode || ''}</td>`;
+                tableHtml += `<td>${run.itemDescription || ''}</td>`;
+                tableHtml += `<td class="num">${formatNumber(run.qty)}</td>`;
+                tableHtml += `<td class="num">${formatCurrency(run.unitPrice)}</td>`;
+                tableHtml += `<td class="num">${formatCurrency(run.extendedValue)}</td>`;
+                tableHtml += '</tr>';
+            });
+        });
+
+        tableHtml += '</tbody></table></div>';
+        resultsTable.innerHTML = tableHtml;
+    }
+
+    function downloadCsv() {
+        if (!cachedData || !cachedData.runs) return;
+
+        const header = ['ProductionLine', 'PONumber', 'ItemCode', 'Description', 'Qty', 'UnitPrice', 'ExtendedValue'];
+        const lines = cachedData.runs.map(run => {
+            const safeDesc = (run.itemDescription || '').replace(/"/g, '""');
+            return [
+                run.prodLine || '',
+                run.poNumber || '',
+                run.itemCode || '',
+                `"${safeDesc}"`,
+                run.qty || 0,
+                run.unitPrice || 0,
+                run.extendedValue || 0
+            ].join(',');
+        });
+
+        const csv = [header.join(','), ...lines].join('\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'production-value-forecast.csv';
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+    }
+
+    function formatCurrency(value, minimumFractionDigits = 2, maximumFractionDigits = 2) {
+        const num = Number(value) || 0;
+        return num.toLocaleString(undefined, {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits,
+            maximumFractionDigits,
+        });
+    }
+
+    function formatNumber(value, maximumFractionDigits = 2) {
+        const num = Number(value) || 0;
+        return num.toLocaleString(undefined, { maximumFractionDigits });
+    }
+})();
+</script>
+{% endblock belowdeckscripts %}
