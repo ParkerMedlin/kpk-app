@@ -360,11 +360,11 @@ _When discharge_type is Acid or Base, require user to specify the material via a
 
 ### API Layer - Autocomplete Endpoint
 
-- [ ] **16.6** Create material search API view
+- [x] **16.6** Create material search API view
   - **Do**: In `app/core/views/api.py`, add `discharge_material_search_api(request)` view function; accept GET with `q` query param; return JSON `{"status": "ok", "results": [...]}` using `get_acid_base_material_options(q)`; require login.
   - **Deliverable**: API endpoint returns matching materials.
 
-- [ ] **16.7** Add URL route for material search
+- [x] **16.7** Add URL route for material search
   - **Do**: In `app/core/urls.py`, add path `api/discharge-material-search/` pointing to `discharge_material_search_api` view.
   - **Deliverable**: Endpoint accessible at `/core/api/discharge-material-search/`.
   - **Verify**: `python manage.py show_urls` shows new path.
