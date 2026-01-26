@@ -330,6 +330,163 @@ _Replace free-text input with user selection dropdown._
 
 ---
 
+## Phase 16: Acid/Base Material Autocomplete
+
+_When discharge_type is Acid or Base, require user to specify the material via autocomplete from ci_item records where itemcodedesc starts with BLEND or CHEM._
+
+### Model Changes
+
+- [ ] **16.1** Add `discharge_material_code` field
+  - **Do**: In `app/core/models.py`, add `discharge_material_code = models.CharField(max_length=50, blank=True, null=True)` to `DischargeTestingRecord` model; stores itemcode from ci_item.
+  - **Deliverable**: Field added to model.
+
+- [ ] **16.2** Add `discharge_material_name` field
+  - **Do**: In `app/core/models.py`, add `discharge_material_name = models.CharField(max_length=255, blank=True, null=True)` to `DischargeTestingRecord` model; stores itemcodedesc for historical record.
+  - **Deliverable**: Field added to model.
+
+- [ ] **16.3** Create migration
+  - **Do**: Create migration for new fields.
+  - **Verify**: `python manage.py makemigrations` succeeds.
+
+- [ ] **16.4** Apply migration (delegate to user)
+  - **Do**: Prompt user to run migrations.
+  - **Verify**: Migration applies cleanly.
+
+### Selector Layer
+
+- [ ] **16.5** Create material autocomplete selector
+  - **Do**: In `discharge_testing_selectors.py`, add `get_acid_base_material_options(search_term: str, limit: int = 20)` function that queries `CiItem.objects.filter(itemcodedesc__istartswith='BLEND') | CiItem.objects.filter(itemcodedesc__istartswith='CHEM')`, filters by search_term matching itemcode or itemcodedesc (case-insensitive), returns list of `{'value': itemcode, 'label': f"{itemcode}: {itemcodedesc}"}` dicts, ordered by itemcode, limited to `limit` results.
+  - **Deliverable**: Selector function returns filtered material options.
+
+- [ ] **16.6** Update selector exports
+  - **Do**: In `app/core/selectors/__init__.py`, add `get_acid_base_material_options` to imports and exports.
+  - **Deliverable**: Function exported from selectors package.
+
+### API Layer - Autocomplete Endpoint
+
+- [ ] **16.7** Create material search API view
+  - **Do**: In `app/core/views/api.py`, add `discharge_material_search_api(request)` view function; accept GET with `q` query param; return JSON `{"status": "ok", "results": [...]}` using `get_acid_base_material_options(q)`; require login.
+  - **Deliverable**: API endpoint returns matching materials.
+
+- [ ] **16.8** Add URL route for material search
+  - **Do**: In `app/core/urls.py`, add path `api/discharge-material-search/` pointing to `discharge_material_search_api` view.
+  - **Deliverable**: Endpoint accessible at `/core/api/discharge-material-search/`.
+  - **Verify**: `python manage.py show_urls` shows new path.
+
+### Service Layer
+
+- [ ] **16.9** Update create_discharge_test signature
+  - **Do**: In `discharge_testing_services.py`, update `create_discharge_test` to accept optional `discharge_material_code` and `discharge_material_name` parameters.
+  - **Deliverable**: Function accepts new parameters.
+
+- [ ] **16.10** Add material validation
+  - **Do**: In `discharge_testing_services.py`, add validation in `create_discharge_test`: if `discharge_type` is 'Acid' or 'Base', require both `discharge_material_code` and `discharge_material_name` to be non-empty; raise `ValidationError` with key `discharge_material` if missing.
+  - **Deliverable**: Service validates material requirement.
+
+- [ ] **16.11** Assign material fields to model
+  - **Do**: In `discharge_testing_services.py`, in `create_discharge_test`, assign `discharge_material_code` and `discharge_material_name` to the `DischargeTestingRecord` instance before save.
+  - **Deliverable**: Material fields saved to database.
+
+- [ ] **16.12** Update service serialization
+  - **Do**: In `discharge_testing_services.py`, update `_serialize_discharge_test` to include `discharge_material_code` and `discharge_material_name` in returned dict.
+  - **Deliverable**: WebSocket broadcasts include material fields.
+
+### API View Updates
+
+- [ ] **16.13** Update API payload handling
+  - **Do**: In `app/core/views/api.py`, update `discharge_testing_list_api` POST handler to extract `discharge_material_code` and `discharge_material_name` from payload and pass to `create_discharge_test`.
+  - **Deliverable**: API accepts material fields.
+
+- [ ] **16.14** Update API serialization
+  - **Do**: In `app/core/views/api.py`, update `_serialize_flush_tote` helper to include `discharge_material_code` and `discharge_material_name` in output.
+  - **Deliverable**: API GET responses include material fields.
+
+### Template Layer
+
+- [ ] **16.15** Add material autocomplete field to entry form
+  - **Do**: In `discharge_testing_entry.html`, add new form group after discharge_type: label "Discharge Material", text input with `id="discharge-testing-entry-discharge-material"` and `name="discharge_material"`, hidden input for `discharge_material_code`, hidden input for `discharge_material_name`, autocomplete results container div; wrap in container with `data-role="discharge-material-group"`.
+  - **Deliverable**: Material field structure in template.
+
+- [ ] **16.16** Add conditional visibility styling
+  - **Do**: In `discharge_testing_entry.html`, add `style="display: none;"` to discharge-material-group container (JS will show/hide based on discharge_type).
+  - **Deliverable**: Field hidden by default.
+
+### JavaScript Layer - Field Setup
+
+- [ ] **16.17** Add material field element references
+  - **Do**: In `DischargeTestingEntry.js`, in constructor, add references: `this.dischargeMaterialGroup`, `this.dischargeMaterialInput`, `this.dischargeMaterialCode` (hidden), `this.dischargeMaterialName` (hidden), `this.dischargeMaterialResults` (autocomplete dropdown).
+  - **Deliverable**: Element references in class.
+
+- [ ] **16.18** Add material field constants
+  - **Do**: In `DischargeTestingEntry.js`, add `const MATERIAL_SEARCH_ENDPOINT = '/core/api/discharge-material-search/';` and `const ACID_BASE_TYPES = ['Acid', 'Base'];`.
+  - **Deliverable**: Constants defined.
+
+### JavaScript Layer - Visibility Logic
+
+- [ ] **16.19** Add discharge_type change handler
+  - **Do**: In `DischargeTestingEntry.js`, in `registerEvents`, add change listener on `this.dischargeType` that calls `this.syncMaterialFieldVisibility()`.
+  - **Deliverable**: Event listener registered.
+
+- [ ] **16.20** Implement syncMaterialFieldVisibility
+  - **Do**: In `DischargeTestingEntry.js`, add `syncMaterialFieldVisibility()` method: show `dischargeMaterialGroup` if `dischargeType.value` is in `ACID_BASE_TYPES`, hide otherwise; clear material fields when hiding.
+  - **Deliverable**: Field visibility toggles correctly.
+
+- [ ] **16.21** Call sync on page load
+  - **Do**: In `DischargeTestingEntry.js`, in constructor after `registerEvents()`, call `this.syncMaterialFieldVisibility()`.
+  - **Deliverable**: Correct initial visibility.
+
+### JavaScript Layer - Autocomplete
+
+- [ ] **16.22** Add debounce utility
+  - **Do**: In `DischargeTestingEntry.js`, add `debounce(fn, delay)` helper function that returns a debounced version of the function.
+  - **Deliverable**: Debounce utility available.
+
+- [ ] **16.23** Add material search input handler
+  - **Do**: In `DischargeTestingEntry.js`, in `registerEvents`, add debounced input listener on `dischargeMaterialInput` that calls `this.searchMaterials()` with 250ms delay.
+  - **Deliverable**: Input triggers debounced search.
+
+- [ ] **16.24** Implement searchMaterials
+  - **Do**: In `DischargeTestingEntry.js`, add `async searchMaterials()` method: get search term from input; if less than 2 chars, hide results; otherwise fetch from `MATERIAL_SEARCH_ENDPOINT?q=${term}`; call `renderMaterialResults(data.results)`.
+  - **Deliverable**: Search fetches and triggers render.
+
+- [ ] **16.25** Implement renderMaterialResults
+  - **Do**: In `DischargeTestingEntry.js`, add `renderMaterialResults(results)` method: clear results container; if no results, show "No matches" message; otherwise render clickable items with `data-value` (itemcode) and `data-label` (full display string); show container.
+  - **Deliverable**: Dropdown displays search results.
+
+- [ ] **16.26** Add result item click handler
+  - **Do**: In `DischargeTestingEntry.js`, add event delegation on `dischargeMaterialResults` for click on result items; on click, set `dischargeMaterialInput.value` to label, `dischargeMaterialCode.value` to itemcode, `dischargeMaterialName.value` to itemcodedesc portion; hide results; clear field feedback.
+  - **Deliverable**: Selection populates fields.
+
+- [ ] **16.27** Add click-outside handler
+  - **Do**: In `DischargeTestingEntry.js`, add document click listener that hides `dischargeMaterialResults` when clicking outside the autocomplete area.
+  - **Deliverable**: Dropdown closes on outside click.
+
+### JavaScript Layer - Validation & Submission
+
+- [ ] **16.28** Update collectPayload for material fields
+  - **Do**: In `DischargeTestingEntry.js`, update `collectPayload()`: if discharge_type is Acid or Base, validate that `dischargeMaterialCode` has a value; add error if missing; include `discharge_material_code` and `discharge_material_name` in returned payload.
+  - **Deliverable**: Payload includes material; validation enforces requirement.
+
+- [ ] **16.29** Update applyValidationErrors for material field
+  - **Do**: In `DischargeTestingEntry.js`, update `applyValidationErrors()` to handle `discharge_material` error key, applying feedback to `dischargeMaterialInput`.
+  - **Deliverable**: Server errors display on material field.
+
+- [ ] **16.30** Update resetForm for material fields
+  - **Do**: In `DischargeTestingEntry.js`, update `resetForm()` to clear `dischargeMaterialInput`, `dischargeMaterialCode`, `dischargeMaterialName`, hide results dropdown, and call `syncMaterialFieldVisibility()`.
+  - **Deliverable**: Reset clears material state.
+
+### Records View Updates
+
+- [ ] **16.31** Add material column to records table
+  - **Do**: In `discharge_testing_records.html`, add table column header "Discharge Material"; in row template, display `discharge_material_code` and `discharge_material_name` (format: `code: name` or empty if null).
+  - **Deliverable**: Records table shows material.
+
+- [ ] **16.32** Update DischargeTestingRecords.js for material display
+  - **Do**: In `DischargeTestingRecords.js`, update row rendering to include `discharge_material_code` and `discharge_material_name`; no inline edit for this field (read-only in records view).
+  - **Deliverable**: Records JS renders material correctly.
+
+---
+
 ## Progress
 
 | Phase | Status | Tasks Complete |
@@ -342,9 +499,10 @@ _Replace free-text input with user selection dropdown._
 | 13. Rename flush_type | Complete | 12/12 |
 | 14. Model-Defined Choices | Complete | 8/8 |
 | 15. Sampling Personnel Dropdown | Complete | 10/10 |
+| 16. Acid/Base Material Autocomplete | Not Started | 0/32 |
 
-**Overall**: 68/68 tasks (100%)
+**Overall**: 68/100 tasks (68%)
 
 ---
 
-**Status**: Complete
+**Status**: In Progress
