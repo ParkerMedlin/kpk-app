@@ -334,6 +334,8 @@ class DischargeTestingEntryPage {
     if (shouldHide) {
       if (this.initialPh) {
         this.initialPh.value = '';
+        this.initialPh.required = false;
+        this.initialPh.removeAttribute('aria-required');
       }
       if (this.finalPh) {
         this.finalPh.value = '';
@@ -349,6 +351,10 @@ class DischargeTestingEntryPage {
       return;
     }
 
+    if (this.initialPh) {
+      this.initialPh.required = true;
+      this.initialPh.setAttribute('aria-required', 'true');
+    }
     this.syncActionRequired();
   }
 
@@ -619,6 +625,8 @@ class DischargeTestingEntryPage {
     if (!isOilType) {
       if (initialParsed.error) {
         errors.initial_pH = initialParsed.error;
+      } else if (initialParsed.value === null) {
+        errors.initial_pH = 'Initial pH is required.';
       }
       if (finalParsed.error) {
         errors.final_pH = finalParsed.error;

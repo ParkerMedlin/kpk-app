@@ -685,6 +685,64 @@ _Include itemcodedesc in the pH active component alert for better user context._
 
 ---
 
+## Phase 20: Admin Row Deletion on Records Page
+
+_Allow admin users to delete discharge testing records via a trash button in the records table._
+
+### API Layer
+
+- [ ] **20.1** Add DELETE handler to detail API
+  - **Do**: In `app/core/views/api.py`, update `discharge_testing_detail_api` to handle DELETE method; check `request.user.is_staff` or `is_superuser`; return 403 if not admin; delete record and return `{"status": "ok"}`.
+  - **Deliverable**: API supports DELETE for admins.
+
+- [ ] **20.2** Return 403 for non-admin DELETE
+  - **Do**: Ensure DELETE returns `{"status": "error", "error": "Permission denied"}` with 403 status for non-admin users.
+  - **Deliverable**: Permission enforced server-side.
+
+### Service Layer
+
+- [ ] **20.3** Create delete_discharge_test service function
+  - **Do**: In `discharge_testing_services.py`, add `delete_discharge_test(tote_id: int, user: User)` function; verify user is admin; delete record; optionally broadcast deletion event.
+  - **Deliverable**: Service function handles deletion logic.
+
+### Template Layer
+
+- [ ] **20.4** Add delete button column to records table
+  - **Do**: In `discharge_testing_records.html`, add column header (empty or icon); in row template, add delete button with trash icon: `<button class="btn btn-sm btn-outline-danger" data-action="delete" data-id="{{ record.id }}"><i class="fas fa-trash"></i></button>`.
+  - **Deliverable**: Trash button visible in each row.
+
+- [ ] **20.5** Conditionally show delete button for admins only
+  - **Do**: In `discharge_testing_records.html`, wrap delete button in `{% if user.is_staff %}...{% endif %}` to hide from non-admin users.
+  - **Deliverable**: Button only visible to staff/superusers.
+
+### JavaScript Layer
+
+- [ ] **20.6** Add delete button click handler
+  - **Do**: In `DischargeTestingRecords.js`, add event delegation for `[data-action="delete"]` clicks; extract `data-id` from button.
+  - **Deliverable**: Click events captured.
+
+- [ ] **20.7** Implement confirmation dialog
+  - **Do**: In `DischargeTestingRecords.js`, on delete click, show `confirm("Are you sure you want to delete this record?")` dialog; proceed only if confirmed.
+  - **Deliverable**: User must confirm before deletion.
+
+- [ ] **20.8** Implement deleteRecord method
+  - **Do**: In `DischargeTestingRecords.js`, add `async deleteRecord(id)` method; send DELETE request to `/core/api/discharge-testing/${id}/`; on success, remove row from DOM; show success toast.
+  - **Deliverable**: Record deleted and UI updated.
+
+- [ ] **20.9** Handle delete errors
+  - **Do**: In `DischargeTestingRecords.js`, in `deleteRecord`, catch errors; show error toast with message; do not remove row on failure.
+  - **Deliverable**: Errors displayed to user.
+
+### Testing
+
+- [ ] **20.10** Test: Admin can delete record
+- [ ] **20.11** Test: Non-admin cannot see delete button
+- [ ] **20.12** Test: Non-admin DELETE request returns 403
+- [ ] **20.13** Test: Confirmation dialog appears before deletion
+- [ ] **20.14** Test: Cancelled confirmation does not delete
+
+---
+
 ## Progress
 
 | Phase | Status | Tasks Complete |
@@ -701,9 +759,10 @@ _Include itemcodedesc in the pH active component alert for better user context._
 | 17. pH Active Component Tracking | Complete | 12/12 |
 | 18. Form UX Enhancements | Complete | 19/19 |
 | 19. pH Alert Description Enhancement | Complete | 5/5 |
+| 20. Admin Row Deletion | Pending | 0/14 |
 
-**Overall**: 135/135 tasks (100%)
+**Overall**: 135/149 tasks (91%)
 
 ---
 
-**Status**: Complete
+**Status**: In Progress
