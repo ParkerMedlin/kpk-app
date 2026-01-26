@@ -371,19 +371,19 @@ _When discharge_type is Acid or Base, require user to specify the material via a
 
 ### Service Layer
 
-- [ ] **16.8** Update create_discharge_test signature
+- [x] **16.8** Update create_discharge_test signature
   - **Do**: In `discharge_testing_services.py`, update `create_discharge_test` to accept optional `discharge_material_code` parameter.
   - **Deliverable**: Function accepts new parameter.
 
-- [ ] **16.9** Add material validation
+- [x] **16.9** Add material validation
   - **Do**: In `discharge_testing_services.py`, add validation in `create_discharge_test`: if `discharge_type` is 'Acid' or 'Base', require `discharge_material_code` to be non-empty; raise `ValidationError` with key `discharge_material_code` if missing.
   - **Deliverable**: Service validates material requirement.
 
-- [ ] **16.10** Assign material field to model
+- [x] **16.10** Assign material field to model
   - **Do**: In `discharge_testing_services.py`, in `create_discharge_test`, assign `discharge_material_code` to the `DischargeTestingRecord` instance before save.
   - **Deliverable**: Material field saved to database.
 
-- [ ] **16.11** Update service serialization
+- [x] **16.11** Update service serialization
   - **Do**: In `discharge_testing_services.py`, update `_serialize_discharge_test` to include `discharge_material_code` in returned dict.
   - **Deliverable**: WebSocket broadcasts include material field.
 
