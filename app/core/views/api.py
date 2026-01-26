@@ -45,6 +45,7 @@ from core.kpkapp_utils.string_utils import get_unencoded_item_code
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import get_user_model
 from django.db import connection
 from core.selectors.inventory_selectors import get_count_record_model
 from core.services.tank_levels_services import get_tank_levels_html, extract_all_tank_levels
@@ -73,6 +74,7 @@ from typing import Dict
 from core.selectors import get_discharge_test, list_discharge_tests
 
 logger = logging.getLogger(__name__)
+User = get_user_model()
 
 def _serialize_lot_record(lot_record):
     """Return a JSON-serializable dict representation of a LotNumRecord."""
@@ -2214,9 +2216,6 @@ def _user_display(user):
 
 
 def _sampling_personnel_display(tote):
-    sampling_name = getattr(tote, 'sampling_personnel_name', None)
-    if sampling_name:
-        return sampling_name
     return _user_display(tote.sampling_personnel)
 
 
@@ -2284,7 +2283,7 @@ def discharge_testing_list_api(request):
     discharge_source = (payload.get('discharge_source') or payload.get('production_line') or '').strip()
     discharge_type = (payload.get('discharge_type') or '').strip()
     final_disposition = (payload.get('final_disposition') or '').strip()
-    sampling_personnel_name = (payload.get('sampling_personnel_name') or '').strip()
+    sampling_personnel_id = payload.get('sampling_personnel_id')
     initial_ph = payload.get('initial_pH')
     action_required = payload.get('action_required')
     final_ph = payload.get('final_pH')
@@ -2294,7 +2293,7 @@ def discharge_testing_list_api(request):
             discharge_source=discharge_source,
             discharge_type=discharge_type,
             final_disposition=final_disposition,
-            sampling_personnel_name=sampling_personnel_name,
+            sampling_personnel_id=sampling_personnel_id,
             user=request.user,
             initial_pH=initial_ph,
             action_required=action_required,
@@ -2332,7 +2331,7 @@ def discharge_testing_detail_api(request, pk):
     is_line = is_admin or _user_in_group(request.user, GROUP_LINE_PERSONNEL)
     is_lab = is_admin or _user_in_group(request.user, GROUP_LAB_TECHNICIAN)
 
-    line_fields = {'discharge_source', 'production_line', 'discharge_type'}
+    line_fields = {'discharge_source', 'production_line', 'discharge_type', 'sampling_personnel_id'}
     lab_fields = {'initial_pH', 'final_pH', 'action_required'}
 
     requested_line_fields = line_fields.intersection(payload.keys())
@@ -2356,6 +2355,19 @@ def discharge_testing_detail_api(request, pk):
             if 'discharge_type' in requested_line_fields:
                 tote.discharge_type = (payload.get('discharge_type') or '').strip()
                 updated_fields.append('discharge_type')
+            if 'sampling_personnel_id' in requested_line_fields:
+                raw_sampling_id = payload.get('sampling_personnel_id')
+                if raw_sampling_id in (None, ''):
+                    raise ValidationError({'sampling_personnel_id': 'Sampling personnel is required.'})
+                try:
+                    sampling_id = int(raw_sampling_id)
+                except (TypeError, ValueError):
+                    raise ValidationError({'sampling_personnel_id': 'Select a valid sampling personnel.'})
+                sampling_user = User.objects.filter(pk=sampling_id, is_active=True).first()
+                if sampling_user is None:
+                    raise ValidationError({'sampling_personnel_id': 'Sampling personnel not found.'})
+                tote.sampling_personnel = sampling_user
+                updated_fields.append('sampling_personnel')
 
             tote.full_clean()
             tote.save(update_fields=updated_fields)

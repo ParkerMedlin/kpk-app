@@ -115,6 +115,7 @@ class DischargeTestingRecordsPage {
     }
     this.table = document.getElementById('discharge-testing-records-table');
     this.tableBody = this.table ? this.table.querySelector('tbody') : null;
+    this.samplingPersonnelTemplate = document.getElementById('sampling-personnel-options');
 
     this.canEdit = this.root.dataset.roleLine === 'true' || this.root.dataset.roleLab === 'true';
 
@@ -168,6 +169,11 @@ class DischargeTestingRecordsPage {
     row.querySelectorAll('[data-field]').forEach((cell) => {
       const field = cell.dataset.field;
       if (!field || field === 'actions') {
+        return;
+      }
+      if (field === 'sampling_personnel_id') {
+        snapshot.sampling_personnel_id = cell.dataset.value ?? '';
+        snapshot.sampling_personnel_name = cell.dataset.label ?? cell.textContent.trim();
         return;
       }
       snapshot[field] = cell.dataset.value ?? cell.textContent.trim();
@@ -231,6 +237,24 @@ class DischargeTestingRecordsPage {
     return textarea;
   }
 
+  createSelectInput(field, value) {
+    const select = document.createElement('select');
+    select.className = 'form-select form-select-sm';
+    select.dataset.field = field;
+    select.dataset.isInput = 'true';
+
+    if (this.samplingPersonnelTemplate) {
+      this.samplingPersonnelTemplate.querySelectorAll('option').forEach((option) => {
+        select.appendChild(option.cloneNode(true));
+      });
+    }
+
+    if (value != null && value !== '') {
+      select.value = String(value);
+    }
+    return select;
+  }
+
   enterEditMode(row) {
     if (!this.canEdit || !row) {
       return;
@@ -261,13 +285,15 @@ class DischargeTestingRecordsPage {
         this.renderEditButtons(row, cell);
         return;
       }
-      if (!field || field === 'date' || field === 'sampling_personnel_name' || field === 'lab_technician_name') {
+      if (!field || field === 'date' || field === 'lab_technician_name') {
         return;
       }
 
       const currentValue = cell.dataset.value ?? '';
       let input;
-      if (field === 'action_required' || field === 'final_disposition') {
+      if (field === 'sampling_personnel_id') {
+        input = this.createSelectInput(field, currentValue);
+      } else if (field === 'action_required' || field === 'final_disposition') {
         input = this.createTextarea(field, currentValue);
       } else if (field === 'initial_pH' || field === 'final_pH') {
         input = this.createTextInput(field, currentValue, {
@@ -372,6 +398,7 @@ class DischargeTestingRecordsPage {
 
     const sourceInput = row.querySelector('[data-field="discharge_source"] [data-is-input="true"]');
     const dischargeTypeInput = row.querySelector('[data-field="discharge_type"] [data-is-input="true"]');
+    const samplingPersonnelInput = row.querySelector('[data-field="sampling_personnel_id"] [data-is-input="true"]');
 
     if (sourceInput) {
       const value = normalizeText(sourceInput.value);
@@ -385,6 +412,18 @@ class DischargeTestingRecordsPage {
       if (value !== normalizeText(snapshot.discharge_type)) {
         payload.discharge_type = value;
         updatedFields.push('discharge_type');
+      }
+    }
+    if (samplingPersonnelInput) {
+      const value = samplingPersonnelInput.value ?? '';
+      if (!value) {
+        samplingPersonnelInput.classList.add('is-invalid');
+        this.applyValidationErrors(row, { sampling_personnel_id: 'Sampling personnel is required.' });
+        return;
+      }
+      if (String(value) !== String(snapshot.sampling_personnel_id ?? '')) {
+        payload.sampling_personnel_id = value;
+        updatedFields.push('sampling_personnel_id');
       }
     }
 
@@ -556,6 +595,7 @@ class DischargeTestingRecordsPage {
       action_required: tote.action_required ?? '',
       final_disposition: tote.final_disposition ?? '',
       final_pH: tote.final_pH ?? '',
+      sampling_personnel_id: tote.sampling_personnel_id ?? '',
       sampling_personnel_name: tote.sampling_personnel_name ?? '',
       lab_technician_name: tote.lab_technician_name ?? '',
     };
@@ -601,7 +641,7 @@ class DischargeTestingRecordsPage {
     this.setTextCell(row, 'final_disposition', data.final_disposition, true);
     this.setPhCell(row, 'final_pH', data.final_pH, data.lab_technician_name, finalUpdatedAt, 'final');
 
-    this.setTextCell(row, 'sampling_personnel_name', data.sampling_personnel_name);
+    this.setSamplingPersonnelCell(row, data.sampling_personnel_id, data.sampling_personnel_name);
     this.setTextCell(row, 'lab_technician_name', data.lab_technician_name);
 
     const actionsCell = row.querySelector('[data-field="actions"]');
@@ -643,6 +683,22 @@ class DischargeTestingRecordsPage {
       <div class="text-muted small" data-role="${prefix}-ph-updated-by">${escapeHtml(byText)}</div>
       <div class="text-muted small" data-role="${prefix}-ph-updated-at">${escapeHtml(timeText)}</div>
     `;
+  }
+
+  setSamplingPersonnelCell(row, id, name) {
+    const cell = row.querySelector('[data-field="sampling_personnel_id"]');
+    if (!cell) {
+      return;
+    }
+    const idValue = id == null ? '' : String(id);
+    const labelValue = name == null ? '' : String(name);
+    cell.dataset.value = idValue;
+    cell.dataset.label = labelValue;
+    if (!labelValue) {
+      cell.textContent = '--';
+      return;
+    }
+    cell.textContent = labelValue;
   }
 }
 
