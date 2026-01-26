@@ -573,27 +573,27 @@ _Two enhancements: (1) Show bold alert when a pH-active component is detected in
 
 ### pH Active Component Alert
 
-- [ ] **18.1** Add API endpoint to check pH active component
+- [x] **18.1** Add API endpoint to check pH active component
   - **Do**: In `app/core/views/api.py`, add `discharge_material_ph_check_api(request)` view; accept GET with `code` query param; use `find_ph_active_component(code)` selector; return JSON `{"status": "ok", "ph_active_component": "<code or null>"}`.
   - **Deliverable**: Endpoint returns detected component.
 
-- [ ] **18.2** Add URL route for pH check
+- [x] **18.2** Add URL route for pH check
   - **Do**: In `app/core/urls.py`, add path `api/discharge-material-ph-check/` pointing to `discharge_material_ph_check_api`.
   - **Deliverable**: Endpoint accessible.
 
-- [ ] **18.3** Add alert container to template
+- [x] **18.3** Add alert container to template
   - **Do**: In `discharge_testing_entry.html`, add alert container inside form: `<div id="discharge-testing-entry-ph-alert" class="alert alert-warning fw-bold" style="display: none;" role="alert"></div>` positioned after discharge material group.
   - **Deliverable**: Alert container in template (hidden by default).
 
-- [ ] **18.4** Add alert element reference
+- [x] **18.4** Add alert element reference
   - **Do**: In `DischargeTestingEntry.js`, add `this.phAlert = document.getElementById('discharge-testing-entry-ph-alert');` in constructor.
   - **Deliverable**: Element reference available.
 
-- [ ] **18.5** Add constant for pH check endpoint
+- [x] **18.5** Add constant for pH check endpoint
   - **Do**: In `DischargeTestingEntry.js`, add `const PH_CHECK_ENDPOINT = '/core/api/discharge-material-ph-check/';`.
   - **Deliverable**: Constant defined.
 
-- [ ] **18.6** Implement checkPhActiveComponent method
+- [x] **18.6** Implement checkPhActiveComponent method
   - **Do**: In `DischargeTestingEntry.js`, add `async checkPhActiveComponent(materialCode)` method: fetch from `PH_CHECK_ENDPOINT?code=${materialCode}`; if response has `ph_active_component`, call `showPhAlert(code)`; otherwise call `hidePhAlert()`.
   - **Deliverable**: Method checks and triggers alert.
 
@@ -667,9 +667,9 @@ _Two enhancements: (1) Show bold alert when a pH-active component is detected in
 | 15. Sampling Personnel Dropdown | Complete | 10/10 |
 | 16. Acid/Base Material Autocomplete | Complete | 31/31 |
 | 17. pH Active Component Tracking | Complete | 12/12 |
-| 18. Form UX Enhancements | In Progress | 0/19 |
+| 18. Form UX Enhancements | In Progress | 6/19 |
 
-**Overall**: 111/130 tasks (85%)
+**Overall**: 117/130 tasks (90%)
 
 ---
 
