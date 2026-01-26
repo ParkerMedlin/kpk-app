@@ -126,6 +126,7 @@ urlpatterns = [
     path('api/discharge-testing/', api.discharge_testing_list_api, name='discharge-testing-list-api'),
     path('api/discharge-testing/<int:pk>/', api.discharge_testing_detail_api, name='discharge-testing-detail-api'),
     path('api/discharge-material-search/', api.discharge_material_search_api, name='discharge-material-search-api'),
+    path('api/discharge-material-ph-check/', api.discharge_material_ph_check_api, name='discharge-material-ph-check-api'),
     path('api/validate-blend-item/', api.validate_blend_item, name='validate-blend-item'),
     path('api/purchasing-alias-audit/', operating_supplies_services.update_purchasing_alias_audit, name='purchasing-alias-audit-api'),
     path('api/purchasing-alias/<int:alias_id>/', operating_supplies_services.update_purchasing_alias, name='update-purchasing-alias'),

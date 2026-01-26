@@ -1,5 +1,6 @@
 const API_ENDPOINT = '/core/api/discharge-testing/';
 const MATERIAL_SEARCH_ENDPOINT = '/core/api/discharge-material-search/';
+const PH_CHECK_ENDPOINT = '/core/api/discharge-material-ph-check/';
 const ACID_BASE_TYPES = ['Acid', 'Base'];
 
 const DEFAULT_PH_MIN = 5.1;
@@ -150,6 +151,7 @@ class DischargeTestingEntryPage {
     this.dischargeMaterialInput = document.getElementById('discharge-testing-entry-discharge-material');
     this.dischargeMaterialCode = document.getElementById('discharge-testing-entry-discharge-material-code');
     this.dischargeMaterialResults = document.getElementById('discharge-testing-entry-discharge-material-results');
+    this.phAlert = document.getElementById('discharge-testing-entry-ph-alert');
     this.hideMaterialResults();
     this.actionRequiredGroup = this.form
       ? this.form.querySelector('[data-role="action-required-group"]')
@@ -347,6 +349,42 @@ class DischargeTestingEntryPage {
       item.textContent = result.label || result.value || '';
       this.dischargeMaterialResults.appendChild(item);
     });
+  }
+
+  async checkPhActiveComponent(materialCode) {
+    const code = normalizeText(materialCode);
+    if (!code) {
+      if (typeof this.hidePhAlert === 'function') {
+        this.hidePhAlert();
+      }
+      return;
+    }
+
+    try {
+      const data = await this.requestJson(
+        `${PH_CHECK_ENDPOINT}?code=${encodeURIComponent(code)}`,
+        {
+          method: 'GET',
+          credentials: 'same-origin',
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+          },
+        },
+      );
+      const componentCode = normalizeText(data.ph_active_component);
+      if (componentCode) {
+        if (typeof this.showPhAlert === 'function') {
+          this.showPhAlert(componentCode);
+        }
+      } else if (typeof this.hidePhAlert === 'function') {
+        this.hidePhAlert();
+      }
+    } catch (error) {
+      console.error(error);
+      if (typeof this.hidePhAlert === 'function') {
+        this.hidePhAlert();
+      }
+    }
   }
 
   async searchMaterials() {

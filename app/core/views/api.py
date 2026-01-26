@@ -72,6 +72,7 @@ import time
 from django.utils.dateparse import parse_datetime
 from typing import Dict
 from core.selectors import (
+    find_ph_active_component,
     get_acid_base_material_options,
     get_discharge_test,
     list_discharge_tests,
@@ -2325,6 +2326,14 @@ def discharge_material_search_api(request):
     query = (request.GET.get("q") or "").strip()
     results = get_acid_base_material_options(query)
     return JsonResponse({"status": "ok", "results": results})
+
+
+@login_required
+@require_GET
+def discharge_material_ph_check_api(request):
+    code = (request.GET.get("code") or "").strip()
+    component_code = find_ph_active_component(code)
+    return JsonResponse({"status": "ok", "ph_active_component": component_code})
 
 
 @login_required
