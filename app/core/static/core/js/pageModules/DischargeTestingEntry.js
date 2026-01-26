@@ -388,11 +388,15 @@ class DischargeTestingEntryPage {
     });
   }
 
-  showPhAlert(componentCode) {
+  showPhAlert(componentCode, componentDesc) {
     if (!this.phAlert) {
       return;
     }
-    const message = `pH-affecting material detected: ${componentCode}`;
+    const desc = normalizeText(componentDesc);
+    let message = `pH-affecting material detected: ${componentCode}`;
+    if (desc) {
+      message = `${message}: ${desc}`;
+    }
     this.phAlert.textContent = message;
     this.phAlert.style.display = 'block';
   }
@@ -426,9 +430,10 @@ class DischargeTestingEntryPage {
         },
       );
       const componentCode = normalizeText(data.ph_active_component);
+      const componentDesc = normalizeText(data.ph_active_component_desc);
       if (componentCode) {
         if (typeof this.showPhAlert === 'function') {
-          this.showPhAlert(componentCode);
+          this.showPhAlert(componentCode, componentDesc);
         }
       } else if (typeof this.hidePhAlert === 'function') {
         this.hidePhAlert();

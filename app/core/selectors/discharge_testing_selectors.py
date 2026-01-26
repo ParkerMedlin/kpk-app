@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from django.contrib.auth import get_user_model
 from django.db.models import Q, QuerySet
@@ -64,9 +64,9 @@ def get_acid_base_material_options(search_term: str, limit: int = 20) -> List[di
     ]
 
 
-def find_ph_active_component(material_code: str) -> Optional[str]:
+def find_ph_active_component(material_code: str) -> Optional[Dict[str, Optional[str]]]:
     """
-    Return the pH-active component item code for the given material.
+    Return the pH-active component item code and description for the given material.
     """
     if not material_code:
         return None
@@ -76,14 +76,25 @@ def find_ph_active_component(material_code: str) -> Optional[str]:
         return None
 
     watch_codes = set(DischargeTestingRecord.PH_ACTIVE_WATCH_CODES)
+    matched_code = None
     if cleaned_code in watch_codes:
-        return cleaned_code
-
-    return (
-        BillOfMaterials.objects.filter(
-            item_code=cleaned_code,
-            component_item_code__in=watch_codes,
+        matched_code = cleaned_code
+    else:
+        matched_code = (
+            BillOfMaterials.objects.filter(
+                item_code=cleaned_code,
+                component_item_code__in=watch_codes,
+            )
+            .values_list('component_item_code', flat=True)
+            .first()
         )
-        .values_list('component_item_code', flat=True)
+
+    if not matched_code:
+        return None
+
+    description = (
+        CiItem.objects.filter(itemcode=matched_code)
+        .values_list('itemcodedesc', flat=True)
         .first()
     )
+    return {'code': matched_code, 'description': description}
