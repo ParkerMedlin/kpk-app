@@ -2235,18 +2235,24 @@ def get_json_production_value_forecast(request):
 
     runs_list = list(production_runs)
 
-    # Collect unique PO numbers to query sales orders
-    po_numbers = {run['po_number'] for run in runs_list if run['po_number']}
+    # Collect unique PO numbers to query sales orders (normalize by padding with leading zeros)
+    po_numbers_normalized = set()
+    for run in runs_list:
+        if run['po_number']:
+            # Pad to 7 digits with leading zeros (standard Sage format)
+            normalized = run['po_number'].strip().zfill(7)
+            po_numbers_normalized.add(normalized)
 
     # Query matching sales orders
     sales_orders = {}
-    if po_numbers:
+    if po_numbers_normalized:
         so_qs = SoSalesOrderDetail.objects.filter(
-            salesorderno__in=po_numbers
+            salesorderno__in=po_numbers_normalized
         ).values('salesorderno', 'itemcode', 'unitprice')
 
         for so in so_qs:
-            key = (so['salesorderno'], so['itemcode'])
+            # Create normalized key with uppercase itemcode for matching
+            key = (so['salesorderno'].strip(), (so['itemcode'] or '').strip().upper())
             sales_orders[key] = so['unitprice']
 
     # Calculate revenue projections
@@ -2255,8 +2261,8 @@ def get_json_production_value_forecast(request):
     line_breakdown = defaultdict(lambda: {'value': Decimal('0'), 'count': 0})
 
     for run in runs_list:
-        po_num = run['po_number']
-        item = run['item_code']
+        po_num = (run['po_number'] or '').strip().zfill(7)  # Normalize to 7 digits
+        item = (run['item_code'] or '').strip().upper()  # Normalize itemcode
         key = (po_num, item)
 
         # Match to sales order
