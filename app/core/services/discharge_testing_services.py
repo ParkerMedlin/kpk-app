@@ -287,6 +287,21 @@ def record_discharge_action_and_final_ph(
     return instance
 
 
+def delete_discharge_test(
+    tote: Union[int, DischargeTestingRecord],
+    *,
+    user: Optional[User] = None,
+) -> DischargeTestingRecord:
+    if not user or not getattr(user, "is_authenticated", False) or not (user.is_staff or user.is_superuser):
+        raise ValidationError({"permission": "Permission denied"})
+
+    instance = _resolve_discharge_test(tote)
+    with transaction.atomic():
+        instance.delete()
+        transaction.on_commit(lambda: _broadcast_discharge_testing_event("tote_deleted", instance))
+    return instance
+
+
 def _resolve_discharge_test(tote: Union[int, DischargeTestingRecord]) -> DischargeTestingRecord:
     if isinstance(tote, DischargeTestingRecord):
         return tote
