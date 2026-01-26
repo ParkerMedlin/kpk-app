@@ -3,7 +3,7 @@ from typing import List, Optional, Tuple
 from django.contrib.auth import get_user_model
 from django.db.models import Q, QuerySet
 
-from core.models import CiItem, DischargeTestingRecord
+from core.models import BillOfMaterials, CiItem, DischargeTestingRecord
 
 User = get_user_model()
 
@@ -62,3 +62,28 @@ def get_acid_base_material_options(search_term: str, limit: int = 20) -> List[di
         {'value': item['itemcode'], 'label': f"{item['itemcode']}: {item['itemcodedesc']}"}
         for item in items
     ]
+
+
+def find_ph_active_component(material_code: str) -> Optional[str]:
+    """
+    Return the pH-active component item code for the given material.
+    """
+    if not material_code:
+        return None
+
+    cleaned_code = material_code.strip()
+    if not cleaned_code:
+        return None
+
+    watch_codes = set(DischargeTestingRecord.PH_ACTIVE_WATCH_CODES)
+    if cleaned_code in watch_codes:
+        return cleaned_code
+
+    return (
+        BillOfMaterials.objects.filter(
+            item_code=cleaned_code,
+            component_item_code__in=watch_codes,
+        )
+        .values_list('component_item_code', flat=True)
+        .first()
+    )
