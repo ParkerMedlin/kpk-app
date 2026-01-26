@@ -567,6 +567,92 @@ _Auto-detect and record which specific material caused pH deviation. When discha
 
 ---
 
+## Phase 18: Form UX Enhancements
+
+_Two enhancements: (1) Show bold alert when a pH-active component is detected in the selected material. (2) Hide pH and Action Required fields when discharge type is Oil._
+
+### pH Active Component Alert
+
+- [ ] **18.1** Add API endpoint to check pH active component
+  - **Do**: In `app/core/views/api.py`, add `discharge_material_ph_check_api(request)` view; accept GET with `code` query param; use `find_ph_active_component(code)` selector; return JSON `{"status": "ok", "ph_active_component": "<code or null>"}`.
+  - **Deliverable**: Endpoint returns detected component.
+
+- [ ] **18.2** Add URL route for pH check
+  - **Do**: In `app/core/urls.py`, add path `api/discharge-material-ph-check/` pointing to `discharge_material_ph_check_api`.
+  - **Deliverable**: Endpoint accessible.
+
+- [ ] **18.3** Add alert container to template
+  - **Do**: In `discharge_testing_entry.html`, add alert container inside form: `<div id="discharge-testing-entry-ph-alert" class="alert alert-warning fw-bold" style="display: none;" role="alert"></div>` positioned after discharge material group.
+  - **Deliverable**: Alert container in template (hidden by default).
+
+- [ ] **18.4** Add alert element reference
+  - **Do**: In `DischargeTestingEntry.js`, add `this.phAlert = document.getElementById('discharge-testing-entry-ph-alert');` in constructor.
+  - **Deliverable**: Element reference available.
+
+- [ ] **18.5** Add constant for pH check endpoint
+  - **Do**: In `DischargeTestingEntry.js`, add `const PH_CHECK_ENDPOINT = '/core/api/discharge-material-ph-check/';`.
+  - **Deliverable**: Constant defined.
+
+- [ ] **18.6** Implement checkPhActiveComponent method
+  - **Do**: In `DischargeTestingEntry.js`, add `async checkPhActiveComponent(materialCode)` method: fetch from `PH_CHECK_ENDPOINT?code=${materialCode}`; if response has `ph_active_component`, call `showPhAlert(code)`; otherwise call `hidePhAlert()`.
+  - **Deliverable**: Method checks and triggers alert.
+
+- [ ] **18.7** Implement showPhAlert method
+  - **Do**: In `DischargeTestingEntry.js`, add `showPhAlert(componentCode)` method: set `phAlert.textContent` to warning message like `"⚠️ pH-affecting material detected: ${componentCode}"`; set `phAlert.style.display = 'block'`.
+  - **Deliverable**: Alert displays with component code.
+
+- [ ] **18.8** Implement hidePhAlert method
+  - **Do**: In `DischargeTestingEntry.js`, add `hidePhAlert()` method: set `phAlert.style.display = 'none'`; clear `textContent`.
+  - **Deliverable**: Alert hides.
+
+- [ ] **18.9** Call checkPhActiveComponent on material selection
+  - **Do**: In `DischargeTestingEntry.js`, in the material result click handler (after setting `dischargeMaterialCode.value`), call `this.checkPhActiveComponent(value)`.
+  - **Deliverable**: Alert triggers on material selection.
+
+- [ ] **18.10** Hide alert when material cleared
+  - **Do**: In `DischargeTestingEntry.js`, update `syncMaterialFieldVisibility()` to call `this.hidePhAlert()` when hiding material group.
+  - **Deliverable**: Alert clears when discharge type changes.
+
+- [ ] **18.11** Clear alert on form reset
+  - **Do**: In `DischargeTestingEntry.js`, update `resetForm()` to call `this.hidePhAlert()`.
+  - **Deliverable**: Alert clears on reset.
+
+### Oil Discharge Type - Hide pH Fields
+
+- [ ] **18.12** Add pH fields group wrapper in template
+  - **Do**: In `discharge_testing_entry.html`, wrap Initial pH, Final pH, and Action Required fields in a container `<div data-role="ph-fields-group">...</div>`.
+  - **Deliverable**: pH-related fields wrapped in identifiable container.
+
+- [ ] **18.13** Add phFieldsGroup element reference
+  - **Do**: In `DischargeTestingEntry.js`, add `this.phFieldsGroup = this.form ? this.form.querySelector('[data-role="ph-fields-group"]') : null;` in constructor.
+  - **Deliverable**: Element reference available.
+
+- [ ] **18.14** Add OIL_TYPE constant
+  - **Do**: In `DischargeTestingEntry.js`, add `const OIL_TYPE = 'Oil';` near other type constants.
+  - **Deliverable**: Constant defined.
+
+- [ ] **18.15** Implement syncPhFieldsVisibility method
+  - **Do**: In `DischargeTestingEntry.js`, add `syncPhFieldsVisibility()` method: if `dischargeType.value === OIL_TYPE`, hide `phFieldsGroup` and clear pH/action fields; otherwise show `phFieldsGroup`.
+  - **Deliverable**: pH fields hide/show based on type.
+
+- [ ] **18.16** Call syncPhFieldsVisibility on discharge type change
+  - **Do**: In `DischargeTestingEntry.js`, in the discharge type change handler, add call to `this.syncPhFieldsVisibility()`.
+  - **Deliverable**: Visibility syncs on type change.
+
+- [ ] **18.17** Call syncPhFieldsVisibility on page load
+  - **Do**: In `DischargeTestingEntry.js`, in constructor after `registerEvents()`, add call to `this.syncPhFieldsVisibility()`.
+  - **Deliverable**: Correct initial visibility.
+
+- [ ] **18.18** Skip pH validation when Oil selected
+  - **Do**: In `DischargeTestingEntry.js`, update `collectPayload()`: if `dischargeType === OIL_TYPE`, skip pH and action_required validation; set pH values to null in payload.
+  - **Deliverable**: No pH validation errors for Oil type.
+
+- [ ] **18.19** Update service validation for Oil type
+  - **Do**: In `discharge_testing_services.py`, update `create_discharge_test`: if `discharge_type == 'Oil'`, skip pH range validation and action_required requirement.
+  - **Deliverable**: Server allows null pH for Oil.
+
+---
+
 ## Progress
 
 | Phase | Status | Tasks Complete |
@@ -580,9 +666,10 @@ _Auto-detect and record which specific material caused pH deviation. When discha
 | 14. Model-Defined Choices | Complete | 8/8 |
 | 15. Sampling Personnel Dropdown | Complete | 10/10 |
 | 16. Acid/Base Material Autocomplete | Complete | 31/31 |
-| 17. pH Active Component Tracking | In Progress | 0/12 |
+| 17. pH Active Component Tracking | Complete | 12/12 |
+| 18. Form UX Enhancements | In Progress | 0/19 |
 
-**Overall**: 99/111 tasks (89%)
+**Overall**: 111/130 tasks (85%)
 
 ---
 
