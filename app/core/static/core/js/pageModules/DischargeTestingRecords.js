@@ -107,6 +107,47 @@ function extractErrorMessage(data) {
   return 'Unable to process request.';
 }
 
+function showToast(type, title, message, delay = 4000) {
+  const toastId = `discharge-testing-records-toast-${Date.now()}`;
+  const typeStyles = {
+    success: { bg: 'bg-success', text: 'text-white' },
+    error: { bg: 'bg-danger', text: 'text-white' },
+    warning: { bg: 'bg-warning', text: 'text-dark' },
+    info: { bg: 'bg-info', text: 'text-white' },
+  };
+  const style = typeStyles[type] || typeStyles.info;
+  const closeButtonClass = style.text === 'text-dark' ? '' : 'btn-close-white';
+
+  document.querySelectorAll('.discharge-testing-records-toast').forEach((el) => el.remove());
+
+  const toastHtml = `
+    <div id="${toastId}" class="toast-container discharge-testing-records-toast position-fixed top-0 end-0 p-3" style="z-index: 1090;">
+      <div class="toast show ${style.bg} ${style.text}" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header ${style.bg} ${style.text} border-0">
+          <strong class="me-auto">${escapeHtml(title || 'Discharge Testing Records')}</strong>
+          <button type="button" class="btn-close ${closeButtonClass}" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">${escapeHtml(message || '')}</div>
+      </div>
+    </div>
+  `;
+
+  document.body.insertAdjacentHTML('beforeend', toastHtml);
+  const toastElement = document.querySelector(`#${toastId} .toast`);
+
+  const removeToast = () => {
+    document.getElementById(toastId)?.remove();
+  };
+
+  if (window.bootstrap?.Toast && toastElement) {
+    const toast = new window.bootstrap.Toast(toastElement, { delay, autohide: true });
+    toast.show();
+    toastElement.addEventListener('hidden.bs.toast', removeToast, { once: true });
+  } else {
+    setTimeout(removeToast, delay);
+  }
+}
+
 class DischargeTestingRecordsPage {
   constructor() {
     this.root = document.getElementById('discharge-testing-records-app');
@@ -131,6 +172,7 @@ class DischargeTestingRecordsPage {
 
   init() {
     if (this.tableBody) {
+      this.tableBody.addEventListener('click', (event) => this.handleTableClick(event));
       this.tableBody.querySelectorAll('tr.discharge-testing-row').forEach((row) => {
         this.normalizeRowTimestamps(row);
         this.attachRowEvents(row);
@@ -158,6 +200,81 @@ class DischargeTestingRecordsPage {
     if (editButton) {
       editButton.addEventListener('click', () => this.enterEditMode(row));
     }
+  }
+
+  handleTableClick(event) {
+    const deleteButton = event.target.closest('[data-action="delete"]');
+    if (deleteButton && this.tableBody?.contains(deleteButton)) {
+      event.preventDefault();
+      this.handleDelete(deleteButton);
+    }
+  }
+
+  async handleDelete(button) {
+    if (!button) {
+      return;
+    }
+    const recordId = button.dataset.id;
+    if (!recordId) {
+      alert('Unable to determine which discharge test to delete.');
+      return;
+    }
+
+    const confirmed = window.confirm('Are you sure you want to delete this record?');
+    if (!confirmed) {
+      return;
+    }
+
+    const row = button.closest('tr');
+    const originalHtml = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+
+    try {
+      await this.deleteRecord(recordId);
+      if (row) {
+        if (this.activeRow === row) {
+          this.activeRow = null;
+        }
+        row.remove();
+      }
+      this.ensureEmptyState();
+      showToast('success', 'Discharge Testing Records', 'Record deleted.');
+    } catch (error) {
+      console.error(error);
+      alert(error.message || 'Unable to delete record.');
+    } finally {
+      if (document.body.contains(button)) {
+        button.innerHTML = originalHtml;
+        button.disabled = false;
+      }
+    }
+  }
+
+  async deleteRecord(recordId) {
+    return this.requestJson(`${API_BASE}${recordId}/`, {
+      method: 'DELETE',
+      credentials: 'same-origin',
+      headers: {
+        'X-CSRFToken': getCsrfToken(),
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+    });
+  }
+
+  ensureEmptyState() {
+    if (!this.tableBody) {
+      return;
+    }
+    const remainingRows = this.tableBody.querySelectorAll('tr.discharge-testing-row');
+    if (remainingRows.length) {
+      return;
+    }
+    this.tableBody.innerHTML = `
+      <tr>
+        <td colspan="13" class="text-center py-4">No discharge tests recorded yet.</td>
+      </tr>
+    `;
   }
 
   getRowSnapshot(row) {

@@ -717,15 +717,15 @@ _Allow admin users to delete discharge testing records via a trash button in the
 
 ### JavaScript Layer
 
-- [ ] **20.6** Add delete button click handler
+- [x] **20.6** Add delete button click handler
   - **Do**: In `DischargeTestingRecords.js`, add event delegation for `[data-action="delete"]` clicks; extract `data-id` from button.
   - **Deliverable**: Click events captured.
 
-- [ ] **20.7** Implement confirmation dialog
+- [x] **20.7** Implement confirmation dialog
   - **Do**: In `DischargeTestingRecords.js`, on delete click, show `confirm("Are you sure you want to delete this record?")` dialog; proceed only if confirmed.
   - **Deliverable**: User must confirm before deletion.
 
-- [ ] **20.8** Implement deleteRecord method
+- [x] **20.8** Implement deleteRecord method
   - **Do**: In `DischargeTestingRecords.js`, add `async deleteRecord(id)` method; send DELETE request to `/core/api/discharge-testing/${id}/`; on success, remove row from DOM; show success toast.
   - **Deliverable**: Record deleted and UI updated.
 
