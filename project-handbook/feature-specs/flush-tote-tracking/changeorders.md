@@ -521,17 +521,17 @@ _Auto-detect and record which specific material caused pH deviation. When discha
   - **Do**: Create migration for new field.
   - **Verify**: `python manage.py makemigrations` succeeds.
 
-- [ ] **17.4** Apply migration (delegate to user)
+- [x] **17.4** Apply migration (delegate to user)
   - **Do**: Prompt user to run migrations.
   - **Verify**: Migration applies cleanly.
 
 ### Selector Layer
 
-- [ ] **17.5** Create selector to find pH active component from BOM
+- [x] **17.5** Create selector to find pH active component from BOM
   - **Do**: In `discharge_testing_selectors.py`, add `find_ph_active_component(material_code: str) -> Optional[str]` function: first check if `material_code` is directly in `DischargeTestingRecord.PH_ACTIVE_WATCH_CODES`, return it if so; otherwise query `bill_of_materials` table where `parent_item_code = material_code` and `component_item_code` is in watch list; return first match or None.
   - **Deliverable**: Selector function returns matching watch list code or None.
 
-- [ ] **17.6** Update selector exports
+- [x] **17.6** Update selector exports
   - **Do**: In `app/core/selectors/__init__.py`, add `find_ph_active_component` to imports and exports.
   - **Deliverable**: Function exported from selectors package.
 
