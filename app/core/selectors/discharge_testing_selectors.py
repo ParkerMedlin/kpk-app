@@ -1,9 +1,9 @@
 from typing import List, Optional, Tuple
 
 from django.contrib.auth import get_user_model
-from django.db.models import QuerySet
+from django.db.models import Q, QuerySet
 
-from core.models import DischargeTestingRecord
+from core.models import CiItem, DischargeTestingRecord
 
 User = get_user_model()
 
@@ -42,3 +42,23 @@ def get_sampling_personnel_options() -> List[Tuple[int, str]]:
 
     options.sort(key=lambda option: option[1].lower())
     return options
+
+
+def get_acid_base_material_options(search_term: str, limit: int = 20) -> List[dict]:
+    """
+    Return CI item options for acid/base materials as value/label dicts.
+    """
+    queryset = CiItem.objects.filter(
+        Q(itemcodedesc__istartswith='BLEND') | Q(itemcodedesc__istartswith='CHEM')
+    )
+
+    if search_term:
+        queryset = queryset.filter(
+            Q(itemcode__icontains=search_term) | Q(itemcodedesc__icontains=search_term)
+        )
+
+    items = queryset.order_by('itemcode').values('itemcode', 'itemcodedesc')[:limit]
+    return [
+        {'value': item['itemcode'], 'label': f"{item['itemcode']}: {item['itemcodedesc']}"}
+        for item in items
+    ]

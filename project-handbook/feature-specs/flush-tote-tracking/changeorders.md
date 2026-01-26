@@ -350,11 +350,11 @@ _When discharge_type is Acid or Base, require user to specify the material via a
 
 ### Selector Layer
 
-- [ ] **16.4** Create material autocomplete selector
+- [x] **16.4** Create material autocomplete selector
   - **Do**: In `discharge_testing_selectors.py`, add `get_acid_base_material_options(search_term: str, limit: int = 20)` function that queries `CiItem.objects.filter(itemcodedesc__istartswith='BLEND') | CiItem.objects.filter(itemcodedesc__istartswith='CHEM')`, filters by search_term matching itemcode or itemcodedesc (case-insensitive), returns list of `{'value': itemcode, 'label': f"{itemcode}: {itemcodedesc}"}` dicts, ordered by itemcode, limited to `limit` results.
   - **Deliverable**: Selector function returns filtered material options.
 
-- [ ] **16.5** Update selector exports
+- [x] **16.5** Update selector exports
   - **Do**: In `app/core/selectors/__init__.py`, add `get_acid_base_material_options` to imports and exports.
   - **Deliverable**: Function exported from selectors package.
 
