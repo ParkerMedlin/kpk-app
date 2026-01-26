@@ -10,6 +10,7 @@ from django.db import transaction
 
 from app.websockets import base_consumer
 from core.models import DischargeTestingRecord
+from core.selectors import find_ph_active_component
 from core.websockets.serializer import serialize_for_websocket
 
 logger = logging.getLogger(__name__)
@@ -48,6 +49,7 @@ def _serialize_discharge_test(tote: DischargeTestingRecord) -> Dict[str, Any]:
             "discharge_source": tote.discharge_source,
             "discharge_type": tote.discharge_type,
             "discharge_material_code": tote.discharge_material_code,
+            "ph_active_component": tote.ph_active_component,
             "initial_pH": tote.initial_pH,
             "action_required": tote.action_required,
             "final_pH": tote.final_pH,
@@ -176,6 +178,10 @@ def create_discharge_test(
         final_pH=final_value,
         final_disposition=cleaned_disposition,
     )
+    if cleaned_material_code:
+        ph_component = find_ph_active_component(cleaned_material_code)
+        if ph_component:
+            tote.ph_active_component = ph_component
 
     if sampling_personnel_user is not None:
         tote.sampling_personnel = sampling_personnel_user
