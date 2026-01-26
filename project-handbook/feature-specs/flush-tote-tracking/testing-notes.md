@@ -16,3 +16,4 @@ ISSUES
  - the Clear button on the form causes all fields to be unclickable
  - need to make the initial pH field required
  - on the count records we need admin users to be able to delete rows
+ - when you click the edit button, the delete button gets replaced with an empty text input field??

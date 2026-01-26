@@ -729,7 +729,7 @@ _Allow admin users to delete discharge testing records via a trash button in the
   - **Do**: In `DischargeTestingRecords.js`, add `async deleteRecord(id)` method; send DELETE request to `/core/api/discharge-testing/${id}/`; on success, remove row from DOM; show success toast.
   - **Deliverable**: Record deleted and UI updated.
 
-- [ ] **20.9** Handle delete errors
+- [x] **20.9** Handle delete errors
   - **Do**: In `DischargeTestingRecords.js`, in `deleteRecord`, catch errors; show error toast with message; do not remove row on failure.
   - **Deliverable**: Errors displayed to user.
 
