@@ -389,7 +389,23 @@
             runIndices.set(run, index);
         });
 
-        Object.keys(lineGroups).sort().forEach(line => {
+        // Custom production line sort order
+        const lineOrder = ['hx', 'dm', 'inline', 'pd line', 'jb line', 'blister', 'oil line', 'kits'];
+        const sortedLines = Object.keys(lineGroups).sort((a, b) => {
+            const aLower = (a || '').toLowerCase();
+            const bLower = (b || '').toLowerCase();
+            const aIndex = lineOrder.indexOf(aLower);
+            const bIndex = lineOrder.indexOf(bLower);
+
+            if (aIndex !== -1 && bIndex !== -1) {
+                return aIndex - bIndex;
+            }
+            if (aIndex !== -1) return -1;
+            if (bIndex !== -1) return 1;
+            return a.localeCompare(b);
+        });
+
+        sortedLines.forEach(line => {
             const lineRuns = lineGroups[line];
 
             // Sort runs by start_time within each line
@@ -441,8 +457,30 @@
     function downloadCsv() {
         if (!cachedData || !cachedData.runs) return;
 
+        // Sort runs by production line order, then by start time
+        const lineOrder = ['hx', 'dm', 'inline', 'pd line', 'jb line', 'blister', 'oil line', 'kits'];
+        const sortedRuns = cachedData.runs.slice().sort((a, b) => {
+            const aLineLower = (a.prodLine || '').toLowerCase();
+            const bLineLower = (b.prodLine || '').toLowerCase();
+            const aIndex = lineOrder.indexOf(aLineLower);
+            const bIndex = lineOrder.indexOf(bLineLower);
+
+            if (aIndex !== -1 && bIndex !== -1) {
+                if (aIndex !== bIndex) return aIndex - bIndex;
+            } else if (aIndex !== -1) {
+                return -1;
+            } else if (bIndex !== -1) {
+                return 1;
+            } else {
+                const lineCompare = (a.prodLine || '').localeCompare(b.prodLine || '');
+                if (lineCompare !== 0) return lineCompare;
+            }
+
+            return (a.startTime || 0) - (b.startTime || 0);
+        });
+
         const header = ['ProductionLine', 'PONumber', 'ItemCode', 'Description', 'StartTime', 'Qty', 'UnitPrice', 'ExtendedValue'];
-        const lines = cachedData.runs.map(run => {
+        const lines = sortedRuns.map(run => {
             const safeDesc = (run.itemDescription || '').replace(/"/g, '""');
             return [
                 run.prodLine || '',
