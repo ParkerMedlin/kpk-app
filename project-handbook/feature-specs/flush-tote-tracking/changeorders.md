@@ -336,11 +336,11 @@ _When discharge_type is Acid or Base, require user to specify the material via a
 
 ### Model Changes
 
-- [ ] **16.1** Add `discharge_material_code` field
+- [x] **16.1** Add `discharge_material_code` field
   - **Do**: In `app/core/models.py`, add `discharge_material_code = models.CharField(max_length=50, blank=True, null=True)` to `DischargeTestingRecord` model; stores itemcode from ci_item.
   - **Deliverable**: Field added to model.
 
-- [ ] **16.2** Create migration
+- [x] **16.2** Create migration
   - **Do**: Create migration for new field.
   - **Verify**: `python manage.py makemigrations` succeeds.
 

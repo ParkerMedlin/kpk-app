@@ -1432,6 +1432,7 @@ class DischargeTestingRecord(models.Model):
     date = models.DateTimeField(auto_now_add=True, db_index=True)
     discharge_source = models.CharField(max_length=20, choices=DISCHARGE_SOURCE_CHOICES)
     discharge_type = models.CharField(max_length=100, choices=DISCHARGE_TYPE_CHOICES)
+    discharge_material_code = models.CharField(max_length=50, blank=True, null=True)
     initial_pH = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
     action_required = models.TextField(blank=True, null=True)
     final_pH = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
