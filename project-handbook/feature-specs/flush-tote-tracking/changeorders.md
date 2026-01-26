@@ -597,23 +597,23 @@ _Two enhancements: (1) Show bold alert when a pH-active component is detected in
   - **Do**: In `DischargeTestingEntry.js`, add `async checkPhActiveComponent(materialCode)` method: fetch from `PH_CHECK_ENDPOINT?code=${materialCode}`; if response has `ph_active_component`, call `showPhAlert(code)`; otherwise call `hidePhAlert()`.
   - **Deliverable**: Method checks and triggers alert.
 
-- [ ] **18.7** Implement showPhAlert method
+- [x] **18.7** Implement showPhAlert method
   - **Do**: In `DischargeTestingEntry.js`, add `showPhAlert(componentCode)` method: set `phAlert.textContent` to warning message like `"⚠️ pH-affecting material detected: ${componentCode}"`; set `phAlert.style.display = 'block'`.
   - **Deliverable**: Alert displays with component code.
 
-- [ ] **18.8** Implement hidePhAlert method
+- [x] **18.8** Implement hidePhAlert method
   - **Do**: In `DischargeTestingEntry.js`, add `hidePhAlert()` method: set `phAlert.style.display = 'none'`; clear `textContent`.
   - **Deliverable**: Alert hides.
 
-- [ ] **18.9** Call checkPhActiveComponent on material selection
+- [x] **18.9** Call checkPhActiveComponent on material selection
   - **Do**: In `DischargeTestingEntry.js`, in the material result click handler (after setting `dischargeMaterialCode.value`), call `this.checkPhActiveComponent(value)`.
   - **Deliverable**: Alert triggers on material selection.
 
-- [ ] **18.10** Hide alert when material cleared
+- [x] **18.10** Hide alert when material cleared
   - **Do**: In `DischargeTestingEntry.js`, update `syncMaterialFieldVisibility()` to call `this.hidePhAlert()` when hiding material group.
   - **Deliverable**: Alert clears when discharge type changes.
 
-- [ ] **18.11** Clear alert on form reset
+- [x] **18.11** Clear alert on form reset
   - **Do**: In `DischargeTestingEntry.js`, update `resetForm()` to call `this.hidePhAlert()`.
   - **Deliverable**: Alert clears on reset.
 
@@ -667,9 +667,9 @@ _Two enhancements: (1) Show bold alert when a pH-active component is detected in
 | 15. Sampling Personnel Dropdown | Complete | 10/10 |
 | 16. Acid/Base Material Autocomplete | Complete | 31/31 |
 | 17. pH Active Component Tracking | Complete | 12/12 |
-| 18. Form UX Enhancements | In Progress | 6/19 |
+| 18. Form UX Enhancements | In Progress | 11/19 |
 
-**Overall**: 117/130 tasks (90%)
+**Overall**: 122/130 tasks (94%)
 
 ---
 
