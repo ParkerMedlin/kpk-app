@@ -653,6 +653,38 @@ _Two enhancements: (1) Show bold alert when a pH-active component is detected in
 
 ---
 
+## Phase 19: pH Alert Description Enhancement
+
+_Include itemcodedesc in the pH active component alert for better user context._
+
+### Selector Layer
+
+- [ ] **19.1** Update selector to return description
+  - **Do**: In `discharge_testing_selectors.py`, update `find_ph_active_component` to return a dict `{'code': itemcode, 'description': itemcodedesc}` instead of just the code string; return `None` if no match; look up description from `CiItem` for the matched code.
+  - **Deliverable**: Selector returns code and description.
+
+- [ ] **19.2** Update selector in service layer
+  - **Do**: In `discharge_testing_services.py`, update usage of `find_ph_active_component`: extract `['code']` from returned dict when assigning to `tote.ph_active_component`.
+  - **Deliverable**: Service handles new return format.
+
+### API Layer
+
+- [ ] **19.3** Update pH check API response
+  - **Do**: In `app/core/views/api.py`, update `discharge_material_ph_check_api` to return both fields: `{"status": "ok", "ph_active_component": "<code or null>", "ph_active_component_desc": "<description or null>"}`.
+  - **Deliverable**: API returns code and description.
+
+### JavaScript Layer
+
+- [ ] **19.4** Update showPhAlert to display description
+  - **Do**: In `DischargeTestingEntry.js`, update `showPhAlert(componentCode, componentDesc)` to accept description parameter; display message like `"⚠️ pH-affecting material detected: ${componentCode}: ${componentDesc}"`.
+  - **Deliverable**: Alert shows full item info.
+
+- [ ] **19.5** Update checkPhActiveComponent to pass description
+  - **Do**: In `DischargeTestingEntry.js`, update `checkPhActiveComponent` to extract `ph_active_component_desc` from response and pass to `showPhAlert(code, desc)`.
+  - **Deliverable**: Description flows through to alert.
+
+---
+
 ## Progress
 
 | Phase | Status | Tasks Complete |
@@ -668,9 +700,10 @@ _Two enhancements: (1) Show bold alert when a pH-active component is detected in
 | 16. Acid/Base Material Autocomplete | Complete | 31/31 |
 | 17. pH Active Component Tracking | Complete | 12/12 |
 | 18. Form UX Enhancements | Complete | 19/19 |
+| 19. pH Alert Description Enhancement | In Progress | 0/5 |
 
-**Overall**: 130/130 tasks (100%)
+**Overall**: 130/135 tasks (96%)
 
 ---
 
-**Status**: Complete
+**Status**: In Progress
