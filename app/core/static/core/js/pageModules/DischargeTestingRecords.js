@@ -231,18 +231,17 @@ class DischargeTestingRecordsPage {
     button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
 
     try {
-      await this.deleteRecord(recordId);
-      if (row) {
-        if (this.activeRow === row) {
-          this.activeRow = null;
+      const deleted = await this.deleteRecord(recordId);
+      if (deleted) {
+        if (row) {
+          if (this.activeRow === row) {
+            this.activeRow = null;
+          }
+          row.remove();
         }
-        row.remove();
+        this.ensureEmptyState();
+        showToast('success', 'Discharge Testing Records', 'Record deleted.');
       }
-      this.ensureEmptyState();
-      showToast('success', 'Discharge Testing Records', 'Record deleted.');
-    } catch (error) {
-      console.error(error);
-      alert(error.message || 'Unable to delete record.');
     } finally {
       if (document.body.contains(button)) {
         button.innerHTML = originalHtml;
@@ -252,14 +251,21 @@ class DischargeTestingRecordsPage {
   }
 
   async deleteRecord(recordId) {
-    return this.requestJson(`${API_BASE}${recordId}/`, {
-      method: 'DELETE',
-      credentials: 'same-origin',
-      headers: {
-        'X-CSRFToken': getCsrfToken(),
-        'X-Requested-With': 'XMLHttpRequest',
-      },
-    });
+    try {
+      await this.requestJson(`${API_BASE}${recordId}/`, {
+        method: 'DELETE',
+        credentials: 'same-origin',
+        headers: {
+          'X-CSRFToken': getCsrfToken(),
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+      });
+      return true;
+    } catch (error) {
+      console.error(error);
+      showToast('error', 'Discharge Testing Records', error.message || 'Unable to delete record.');
+      return false;
+    }
   }
 
   ensureEmptyState() {
