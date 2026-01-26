@@ -352,16 +352,20 @@
 
         let tableHtml = '<div style="overflow-x:auto; max-height:600px;"><table><thead><tr>';
         tableHtml += '<th>Production Line</th><th>PO #</th><th>Item</th><th>Description</th>';
-        tableHtml += '<th class="num">Qty</th><th class="num">Unit Price</th><th class="num">Extended Value</th>';
+        tableHtml += '<th class="num">Start Time</th><th class="num">Qty</th><th class="num">Unit Price</th><th class="num">Extended Value</th>';
         tableHtml += '</tr></thead><tbody>';
 
         Object.keys(lineGroups).sort().forEach(line => {
             const runs = lineGroups[line];
+
+            // Sort runs by start_time within each line
+            runs.sort((a, b) => (a.startTime || 0) - (b.startTime || 0));
+
             const lineTotal = runs.reduce((sum, r) => sum + r.extendedValue, 0);
 
             // Line group header
             tableHtml += `<tr class="line-group-header" data-line="${line}">`;
-            tableHtml += `<td colspan="4"><strong>${line}</strong> (${runs.length} runs)</td>`;
+            tableHtml += `<td colspan="5"><strong>${line}</strong> (${runs.length} runs)</td>`;
             tableHtml += `<td colspan="3" class="num"><strong>${formatCurrency(lineTotal)}</strong></td>`;
             tableHtml += '</tr>';
 
@@ -372,6 +376,7 @@
                 tableHtml += `<td>${run.poNumber || ''}</td>`;
                 tableHtml += `<td>${run.itemCode || ''}</td>`;
                 tableHtml += `<td>${run.itemDescription || ''}</td>`;
+                tableHtml += `<td class="num">${formatNumber(run.startTime, 2)}</td>`;
                 tableHtml += `<td class="num">${formatNumber(run.qty)}</td>`;
                 tableHtml += `<td class="num">${formatCurrency(run.unitPrice)}</td>`;
                 tableHtml += `<td class="num">${formatCurrency(run.extendedValue)}</td>`;
@@ -386,7 +391,7 @@
     function downloadCsv() {
         if (!cachedData || !cachedData.runs) return;
 
-        const header = ['ProductionLine', 'PONumber', 'ItemCode', 'Description', 'Qty', 'UnitPrice', 'ExtendedValue'];
+        const header = ['ProductionLine', 'PONumber', 'ItemCode', 'Description', 'StartTime', 'Qty', 'UnitPrice', 'ExtendedValue'];
         const lines = cachedData.runs.map(run => {
             const safeDesc = (run.itemDescription || '').replace(/"/g, '""');
             return [
@@ -394,6 +399,7 @@
                 run.poNumber || '',
                 run.itemCode || '',
                 `"${safeDesc}"`,
+                run.startTime || 0,
                 run.qty || 0,
                 run.unitPrice || 0,
                 run.extendedValue || 0
