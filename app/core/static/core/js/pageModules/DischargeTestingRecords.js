@@ -285,7 +285,13 @@ class DischargeTestingRecordsPage {
         this.renderEditButtons(row, cell);
         return;
       }
-      if (!field || field === 'date' || field === 'lab_technician_name' || field === 'discharge_material_code') {
+      if (
+        !field
+        || field === 'date'
+        || field === 'lab_technician_name'
+        || field === 'discharge_material_code'
+        || field === 'ph_active_component'
+      ) {
         return;
       }
 
@@ -592,6 +598,7 @@ class DischargeTestingRecordsPage {
       discharge_source: tote.discharge_source ?? '',
       discharge_type: tote.discharge_type ?? '',
       discharge_material_code: tote.discharge_material_code ?? '',
+      ph_active_component: tote.ph_active_component ?? '',
       initial_pH: tote.initial_pH ?? '',
       action_required: tote.action_required ?? '',
       final_disposition: tote.final_disposition ?? '',
@@ -637,6 +644,7 @@ class DischargeTestingRecordsPage {
     this.setTextCell(row, 'discharge_source', data.discharge_source);
     this.setTextCell(row, 'discharge_type', data.discharge_type);
     this.setTextCell(row, 'discharge_material_code', data.discharge_material_code);
+    this.setTextCell(row, 'ph_active_component', data.ph_active_component);
 
     this.setPhCell(row, 'initial_pH', data.initial_pH, data.lab_technician_name, initialUpdatedAt, 'initial');
     this.setTextCell(row, 'action_required', data.action_required, true);
