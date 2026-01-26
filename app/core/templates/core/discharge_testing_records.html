@@ -20,6 +20,12 @@
     </div>
 
     <form id="discharge-testing-csrf" style="display:none;" aria-hidden="true">{% csrf_token %}</form>
+    <select id="sampling-personnel-options" class="d-none" aria-hidden="true" tabindex="-1">
+        <option value="">Select sampling personnel...</option>
+        {% for id, name in sampling_personnel_options %}
+            <option value="{{ id }}">{{ name }}</option>
+        {% endfor %}
+    </select>
 
     <div class="row mb-3">
         <div class="col-md-6 col-lg-4">
@@ -109,8 +115,9 @@
                             </div>
                         </td>
                         <td
-                            data-field="sampling_personnel_name"
-                            data-value="{% if tote.sampling_personnel %}{{ tote.sampling_personnel.get_full_name|default:tote.sampling_personnel.username }}{% endif %}"
+                            data-field="sampling_personnel_id"
+                            data-value="{{ tote.sampling_personnel_id|default_if_none:'' }}"
+                            data-label="{% if tote.sampling_personnel %}{{ tote.sampling_personnel.get_full_name|default:tote.sampling_personnel.username }}{% endif %}"
                         >
                             {% if tote.sampling_personnel %}
                                 {{ tote.sampling_personnel.get_full_name|default:tote.sampling_personnel.username }}

@@ -308,23 +308,23 @@ _Replace free-text input with user selection dropdown._
   - **Do**: In `DischargeTestingEntry.js`, update field references from `sampling_personnel_name` to `sampling_personnel_id`; update validation to check for selected value; update payload building.
   - **Deliverable**: Entry JS handles dropdown selection.
 
-- [ ] **15.6** Update service to accept user ID
+- [x] **15.6** Update service to accept user ID
   - **Do**: In `discharge_testing_services.py`, update `create_discharge_test` to accept `sampling_personnel_id` parameter; look up user by ID instead of name; keep backward compatibility with name if needed.
   - **Deliverable**: Service accepts user ID directly.
 
-- [ ] **15.7** Update API view for user ID
+- [x] **15.7** Update API view for user ID
   - **Do**: In `app/core/views/api.py`, update payload handling to read `sampling_personnel_id`; pass ID to service; update serialization if needed.
   - **Deliverable**: API accepts and returns user ID.
 
-- [ ] **15.8** Update records template for inline edit
+- [x] **15.8** Update records template for inline edit
   - **Do**: In `discharge_testing_records.html`, if inline editing uses text input for sampling personnel, update to use dropdown or remove inline edit capability for this field.
   - **Deliverable**: Records template consistent with new field type.
 
-- [ ] **15.9** Update DischargeTestingRecords.js for inline edit
+- [x] **15.9** Update DischargeTestingRecords.js for inline edit
   - **Do**: In `DischargeTestingRecords.js`, update inline edit logic for sampling_personnel to handle dropdown or ID-based selection.
   - **Deliverable**: Records JS handles new field type.
 
-- [ ] **15.10** Remove name-based resolution (cleanup)
+- [x] **15.10** Remove name-based resolution (cleanup)
   - **Do**: In `discharge_testing_services.py`, remove `_resolve_sampling_personnel` helper function if no longer needed; clean up any dead code paths.
   - **Deliverable**: Service code cleaned up.
 
@@ -341,10 +341,10 @@ _Replace free-text input with user selection dropdown._
 | 12. Rename line_personnel | Complete | 12/12 |
 | 13. Rename flush_type | Complete | 12/12 |
 | 14. Model-Defined Choices | Complete | 8/8 |
-| 15. Sampling Personnel Dropdown | In Progress | 5/10 |
+| 15. Sampling Personnel Dropdown | Complete | 10/10 |
 
-**Overall**: 63/68 tasks (93%)
+**Overall**: 68/68 tasks (100%)
 
 ---
 
-**Status**: In Progress
+**Status**: Complete
