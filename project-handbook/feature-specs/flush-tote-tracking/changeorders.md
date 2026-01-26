@@ -691,27 +691,27 @@ _Allow admin users to delete discharge testing records via a trash button in the
 
 ### API Layer
 
-- [ ] **20.1** Add DELETE handler to detail API
+- [x] **20.1** Add DELETE handler to detail API
   - **Do**: In `app/core/views/api.py`, update `discharge_testing_detail_api` to handle DELETE method; check `request.user.is_staff` or `is_superuser`; return 403 if not admin; delete record and return `{"status": "ok"}`.
   - **Deliverable**: API supports DELETE for admins.
 
-- [ ] **20.2** Return 403 for non-admin DELETE
+- [x] **20.2** Return 403 for non-admin DELETE
   - **Do**: Ensure DELETE returns `{"status": "error", "error": "Permission denied"}` with 403 status for non-admin users.
   - **Deliverable**: Permission enforced server-side.
 
 ### Service Layer
 
-- [ ] **20.3** Create delete_discharge_test service function
+- [x] **20.3** Create delete_discharge_test service function
   - **Do**: In `discharge_testing_services.py`, add `delete_discharge_test(tote_id: int, user: User)` function; verify user is admin; delete record; optionally broadcast deletion event.
   - **Deliverable**: Service function handles deletion logic.
 
 ### Template Layer
 
-- [ ] **20.4** Add delete button column to records table
+- [x] **20.4** Add delete button column to records table
   - **Do**: In `discharge_testing_records.html`, add column header (empty or icon); in row template, add delete button with trash icon: `<button class="btn btn-sm btn-outline-danger" data-action="delete" data-id="{{ record.id }}"><i class="fas fa-trash"></i></button>`.
   - **Deliverable**: Trash button visible in each row.
 
-- [ ] **20.5** Conditionally show delete button for admins only
+- [x] **20.5** Conditionally show delete button for admins only
   - **Do**: In `discharge_testing_records.html`, wrap delete button in `{% if user.is_staff %}...{% endif %}` to hide from non-admin users.
   - **Deliverable**: Button only visible to staff/superusers.
 

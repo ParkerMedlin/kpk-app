@@ -52,6 +52,7 @@ from core.services.tank_levels_services import get_tank_levels_html, extract_all
 from core.services import reports_services
 from core.services import (
     create_discharge_test,
+    delete_discharge_test,
     record_discharge_action_and_final_ph,
     record_discharge_initial_ph,
 )
@@ -2345,8 +2346,24 @@ def discharge_material_ph_check_api(request):
 
 
 @login_required
-@require_http_methods(["PATCH", "PUT"])
+@require_http_methods(["PATCH", "PUT", "DELETE"])
 def discharge_testing_detail_api(request, pk):
+    if request.method == "DELETE":
+        if not (request.user.is_staff or request.user.is_superuser):
+            return JsonResponse({"status": "error", "error": "Permission denied"}, status=403)
+
+        try:
+            tote = get_discharge_test(pk)
+        except Exception:
+            return JsonResponse({"status": "error", "error": "Flush tote not found."}, status=404)
+
+        try:
+            delete_discharge_test(tote, user=request.user)
+        except ValidationError as exc:
+            return JsonResponse({"status": "error", "errors": _validation_error_payload(exc)}, status=400)
+
+        return JsonResponse({"status": "ok"})
+
     try:
         payload = _parse_flush_tote_payload(request)
     except ValueError as exc:

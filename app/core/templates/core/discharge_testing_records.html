@@ -58,6 +58,7 @@
                     <th scope="col" style="width: 160px;">Sampling Personnel</th>
                     <th scope="col" style="width: 160px;">Lab Technician</th>
                     <th scope="col" class="text-center" style="width: 120px;"></th>
+                    <th scope="col" class="text-center" style="width: 80px;"></th>
                 </tr>
             </thead>
             <tbody>
@@ -160,10 +161,23 @@
                                 <i class="fas fa-edit"></i>
                             </button>
                         </td>
+                        <td data-field="delete" class="text-center">
+                            {% if user.is_staff %}
+                                <button
+                                    type="button"
+                                    class="btn btn-sm btn-outline-danger"
+                                    data-action="delete"
+                                    data-id="{{ tote.id }}"
+                                    title="Delete"
+                                >
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            {% endif %}
+                        </td>
                     </tr>
                 {% empty %}
                     <tr>
-                        <td colspan="12" class="text-center py-4">No discharge tests recorded yet.</td>
+                        <td colspan="13" class="text-center py-4">No discharge tests recorded yet.</td>
                     </tr>
                 {% endfor %}
             </tbody>
