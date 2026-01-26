@@ -14,18 +14,18 @@
 
 ### Entry Page (`/core/discharge-testing/`)
 
-- [ ] Page loads for user in "lab technician" group
+- [x] Page loads for user in "lab technician" group
 - [x] Page loads for staff user
 - [x] Page loads for superuser
-- [ ] Page returns 403 for authenticated user not in lab technician group and not staff
+- [x] Page returns 403 for authenticated user not in lab technician group and not staff
 - [x] Page redirects to login for anonymous user
 
 ### Records Page (`/core/discharge-testing-records/`)
 
 - [x] Page loads for staff user
 - [x] Page loads for superuser
-- [ ] Page returns 403 for lab technician (non-staff)
-- [ ] Page returns 403 for regular authenticated user
+- [x] Page returns 403 for lab technician (non-staff)
+- [x] Page returns 403 for regular authenticated user
 - [x] Page redirects to login for anonymous user
 
 ### Navigation
@@ -48,27 +48,27 @@
 
 ### Conditional Fields – Acid/Base Type
 
-- [ ] Selecting "Acid" shows Discharge Material field
-- [ ] Selecting "Base" shows Discharge Material field
-- [ ] Selecting "Soap" hides Discharge Material field
-- [ ] Selecting "Polish" hides Discharge Material field
-- [ ] Selecting "Oil" hides Discharge Material field
-- [ ] Changing from Acid to Soap clears and hides Discharge Material field
+- [x] Selecting "Acid" shows Discharge Material field
+- [x] Selecting "Base" shows Discharge Material field
+- [x] Selecting "Soap" hides Discharge Material field
+- [x] Selecting "Polish" hides Discharge Material field
+- [x] Selecting "Oil" hides Discharge Material field
+- [x] Changing from Acid to Soap clears and hides Discharge Material field
 
 ### Conditional Fields – Oil Type
 
-- [ ] Selecting "Oil" hides Initial pH field
-- [ ] Selecting "Oil" hides Final pH field
-- [ ] Selecting "Oil" hides Action Required field
-- [ ] Changing from Oil to Acid shows pH fields again
-- [ ] Changing to Oil clears any entered pH values
+- [x] Selecting "Oil" hides Initial pH field
+- [x] Selecting "Oil" hides Final pH field
+- [x] Selecting "Oil" hides Action Required field
+- [x] Changing from Oil to Acid shows pH fields again
+- [x] Changing to Oil clears any entered pH values
 
 ### pH Fields (Non-Oil Types)
 
-- [ ] Initial pH field visible for Acid, Base, Soap, Polish
-- [ ] Final pH field visible for Acid, Base, Soap, Polish
-- [ ] Action Required field visible for Acid, Base, Soap, Polish
-- [ ] pH range badge shows "5.1 - 10.9"
+- [x] Initial pH field visible for Acid, Base, Soap, Polish
+- [x] Final pH field visible for Acid, Base, Soap, Polish
+- [x] Action Required field visible for Acid, Base, Soap, Polish
+- [x] pH range badge shows "5.1 - 10.9"
 
 ---
 
@@ -76,32 +76,32 @@
 
 ### Search Behavior
 
-- [ ] Typing less than 2 characters shows no results
-- [ ] Typing 2+ characters triggers search after debounce delay (~250ms)
-- [ ] Search matches items where itemcodedesc starts with "BLEND" or "CHEM"
-- [ ] Search matches against itemcode (e.g., typing "030" finds "030050")
-- [ ] Search matches against itemcodedesc (e.g., typing "sodium" finds sodium items)
-- [ ] Results display as "itemcode: itemcodedesc" format
-- [ ] Maximum 20 results shown
-- [ ] "No matches" message when search has no results
+- [x] Typing less than 2 characters shows no results
+- [x] Typing 2+ characters triggers search after debounce delay (~250ms)
+- [x] Search matches items where itemcodedesc starts with "BLEND" or "CHEM"
+- [x] Search matches against itemcode (e.g., typing "030" finds "030050")
+- [x] Search matches against itemcodedesc (e.g., typing "sodium" finds sodium items)
+- [x] Results display as "itemcode: itemcodedesc" format
+- [x] Maximum 20 results shown
+- [x] "No matches" message when search has no results
 
 ### Selection Behavior
 
-- [ ] Clicking a result populates the display input with full label
-- [ ] Clicking a result stores only the itemcode in hidden field
-- [ ] Results dropdown closes after selection
-- [ ] Clicking outside dropdown closes it
-- [ ] Selecting a new material replaces previous selection
+- [x] Clicking a result populates the display input with full label
+- [x] Clicking a result stores only the itemcode in hidden field
+- [x] Results dropdown closes after selection
+- [x] Clicking outside dropdown closes it
+- [x] Selecting a new material replaces previous selection
 
 ### pH Active Component Alert
 
-- [ ] Selecting a watch list item (030050, 030015, 030024, 200126, 030025, 240079) shows alert
-- [ ] Alert displays: "pH-affecting material detected: {code}: {description}"
-- [ ] Alert is bold and visually prominent (alert-warning)
-- [ ] Selecting a BLEND containing a watch list component shows alert with component code
-- [ ] Selecting a material NOT in watch list (and no watch list components) shows no alert
-- [ ] Changing discharge type away from Acid/Base clears alert
-- [ ] Form reset clears alert
+- [x] Selecting a watch list item (030050, 030015, 030024, 200126, 030025, 240079) shows alert
+- [x] Alert displays: "pH-affecting material detected: {code}: {description}"
+- [x] Alert is bold and visually prominent (alert-warning)
+- [x] Selecting a BLEND containing a watch list component shows alert with component code
+- [x] Selecting a material NOT in watch list (and no watch list components) shows no alert
+- [x] Changing discharge type away from Acid/Base clears alert
+- [x] Form reset clears alert
 
 ---
 
@@ -109,8 +109,8 @@
 
 ### Initial pH Feedback
 
-- [ ] Entering valid pH (5.1-10.9) shows success indicator
-- [ ] Entering pH below 5.1 shows warning: "Initial pH is outside 5.1 - 10.9. Action is required."
+- [x] Entering valid pH (5.1-10.9) shows success indicator
+- [x] Entering pH below 5.1 shows warning: "Initial pH is outside 5.1 - 10.9. Action is required."
 - [ ] Entering pH above 10.9 shows warning
 - [ ] Entering non-numeric value shows error: "Enter a valid pH value."
 - [ ] Leaving field empty shows no error (optional field)
