@@ -126,19 +126,26 @@ def create_discharge_test(
     cleaned_discharge_type = (discharge_type or "").strip()
     cleaned_material_code = (discharge_material_code or "").strip()
     cleaned_disposition = (final_disposition or "").strip()
+    is_oil_type = cleaned_discharge_type.lower() == "oil"
     if not cleaned_disposition:
         raise ValidationError({"final_disposition": "Final disposition is required."})
 
     if cleaned_discharge_type.lower() in {"acid", "base"} and not cleaned_material_code:
         raise ValidationError({"discharge_material_code": "Material is required for Acid or Base discharge."})
 
-    initial_value = _parse_ph(initial_pH, "initial_pH")
-    final_value = _parse_ph(final_pH, "final_pH")
+    if is_oil_type:
+        initial_value = None
+        final_value = None
+    else:
+        initial_value = _parse_ph(initial_pH, "initial_pH")
+        final_value = _parse_ph(final_pH, "final_pH")
 
-    if final_value is not None and initial_value is None:
-        raise ValidationError({"final_pH": "Initial pH must be recorded before final pH."})
+        if final_value is not None and initial_value is None:
+            raise ValidationError({"final_pH": "Initial pH must be recorded before final pH."})
 
     cleaned_action = (action_required or "").strip() or None
+    if is_oil_type:
+        cleaned_action = None
     sampling_personnel_user = None
     if sampling_personnel_id not in (None, ""):
         try:

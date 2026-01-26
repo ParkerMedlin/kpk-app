@@ -2,6 +2,7 @@ const API_ENDPOINT = '/core/api/discharge-testing/';
 const MATERIAL_SEARCH_ENDPOINT = '/core/api/discharge-material-search/';
 const PH_CHECK_ENDPOINT = '/core/api/discharge-material-ph-check/';
 const ACID_BASE_TYPES = ['Acid', 'Base'];
+const OIL_TYPE = 'Oil';
 
 const DEFAULT_PH_MIN = 5.1;
 const DEFAULT_PH_MAX = 10.9;
@@ -152,6 +153,7 @@ class DischargeTestingEntryPage {
     this.dischargeMaterialCode = document.getElementById('discharge-testing-entry-discharge-material-code');
     this.dischargeMaterialResults = document.getElementById('discharge-testing-entry-discharge-material-results');
     this.phAlert = document.getElementById('discharge-testing-entry-ph-alert');
+    this.phFieldsGroup = this.form ? this.form.querySelector('[data-role="ph-fields-group"]') : null;
     this.hideMaterialResults();
     this.actionRequiredGroup = this.form
       ? this.form.querySelector('[data-role="action-required-group"]')
@@ -166,6 +168,7 @@ class DischargeTestingEntryPage {
     this.registerEvents();
     this.syncActionRequired();
     this.syncMaterialFieldVisibility();
+    this.syncPhFieldsVisibility();
   }
 
   registerEvents() {
@@ -185,7 +188,10 @@ class DischargeTestingEntryPage {
     }
 
     if (this.dischargeType) {
-      this.dischargeType.addEventListener('change', () => this.syncMaterialFieldVisibility());
+      this.dischargeType.addEventListener('change', () => {
+        this.syncMaterialFieldVisibility();
+        this.syncPhFieldsVisibility();
+      });
     }
 
     if (this.dischargeMaterialInput) {
@@ -315,6 +321,35 @@ class DischargeTestingEntryPage {
       this.hideMaterialResults();
       this.hidePhAlert();
     }
+  }
+
+  syncPhFieldsVisibility() {
+    if (!this.phFieldsGroup) {
+      return;
+    }
+    const dischargeTypeValue = this.dischargeType ? this.dischargeType.value : '';
+    const shouldHide = dischargeTypeValue === OIL_TYPE;
+    this.phFieldsGroup.style.display = shouldHide ? 'none' : '';
+
+    if (shouldHide) {
+      if (this.initialPh) {
+        this.initialPh.value = '';
+      }
+      if (this.finalPh) {
+        this.finalPh.value = '';
+      }
+      if (this.actionRequired) {
+        this.actionRequired.value = '';
+        this.actionRequired.required = false;
+        this.actionRequired.removeAttribute('aria-required');
+      }
+      this.clearFieldFeedback(this.initialPh);
+      this.clearFieldFeedback(this.finalPh);
+      this.clearFieldFeedback(this.actionRequired);
+      return;
+    }
+
+    this.syncActionRequired();
   }
 
   hideMaterialResults() {
@@ -544,14 +579,19 @@ class DischargeTestingEntryPage {
       this.samplingPersonnel?.selectedOptions?.[0]?.textContent,
     );
     const samplingPersonnelName = samplingPersonnelId ? samplingPersonnelLabel : '';
-    const actionRequired = normalizeText(this.actionRequired ? this.actionRequired.value : '');
+    let actionRequired = normalizeText(this.actionRequired ? this.actionRequired.value : '');
     const finalDisposition = normalizeText(this.finalDisposition ? this.finalDisposition.value : '');
     const dischargeMaterialCode = normalizeText(
       this.dischargeMaterialCode ? this.dischargeMaterialCode.value : '',
     );
 
-    const initialParsed = parsePhValue(this.initialPh ? this.initialPh.value : '');
-    const finalParsed = parsePhValue(this.finalPh ? this.finalPh.value : '');
+    const isOilType = dischargeType === OIL_TYPE;
+    let initialParsed = { value: null };
+    let finalParsed = { value: null };
+    if (!isOilType) {
+      initialParsed = parsePhValue(this.initialPh ? this.initialPh.value : '');
+      finalParsed = parsePhValue(this.finalPh ? this.finalPh.value : '');
+    }
 
     const errors = {};
 
@@ -571,28 +611,34 @@ class DischargeTestingEntryPage {
       errors.discharge_material_code = 'Discharge material is required for Acid or Base.';
     }
 
-    if (initialParsed.error) {
-      errors.initial_pH = initialParsed.error;
-    }
-    if (finalParsed.error) {
-      errors.final_pH = finalParsed.error;
+    if (!isOilType) {
+      if (initialParsed.error) {
+        errors.initial_pH = initialParsed.error;
+      }
+      if (finalParsed.error) {
+        errors.final_pH = finalParsed.error;
+      }
     }
 
     const initialValue = initialParsed.error ? null : initialParsed.value;
     const finalValue = finalParsed.error ? null : finalParsed.value;
 
-    if (!finalParsed.error && finalValue !== null && initialValue === null) {
-      errors.final_pH = 'Initial pH must be recorded before final pH.';
-    }
-    const initialOutOfRange =
-      initialValue !== null && !isPhInRange(initialValue, this.phMin, this.phMax);
+    if (!isOilType) {
+      if (!finalParsed.error && finalValue !== null && initialValue === null) {
+        errors.final_pH = 'Initial pH must be recorded before final pH.';
+      }
+      const initialOutOfRange =
+        initialValue !== null && !isPhInRange(initialValue, this.phMin, this.phMax);
 
-    if (initialOutOfRange && !actionRequired) {
-      errors.action_required = 'Action details are required when initial pH is out of range.';
-    }
+      if (initialOutOfRange && !actionRequired) {
+        errors.action_required = 'Action details are required when initial pH is out of range.';
+      }
 
-    if (finalValue !== null && !isPhInRange(finalValue, this.phMin, this.phMax)) {
-      errors.final_pH = `Final pH must be between ${this.phMin} and ${this.phMax}.`;
+      if (finalValue !== null && !isPhInRange(finalValue, this.phMin, this.phMax)) {
+        errors.final_pH = `Final pH must be between ${this.phMin} and ${this.phMax}.`;
+      }
+    } else {
+      actionRequired = '';
     }
 
     if (Object.keys(errors).length > 0) {
@@ -687,6 +733,7 @@ class DischargeTestingEntryPage {
     this.hidePhAlert();
     this.syncActionRequired();
     this.syncMaterialFieldVisibility();
+    this.syncPhFieldsVisibility();
     if (this.dischargeSource && typeof this.dischargeSource.focus === 'function') {
       this.dischargeSource.focus();
     }
