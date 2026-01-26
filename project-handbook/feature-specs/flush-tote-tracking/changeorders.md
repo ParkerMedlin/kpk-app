@@ -399,11 +399,11 @@ _When discharge_type is Acid or Base, require user to specify the material via a
 
 ### Template Layer
 
-- [ ] **16.14** Add material autocomplete field to entry form
+- [x] **16.14** Add material autocomplete field to entry form
   - **Do**: In `discharge_testing_entry.html`, add new form group after discharge_type: label "Discharge Material", text input with `id="discharge-testing-entry-discharge-material"` for display, hidden input `id="discharge-testing-entry-discharge-material-code"` with `name="discharge_material_code"`, autocomplete results container div; wrap in container with `data-role="discharge-material-group"`.
   - **Deliverable**: Material field structure in template.
 
-- [ ] **16.15** Add conditional visibility styling
+- [x] **16.15** Add conditional visibility styling
   - **Do**: In `discharge_testing_entry.html`, add `style="display: none;"` to discharge-material-group container (JS will show/hide based on discharge_type).
   - **Deliverable**: Field hidden by default.
 

@@ -39,6 +39,22 @@
                         {% endfor %}
                     </select>
                 </div>
+                <div class="col-md-3" data-role="discharge-material-group" style="display: none;">
+                    <label class="form-label" for="discharge-testing-entry-discharge-material">Discharge Material</label>
+                    <input
+                        id="discharge-testing-entry-discharge-material"
+                        class="form-control"
+                        type="text"
+                        autocomplete="off"
+                        placeholder="Start typing a BLEND or CHEM item..."
+                    />
+                    <input
+                        id="discharge-testing-entry-discharge-material-code"
+                        name="discharge_material_code"
+                        type="hidden"
+                    />
+                    <div id="discharge-testing-entry-discharge-material-results"></div>
+                </div>
                 <div class="col-md-3">
                     <label class="form-label" for="discharge-testing-entry-sampling-personnel">Sampling Personnel</label>
                     <select
