@@ -409,65 +409,65 @@ _When discharge_type is Acid or Base, require user to specify the material via a
 
 ### JavaScript Layer - Field Setup
 
-- [ ] **16.16** Add material field element references
+- [x] **16.16** Add material field element references
   - **Do**: In `DischargeTestingEntry.js`, in constructor, add references: `this.dischargeMaterialGroup`, `this.dischargeMaterialInput` (display input), `this.dischargeMaterialCode` (hidden), `this.dischargeMaterialResults` (autocomplete dropdown).
   - **Deliverable**: Element references in class.
 
-- [ ] **16.17** Add material field constants
+- [x] **16.17** Add material field constants
   - **Do**: In `DischargeTestingEntry.js`, add `const MATERIAL_SEARCH_ENDPOINT = '/core/api/discharge-material-search/';` and `const ACID_BASE_TYPES = ['Acid', 'Base'];`.
   - **Deliverable**: Constants defined.
 
 ### JavaScript Layer - Visibility Logic
 
-- [ ] **16.18** Add discharge_type change handler
+- [x] **16.18** Add discharge_type change handler
   - **Do**: In `DischargeTestingEntry.js`, in `registerEvents`, add change listener on `this.dischargeType` that calls `this.syncMaterialFieldVisibility()`.
   - **Deliverable**: Event listener registered.
 
-- [ ] **16.19** Implement syncMaterialFieldVisibility
+- [x] **16.19** Implement syncMaterialFieldVisibility
   - **Do**: In `DischargeTestingEntry.js`, add `syncMaterialFieldVisibility()` method: show `dischargeMaterialGroup` if `dischargeType.value` is in `ACID_BASE_TYPES`, hide otherwise; clear material fields when hiding.
   - **Deliverable**: Field visibility toggles correctly.
 
-- [ ] **16.20** Call sync on page load
+- [x] **16.20** Call sync on page load
   - **Do**: In `DischargeTestingEntry.js`, in constructor after `registerEvents()`, call `this.syncMaterialFieldVisibility()`.
   - **Deliverable**: Correct initial visibility.
 
 ### JavaScript Layer - Autocomplete
 
-- [ ] **16.21** Add debounce utility
+- [x] **16.21** Add debounce utility
   - **Do**: In `DischargeTestingEntry.js`, add `debounce(fn, delay)` helper function that returns a debounced version of the function.
   - **Deliverable**: Debounce utility available.
 
-- [ ] **16.22** Add material search input handler
+- [x] **16.22** Add material search input handler
   - **Do**: In `DischargeTestingEntry.js`, in `registerEvents`, add debounced input listener on `dischargeMaterialInput` that calls `this.searchMaterials()` with 250ms delay.
   - **Deliverable**: Input triggers debounced search.
 
-- [ ] **16.23** Implement searchMaterials
+- [x] **16.23** Implement searchMaterials
   - **Do**: In `DischargeTestingEntry.js`, add `async searchMaterials()` method: get search term from input; if less than 2 chars, hide results; otherwise fetch from `MATERIAL_SEARCH_ENDPOINT?q=${term}`; call `renderMaterialResults(data.results)`.
   - **Deliverable**: Search fetches and triggers render.
 
-- [ ] **16.24** Implement renderMaterialResults
+- [x] **16.24** Implement renderMaterialResults
   - **Do**: In `DischargeTestingEntry.js`, add `renderMaterialResults(results)` method: clear results container; if no results, show "No matches" message; otherwise render clickable items with `data-value` (itemcode) and `data-label` (full display string); show container.
   - **Deliverable**: Dropdown displays search results.
 
-- [ ] **16.25** Add result item click handler
+- [x] **16.25** Add result item click handler
   - **Do**: In `DischargeTestingEntry.js`, add event delegation on `dischargeMaterialResults` for click on result items; on click, set `dischargeMaterialInput.value` to label, `dischargeMaterialCode.value` to itemcode; hide results; clear field feedback.
   - **Deliverable**: Selection populates fields.
 
-- [ ] **16.26** Add click-outside handler
+- [x] **16.26** Add click-outside handler
   - **Do**: In `DischargeTestingEntry.js`, add document click listener that hides `dischargeMaterialResults` when clicking outside the autocomplete area.
   - **Deliverable**: Dropdown closes on outside click.
 
 ### JavaScript Layer - Validation & Submission
 
-- [ ] **16.27** Update collectPayload for material field
+- [x] **16.27** Update collectPayload for material field
   - **Do**: In `DischargeTestingEntry.js`, update `collectPayload()`: if discharge_type is Acid or Base, validate that `dischargeMaterialCode` has a value; add error if missing; include `discharge_material_code` in returned payload.
   - **Deliverable**: Payload includes material; validation enforces requirement.
 
-- [ ] **16.28** Update applyValidationErrors for material field
+- [x] **16.28** Update applyValidationErrors for material field
   - **Do**: In `DischargeTestingEntry.js`, update `applyValidationErrors()` to handle `discharge_material_code` error key, applying feedback to `dischargeMaterialInput`.
   - **Deliverable**: Server errors display on material field.
 
-- [ ] **16.29** Update resetForm for material fields
+- [x] **16.29** Update resetForm for material fields
   - **Do**: In `DischargeTestingEntry.js`, update `resetForm()` to clear `dischargeMaterialInput`, `dischargeMaterialCode`, hide results dropdown, and call `syncMaterialFieldVisibility()`.
   - **Deliverable**: Reset clears material state.
 
