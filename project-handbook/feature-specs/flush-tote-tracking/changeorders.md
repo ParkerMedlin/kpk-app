@@ -557,11 +557,11 @@ _Auto-detect and record which specific material caused pH deviation. When discha
 
 ### Records View Updates
 
-- [ ] **17.11** Add column to records table
+- [x] **17.11** Add column to records table
   - **Do**: In `discharge_testing_records.html`, add table column header "pH Active Component"; in row template, display `ph_active_component` value (or empty/dash if null).
   - **Deliverable**: Records table shows ph_active_component.
 
-- [ ] **17.12** Update DischargeTestingRecords.js for display
+- [x] **17.12** Update DischargeTestingRecords.js for display
   - **Do**: In `DischargeTestingRecords.js`, update row rendering to include `ph_active_component`; read-only field (no inline edit).
   - **Deliverable**: Records JS renders ph_active_component correctly.
 

@@ -50,6 +50,7 @@
                     <th scope="col">Discharge Source</th>
                     <th scope="col">Discharge Type</th>
                     <th scope="col" style="width: 160px;">Discharge Material</th>
+                    <th scope="col" style="width: 180px;">pH Active Component</th>
                     <th scope="col" style="width: 140px;">Initial pH</th>
                     <th scope="col" style="min-width: 220px;">Action Required</th>
                     <th scope="col" style="min-width: 220px;">Final Disposition</th>
@@ -74,6 +75,13 @@
                         <td data-field="discharge_material_code" data-value="{{ tote.discharge_material_code|default_if_none:'' }}">
                             {% if tote.discharge_material_code %}
                                 {{ tote.discharge_material_code }}
+                            {% else %}
+                                --
+                            {% endif %}
+                        </td>
+                        <td data-field="ph_active_component" data-value="{{ tote.ph_active_component|default_if_none:'' }}">
+                            {% if tote.ph_active_component %}
+                                {{ tote.ph_active_component }}
                             {% else %}
                                 --
                             {% endif %}
@@ -155,7 +163,7 @@
                     </tr>
                 {% empty %}
                     <tr>
-                        <td colspan="11" class="text-center py-4">No discharge tests recorded yet.</td>
+                        <td colspan="12" class="text-center py-4">No discharge tests recorded yet.</td>
                     </tr>
                 {% endfor %}
             </tbody>
