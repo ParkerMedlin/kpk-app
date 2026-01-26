@@ -15,24 +15,24 @@
 ### Entry Page (`/core/discharge-testing/`)
 
 - [ ] Page loads for user in "lab technician" group
-- [ ] Page loads for staff user
-- [ ] Page loads for superuser
+- [x] Page loads for staff user
+- [x] Page loads for superuser
 - [ ] Page returns 403 for authenticated user not in lab technician group and not staff
-- [ ] Page redirects to login for anonymous user
+- [x] Page redirects to login for anonymous user
 
 ### Records Page (`/core/discharge-testing-records/`)
 
-- [ ] Page loads for staff user
-- [ ] Page loads for superuser
+- [x] Page loads for staff user
+- [x] Page loads for superuser
 - [ ] Page returns 403 for lab technician (non-staff)
 - [ ] Page returns 403 for regular authenticated user
-- [ ] Page redirects to login for anonymous user
+- [x] Page redirects to login for anonymous user
 
 ### Navigation
 
-- [ ] "Discharge Testing" link appears in Blending dropdown for staff users
-- [ ] "Discharge Testing Records" link appears in Blending dropdown for staff users
-- [ ] Entry page link accessible to lab technician group members
+- [x] "Discharge Testing" link appears in Blending dropdown for staff users
+- [x] "Discharge Testing Records" link appears in Blending dropdown for staff users
+- [x] Entry page link accessible to lab technician group members
 
 ---
 
@@ -40,11 +40,11 @@
 
 ### Core Fields (Always Visible)
 
-- [ ] Discharge Source dropdown shows options (JB Line, INLINE, PD Line)
-- [ ] Discharge Type dropdown shows options: Acid, Base, Soap, Polish, Oil
-- [ ] Sampling Personnel dropdown shows active users with display names
-- [ ] Lab Technician field displays current user's name (readonly)
-- [ ] Final Disposition textarea visible and required
+- [x] Discharge Source dropdown shows options (JB Line, INLINE, PD Line, Warehouse)
+- [x] Discharge Type dropdown shows options: Acid, Base, Soap, Polish, Oil
+- [x] Sampling Personnel dropdown shows active users with display names
+- [x] Lab Technician field displays current user's name (readonly)
+- [x] Final Disposition textarea visible and required
 
 ### Conditional Fields – Acid/Base Type
 
