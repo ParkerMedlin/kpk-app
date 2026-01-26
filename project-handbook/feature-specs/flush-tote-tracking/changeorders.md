@@ -389,11 +389,11 @@ _When discharge_type is Acid or Base, require user to specify the material via a
 
 ### API View Updates
 
-- [ ] **16.12** Update API payload handling
+- [x] **16.12** Update API payload handling
   - **Do**: In `app/core/views/api.py`, update `discharge_testing_list_api` POST handler to extract `discharge_material_code` from payload and pass to `create_discharge_test`.
   - **Deliverable**: API accepts material field.
 
-- [ ] **16.13** Update API serialization
+- [x] **16.13** Update API serialization
   - **Do**: In `app/core/views/api.py`, update `_serialize_flush_tote` helper to include `discharge_material_code` in output.
   - **Deliverable**: API GET responses include material field.
 

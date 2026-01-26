@@ -2230,6 +2230,7 @@ def _serialize_flush_tote_reading(tote):
         'discharge_source': tote.discharge_source,
         'production_line': tote.discharge_source,
         'discharge_type': tote.discharge_type,
+        'discharge_material_code': tote.discharge_material_code,
         'initial_pH': _safe_float(tote.initial_pH),
         'action_required': tote.action_required or '',
         'final_pH': _safe_float(tote.final_pH),
@@ -2286,6 +2287,7 @@ def discharge_testing_list_api(request):
 
     discharge_source = (payload.get('discharge_source') or payload.get('production_line') or '').strip()
     discharge_type = (payload.get('discharge_type') or '').strip()
+    discharge_material_code = (payload.get('discharge_material_code') or '').strip()
     final_disposition = (payload.get('final_disposition') or '').strip()
     sampling_personnel_id = payload.get('sampling_personnel_id')
     initial_ph = payload.get('initial_pH')
@@ -2296,6 +2298,7 @@ def discharge_testing_list_api(request):
         tote = create_discharge_test(
             discharge_source=discharge_source,
             discharge_type=discharge_type,
+            discharge_material_code=discharge_material_code,
             final_disposition=final_disposition,
             sampling_personnel_id=sampling_personnel_id,
             user=request.user,
