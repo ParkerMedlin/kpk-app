@@ -509,15 +509,15 @@ _Auto-detect and record which specific material caused pH deviation. When discha
 
 ### Model Changes
 
-- [ ] **17.1** Define PH_ACTIVE_WATCH_CODES constant
+- [x] **17.1** Define PH_ACTIVE_WATCH_CODES constant
   - **Do**: In `app/core/models.py`, add `PH_ACTIVE_WATCH_CODES = ('030050', '030015', '030024', '200126', '030025', '240079')` tuple constant to `DischargeTestingRecord` class.
   - **Deliverable**: Constant defined on model class.
 
-- [ ] **17.2** Add `ph_active_component` field
+- [x] **17.2** Add `ph_active_component` field
   - **Do**: In `app/core/models.py`, add `ph_active_component = models.CharField(max_length=50, blank=True, null=True)` to `DischargeTestingRecord` model; stores the itemcode of the pH-affecting material.
   - **Deliverable**: Field added to model.
 
-- [ ] **17.3** Create migration
+- [x] **17.3** Create migration
   - **Do**: Create migration for new field.
   - **Verify**: `python manage.py makemigrations` succeeds.
 
