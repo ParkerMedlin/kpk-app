@@ -60,4 +60,49 @@ Any authenticated user should be able to be the sampling personnel.
 
 ---
 
+## Issue 4: Clear Button Causes Infinite Reset Loop
+
+**Problem:** Clicking the "Clear" button on the entry form causes all fields to become unresponsive. Only resolved by refreshing the page.
+
+**Root Cause Analysis:**
+
+The `handleReset()` method (line 747-749) schedules `resetForm()` via `setTimeout`. However, `resetForm()` (line 719-745) calls `this.form.reset()` on line 721, which fires another `reset` event, creating an infinite loop:
+
+```
+Click Clear → reset event → handleReset() → setTimeout → resetForm()
+           → this.form.reset() → reset event → handleReset() → ...
+```
+
+Each iteration:
+1. Steals focus back to `dischargeSource` (line 742-744), making other fields seem unclickable
+2. Creates/removes feedback DOM elements
+3. Runs visibility sync methods
+
+The fields aren't disabled—focus is being stolen every ~0ms.
+
+**Code Locations:**
+- `DischargeTestingEntry.js` lines 719-749
+
+**Fix Approach:**
+Remove the redundant `this.form.reset()` call from `resetForm()`. The native form reset already happened before `handleReset()` was invoked. The `resetForm()` method should only handle:
+- Clearing feedback
+- Resetting hidden fields and autocomplete state
+- Syncing visibility
+- Setting focus
+
+### Tasks
+
+- [x] 4.1 Remove `this.form.reset()` call from `resetForm()` method (line 720-722)
+- [x] 4.2 Verify `resetForm()` still clears material code hidden field and display input
+- [x] 4.3 Verify `resetForm()` still hides material results dropdown
+- [x] 4.4 Verify `resetForm()` still hides pH alert
+- [x] 4.5 Verify `resetForm()` still syncs field visibility (material, pH fields)
+- [x] 4.6 Verify focus returns to Discharge Source after reset
+- [x] 4.7 Test: Click Clear → all fields remain interactive
+- [x] 4.8 Test: Click Clear → form values are cleared
+- [x] 4.9 Test: Click Clear → validation feedback is cleared
+- [ ] 4.10 Test: Submit success calls `resetForm()` directly without infinite loop
+
+---
+
 

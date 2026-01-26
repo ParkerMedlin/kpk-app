@@ -717,9 +717,6 @@ class DischargeTestingEntryPage {
   }
 
   resetForm() {
-    if (this.form) {
-      this.form.reset();
-    }
     this.clearFieldFeedback(this.dischargeSource);
     this.clearFieldFeedback(this.dischargeType);
     this.clearFieldFeedback(this.samplingPersonnel);
@@ -779,7 +776,11 @@ class DischargeTestingEntryPage {
       });
 
       showToast('success', 'Discharge Testing Entry', 'Entry saved.');
-      this.resetForm();
+      if (this.form) {
+        this.form.reset();
+      } else {
+        this.resetForm();
+      }
     } catch (error) {
       console.error(error);
       if (error.payload && error.payload.errors) {
