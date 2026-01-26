@@ -55,7 +55,7 @@ from core.services import (
     record_discharge_action_and_final_ph,
     record_discharge_initial_ph,
 )
-from core.services.discharge_testing_services import GROUP_LAB_TECHNICIAN, GROUP_LINE_PERSONNEL
+from core.services.discharge_testing_services import GROUP_LAB_TECHNICIAN
 from core.services.bom_costing_service import (
     BomCostingService,
     CircularBomReferenceError,
@@ -2361,7 +2361,7 @@ def discharge_testing_detail_api(request, pk):
         return JsonResponse({'status': 'error', 'error': 'Flush tote not found.'}, status=404)
 
     is_admin = request.user.is_staff or request.user.is_superuser
-    is_line = is_admin or _user_in_group(request.user, GROUP_LINE_PERSONNEL)
+    is_line = request.user.is_authenticated
     is_lab = is_admin or _user_in_group(request.user, GROUP_LAB_TECHNICIAN)
 
     line_fields = {'discharge_source', 'production_line', 'discharge_type', 'sampling_personnel_id'}

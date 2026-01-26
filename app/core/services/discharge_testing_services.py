@@ -16,8 +16,7 @@ from core.websockets.serializer import serialize_for_websocket
 logger = logging.getLogger(__name__)
 User = get_user_model()
 
-GROUP_LINE_PERSONNEL = "line personnel"
-GROUP_LAB_TECHNICIAN = "lab technician"
+GROUP_LAB_TECHNICIAN = "lab"
 
 
 def _user_in_group(user: Optional[User], group_name: str) -> bool:
@@ -77,6 +76,10 @@ def _is_lab_user(user: Optional[User]) -> bool:
     if not user or not getattr(user, "is_authenticated", False):
         return False
     return user.is_staff or user.is_superuser or _user_in_group(user, GROUP_LAB_TECHNICIAN)
+
+
+def is_lab_user(user: Optional[User]) -> bool:
+    return _is_lab_user(user)
 
 
 def _broadcast_discharge_testing_event(event: str, tote: DischargeTestingRecord) -> None:
@@ -159,8 +162,6 @@ def create_discharge_test(
         ).first()
         if sampling_personnel_user is None:
             raise ValidationError({"sampling_personnel_id": "Sampling personnel not found."})
-    elif _user_in_group(user, GROUP_LINE_PERSONNEL):
-        sampling_personnel_user = user
     else:
         raise ValidationError({"sampling_personnel_id": "Sampling personnel is required."})
 

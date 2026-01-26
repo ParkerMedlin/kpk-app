@@ -52,7 +52,7 @@ from core.kpkapp_utils.string_utils import get_unencoded_item_code
 from core.services.lot_numbers_services import generate_next_lot_number
 from core.services.blend_scheduling_services import get_blend_schedule_querysets, prepare_blend_schedule_queryset
 from core.services.purchasing_alias_services import normalize_supply_type
-from core.services.discharge_testing_services import GROUP_LAB_TECHNICIAN
+from core.services.discharge_testing_services import is_lab_user
 from django.core.paginator import Paginator
 from core.selectors.batch_issue_selectors import (
     get_batch_issue_runs,
@@ -2138,9 +2138,7 @@ def display_container_classifications(request):
 @ensure_csrf_cookie
 def discharge_testing_entry_view(request):
     """Render the discharge testing entry form for lab technicians."""
-    is_admin = request.user.is_staff or request.user.is_superuser
-    is_lab = is_admin or request.user.groups.filter(name__iexact=GROUP_LAB_TECHNICIAN).exists()
-    if not is_lab:
+    if not is_lab_user(request.user):
         return HttpResponseForbidden('Lab technician access required.')
 
     context = {
@@ -2155,6 +2153,9 @@ def discharge_testing_entry_view(request):
 @ensure_csrf_cookie
 def discharge_testing_records_view(request):
     """Render the discharge testing records page with initial options and data."""
+    if not (request.user.is_staff or request.user.is_superuser):
+        return HttpResponseForbidden('Staff access required.')
+
     context = {
         'production_line_choices': DischargeTestingRecord.DISCHARGE_SOURCE_CHOICES,
         'discharge_type_options': DischargeTestingRecord.DISCHARGE_TYPE_CHOICES,
