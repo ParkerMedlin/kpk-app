@@ -1,4 +1,6 @@
 const API_ENDPOINT = '/core/api/discharge-testing/';
+const MATERIAL_SEARCH_ENDPOINT = '/core/api/discharge-material-search/';
+const ACID_BASE_TYPES = ['Acid', 'Base'];
 
 const DEFAULT_PH_MIN = 5.1;
 const DEFAULT_PH_MAX = 10.9;
@@ -22,6 +24,14 @@ function parsePhValue(raw) {
 
 function isPhInRange(value, minValue, maxValue) {
   return Number.isFinite(value) && value >= minValue && value <= maxValue;
+}
+
+function debounce(fn, delay) {
+  let timeoutId;
+  return (...args) => {
+    window.clearTimeout(timeoutId);
+    timeoutId = window.setTimeout(() => fn(...args), delay);
+  };
 }
 
 function getCsrfToken() {
@@ -134,6 +144,13 @@ class DischargeTestingEntryPage {
     this.finalPh = document.getElementById('discharge-testing-entry-final-ph');
     this.actionRequired = document.getElementById('discharge-testing-entry-action-required');
     this.finalDisposition = document.getElementById('discharge-testing-entry-final-disposition');
+    this.dischargeMaterialGroup = this.form
+      ? this.form.querySelector('[data-role="discharge-material-group"]')
+      : null;
+    this.dischargeMaterialInput = document.getElementById('discharge-testing-entry-discharge-material');
+    this.dischargeMaterialCode = document.getElementById('discharge-testing-entry-discharge-material-code');
+    this.dischargeMaterialResults = document.getElementById('discharge-testing-entry-discharge-material-results');
+    this.hideMaterialResults();
     this.actionRequiredGroup = this.form
       ? this.form.querySelector('[data-role="action-required-group"]')
       : null;
@@ -146,6 +163,7 @@ class DischargeTestingEntryPage {
 
     this.registerEvents();
     this.syncActionRequired();
+    this.syncMaterialFieldVisibility();
   }
 
   registerEvents() {
@@ -164,12 +182,58 @@ class DischargeTestingEntryPage {
       this.finalPh.addEventListener('blur', () => this.handleFinalPhInput());
     }
 
+    if (this.dischargeType) {
+      this.dischargeType.addEventListener('change', () => this.syncMaterialFieldVisibility());
+    }
+
+    if (this.dischargeMaterialInput) {
+      const debouncedSearch = debounce(() => this.searchMaterials(), 250);
+      this.dischargeMaterialInput.addEventListener('input', () => {
+        if (this.dischargeMaterialCode) {
+          this.dischargeMaterialCode.value = '';
+        }
+        this.clearFieldFeedback(this.dischargeMaterialInput);
+        debouncedSearch();
+      });
+    }
+
+    if (this.dischargeMaterialResults) {
+      this.dischargeMaterialResults.addEventListener('click', (event) => {
+        const target = event.target.closest('[data-role="discharge-material-option"]');
+        if (!target) {
+          return;
+        }
+        event.preventDefault();
+        const value = target.dataset.value || '';
+        const label = target.dataset.label || '';
+        if (this.dischargeMaterialInput) {
+          this.dischargeMaterialInput.value = label;
+        }
+        if (this.dischargeMaterialCode) {
+          this.dischargeMaterialCode.value = value;
+        }
+        this.clearFieldFeedback(this.dischargeMaterialInput);
+        this.hideMaterialResults();
+      });
+    }
+
+    document.addEventListener('click', (event) => {
+      if (!this.dischargeMaterialResults) {
+        return;
+      }
+      if (this.dischargeMaterialGroup && this.dischargeMaterialGroup.contains(event.target)) {
+        return;
+      }
+      this.hideMaterialResults();
+    });
+
     [
       this.dischargeSource,
       this.dischargeType,
       this.samplingPersonnel,
       this.actionRequired,
       this.finalDisposition,
+      this.dischargeMaterialInput,
     ].forEach((input) => {
       if (!input) {
         return;
@@ -227,6 +291,89 @@ class DischargeTestingEntryPage {
       } else {
         this.actionRequired.removeAttribute('aria-required');
       }
+    }
+  }
+
+  syncMaterialFieldVisibility() {
+    if (!this.dischargeMaterialGroup) {
+      return;
+    }
+    const dischargeTypeValue = this.dischargeType ? this.dischargeType.value : '';
+    const shouldShow = ACID_BASE_TYPES.includes(dischargeTypeValue);
+    this.dischargeMaterialGroup.style.display = shouldShow ? '' : 'none';
+    if (!shouldShow) {
+      if (this.dischargeMaterialInput) {
+        this.dischargeMaterialInput.value = '';
+      }
+      if (this.dischargeMaterialCode) {
+        this.dischargeMaterialCode.value = '';
+      }
+      this.clearFieldFeedback(this.dischargeMaterialInput);
+      this.hideMaterialResults();
+    }
+  }
+
+  hideMaterialResults() {
+    if (!this.dischargeMaterialResults) {
+      return;
+    }
+    this.dischargeMaterialResults.innerHTML = '';
+    this.dischargeMaterialResults.style.display = 'none';
+  }
+
+  renderMaterialResults(results) {
+    if (!this.dischargeMaterialResults) {
+      return;
+    }
+    this.dischargeMaterialResults.innerHTML = '';
+    this.dischargeMaterialResults.style.display = 'block';
+    this.dischargeMaterialResults.classList.add('list-group', 'mt-1');
+
+    if (!Array.isArray(results) || results.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'list-group-item text-muted';
+      empty.textContent = 'No matches';
+      this.dischargeMaterialResults.appendChild(empty);
+      return;
+    }
+
+    results.forEach((result) => {
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'list-group-item list-group-item-action';
+      item.dataset.role = 'discharge-material-option';
+      item.dataset.value = result.value || '';
+      item.dataset.label = result.label || '';
+      item.textContent = result.label || result.value || '';
+      this.dischargeMaterialResults.appendChild(item);
+    });
+  }
+
+  async searchMaterials() {
+    if (!this.dischargeMaterialInput) {
+      return;
+    }
+    const term = normalizeText(this.dischargeMaterialInput.value);
+    if (term.length < 2) {
+      this.hideMaterialResults();
+      return;
+    }
+
+    try {
+      const data = await this.requestJson(
+        `${MATERIAL_SEARCH_ENDPOINT}?q=${encodeURIComponent(term)}`,
+        {
+          method: 'GET',
+          credentials: 'same-origin',
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+          },
+        },
+      );
+      this.renderMaterialResults(data.results || []);
+    } catch (error) {
+      console.error(error);
+      this.hideMaterialResults();
     }
   }
 
@@ -319,6 +466,8 @@ class DischargeTestingEntryPage {
         input = this.finalPh;
       } else if (field === 'final_disposition') {
         input = this.finalDisposition;
+      } else if (field === 'discharge_material_code') {
+        input = this.dischargeMaterialInput;
       }
 
       if (!input) {
@@ -340,6 +489,9 @@ class DischargeTestingEntryPage {
     const samplingPersonnelName = samplingPersonnelId ? samplingPersonnelLabel : '';
     const actionRequired = normalizeText(this.actionRequired ? this.actionRequired.value : '');
     const finalDisposition = normalizeText(this.finalDisposition ? this.finalDisposition.value : '');
+    const dischargeMaterialCode = normalizeText(
+      this.dischargeMaterialCode ? this.dischargeMaterialCode.value : '',
+    );
 
     const initialParsed = parsePhValue(this.initialPh ? this.initialPh.value : '');
     const finalParsed = parsePhValue(this.finalPh ? this.finalPh.value : '');
@@ -357,6 +509,9 @@ class DischargeTestingEntryPage {
     }
     if (!finalDisposition) {
       errors.final_disposition = 'Final disposition is required.';
+    }
+    if (ACID_BASE_TYPES.includes(dischargeType) && !dischargeMaterialCode) {
+      errors.discharge_material_code = 'Discharge material is required for Acid or Base.';
     }
 
     if (initialParsed.error) {
@@ -394,6 +549,7 @@ class DischargeTestingEntryPage {
         action_required: this.actionRequired,
         final_pH: this.finalPh,
         final_disposition: this.finalDisposition,
+        discharge_material_code: this.dischargeMaterialInput,
       }[firstErrorField];
       if (firstInput && typeof firstInput.focus === 'function') {
         firstInput.focus();
@@ -407,6 +563,7 @@ class DischargeTestingEntryPage {
       sampling_personnel_id: samplingPersonnelId,
       sampling_personnel_name: samplingPersonnelName,
       initial_pH: initialValue,
+      discharge_material_code: dischargeMaterialCode,
       action_required: actionRequired,
       final_pH: finalValue,
       final_disposition: finalDisposition,
@@ -462,7 +619,16 @@ class DischargeTestingEntryPage {
     this.clearFieldFeedback(this.finalPh);
     this.clearFieldFeedback(this.actionRequired);
     this.clearFieldFeedback(this.finalDisposition);
+    this.clearFieldFeedback(this.dischargeMaterialInput);
+    if (this.dischargeMaterialInput) {
+      this.dischargeMaterialInput.value = '';
+    }
+    if (this.dischargeMaterialCode) {
+      this.dischargeMaterialCode.value = '';
+    }
+    this.hideMaterialResults();
     this.syncActionRequired();
+    this.syncMaterialFieldVisibility();
     if (this.dischargeSource && typeof this.dischargeSource.focus === 'function') {
       this.dischargeSource.focus();
     }
