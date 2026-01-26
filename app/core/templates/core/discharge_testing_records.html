@@ -49,6 +49,7 @@
                     <th scope="col" style="width: 140px;">Date/Time</th>
                     <th scope="col">Discharge Source</th>
                     <th scope="col">Discharge Type</th>
+                    <th scope="col" style="width: 160px;">Discharge Material</th>
                     <th scope="col" style="width: 140px;">Initial pH</th>
                     <th scope="col" style="min-width: 220px;">Action Required</th>
                     <th scope="col" style="min-width: 220px;">Final Disposition</th>
@@ -69,6 +70,13 @@
                         </td>
                         <td data-field="discharge_type" data-edit-group="line" data-value="{{ tote.discharge_type }}">
                             {{ tote.discharge_type }}
+                        </td>
+                        <td data-field="discharge_material_code" data-value="{{ tote.discharge_material_code|default_if_none:'' }}">
+                            {% if tote.discharge_material_code %}
+                                {{ tote.discharge_material_code }}
+                            {% else %}
+                                --
+                            {% endif %}
                         </td>
                         <td data-field="initial_pH" data-edit-group="lab" data-value="{{ tote.initial_pH|default_if_none:'' }}">
                             <div class="fw-semibold">
@@ -147,7 +155,7 @@
                     </tr>
                 {% empty %}
                     <tr>
-                        <td colspan="10" class="text-center py-4">No discharge tests recorded yet.</td>
+                        <td colspan="11" class="text-center py-4">No discharge tests recorded yet.</td>
                     </tr>
                 {% endfor %}
             </tbody>

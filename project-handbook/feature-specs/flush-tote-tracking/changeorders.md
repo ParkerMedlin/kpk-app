@@ -473,11 +473,11 @@ _When discharge_type is Acid or Base, require user to specify the material via a
 
 ### Records View Updates
 
-- [ ] **16.30** Add material column to records table
+- [x] **16.30** Add material column to records table
   - **Do**: In `discharge_testing_records.html`, add table column header "Discharge Material"; in row template, display `discharge_material_code` (or empty if null).
   - **Deliverable**: Records table shows material code.
 
-- [ ] **16.31** Update DischargeTestingRecords.js for material display
+- [x] **16.31** Update DischargeTestingRecords.js for material display
   - **Do**: In `DischargeTestingRecords.js`, update row rendering to include `discharge_material_code`; no inline edit for this field (read-only in records view).
   - **Deliverable**: Records JS renders material correctly.
 
@@ -495,10 +495,10 @@ _When discharge_type is Acid or Base, require user to specify the material via a
 | 13. Rename flush_type | Complete | 12/12 |
 | 14. Model-Defined Choices | Complete | 8/8 |
 | 15. Sampling Personnel Dropdown | Complete | 10/10 |
-| 16. Acid/Base Material Autocomplete | Not Started | 0/31 |
+| 16. Acid/Base Material Autocomplete | Complete | 31/31 |
 
-**Overall**: 68/99 tasks (69%)
+**Overall**: 99/99 tasks (100%)
 
 ---
 
-**Status**: In Progress
+**Status**: Conplete
