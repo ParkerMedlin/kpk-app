@@ -101,7 +101,35 @@ Remove the redundant `this.form.reset()` call from `resetForm()`. The native for
 - [x] 4.7 Test: Click Clear → all fields remain interactive
 - [x] 4.8 Test: Click Clear → form values are cleared
 - [x] 4.9 Test: Click Clear → validation feedback is cleared
-- [ ] 4.10 Test: Submit success calls `resetForm()` directly without infinite loop
+- [x] 4.10 Test: Submit success calls `resetForm()` directly without infinite loop
+
+---
+
+## Issue 5: Initial pH Should Be Required
+
+**Problem:** The initial pH field is currently optional. It should be required for all non-Oil discharge types.
+
+**Expected Behavior:**
+- Initial pH is required for Acid, Base, Soap, and Polish discharge types
+- Initial pH remains hidden (and not required) for Oil discharge type
+- Form cannot be submitted without initial pH (for applicable types)
+- Server-side validation enforces this requirement
+
+**Code Locations:**
+- `discharge_testing_entry.html` - add `required` attribute to initial pH input
+- `DischargeTestingEntry.js` - add client-side validation for initial pH
+- `discharge_testing_services.py` - add server-side validation for initial pH
+
+### Tasks
+
+- [x] 5.1 Add `required` attribute to initial pH input in `discharge_testing_entry.html`
+- [x] 5.2 Update `collectPayload()` in JS to validate initial pH is provided (non-Oil types)
+- [x] 5.3 Update `create_discharge_test()` service to require initial pH for non-Oil types
+- [x] 5.4 Ensure Oil type bypasses initial pH requirement (client and server)
+- [x] 5.5 Test: Submit Acid type without initial pH → validation error
+- [x] 5.6 Test: Submit Soap type without initial pH → validation error
+- [x] 5.7 Test: Submit Oil type without initial pH → success
+- [x] 5.8 Test: Submit with valid initial pH → success
 
 ---
 

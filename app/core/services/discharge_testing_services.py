@@ -140,6 +140,8 @@ def create_discharge_test(
         final_value = None
     else:
         initial_value = _parse_ph(initial_pH, "initial_pH")
+        if initial_value is None:
+            raise ValidationError({"initial_pH": "Initial pH is required."})
         final_value = _parse_ph(final_pH, "final_pH")
 
         if final_value is not None and initial_value is None:

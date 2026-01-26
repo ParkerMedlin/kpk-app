@@ -157,9 +157,9 @@
 
 ### Oil Submission
 
-- [ ] Submit Oil type without any pH values → record created successfully
-- [ ] pH fields remain null in database
-- [ ] No pH validation errors
+- [x] Submit Oil type without any pH values → record created successfully
+- [x] pH fields remain null in database
+- [x] No pH validation errors
 
 ---
 
@@ -167,20 +167,21 @@
 
 ### Missing Required Fields
 
-- [ ] Submit without Discharge Source → error on field
-- [ ] Submit without Discharge Type → error on field
-- [ ] Submit without Sampling Personnel → error on field
-- [ ] Submit without Final Disposition → error on field
-- [ ] First error field receives focus
+- [x] Submit without Discharge Source → error on field
+- [x] Submit without Discharge Type → error on field
+- [x] Submit without Sampling Personnel → error on field
+- [x] Submit without Initial pH → error on field
+- [x] Submit without Final Disposition → error on field
+- [x] First error field receives focus
 
 ### Acid/Base Material Required
 
-- [ ] Submit Acid type without material → error: "Discharge material is required for Acid or Base."
-- [ ] Submit Base type without material → error on discharge material field
+- [x] Submit Acid type without material → error: "Discharge material is required for Acid or Base."
+- [x] Submit Base type without material → error on discharge material field
 
 ### pH Validation
 
-- [ ] Submit with out-of-range initial pH, no action → error on Action Required
+- [x] Submit with out-of-range initial pH, no action → error on Action Required
 - [ ] Submit with final pH but no initial pH → error: "Initial pH must be recorded before final pH."
 - [ ] Submit with out-of-range final pH → error on Final pH
 
