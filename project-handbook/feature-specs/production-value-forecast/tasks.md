@@ -46,9 +46,10 @@ Implementation tasks for production value forecast report. No models/migrations 
   - **Verify**: All acceptance criteria pass
   - **Requirement**: All
 
-- [ ] **3.2** Add navigation link (optional)
-  - **Do**: Add link to Reports section in navbar if needed
-  - **Deliverable**: Easy access from main nav
+- [x] **3.2** Add navigation link
+  - **Do**: Add to Quick Find menu and Misc Reports dropdown
+  - **Deliverable**: Accessible via Ctrl+K quick find and Reports page dropdown
+  - **Completed**: Added to `_MISC_REPORT_DEFINITIONS` in reports_services.py
 
 ---
 
@@ -58,10 +59,17 @@ Implementation tasks for production value forecast report. No models/migrations 
 |-------|--------|----------------|
 | 1. Backend | Complete | 3/3 |
 | 2. Frontend | Complete | 2/2 |
-| 3. Integration | Ready for Testing | 0/2 |
+| 3. Integration | Ready for Testing | 1/2 |
 
-**Overall**: 5/7 tasks (71%)
+**Overall**: 6/7 tasks (86%)
 
 ---
 
-**Status**: Implementation Complete - Ready for Testing
+**Status**: Implementation Complete - Ready for End-to-End Testing
+
+## Access Points
+
+Users can access the report via:
+1. **Quick Find**: Press Ctrl/Cmd + K, search "production value forecast"
+2. **Reports Page**: Navigate to `/core/reports/`, select "Production Value Forecast" from dropdown, click "Generate Report"
+3. **Direct URL**: Navigate to `/core/production-value-forecast/`
