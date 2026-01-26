@@ -215,6 +215,7 @@ class DischargeTestingEntryPage {
           this.dischargeMaterialCode.value = value;
         }
         this.clearFieldFeedback(this.dischargeMaterialInput);
+        this.checkPhActiveComponent(value);
         this.hideMaterialResults();
       });
     }
@@ -312,6 +313,7 @@ class DischargeTestingEntryPage {
       }
       this.clearFieldFeedback(this.dischargeMaterialInput);
       this.hideMaterialResults();
+      this.hidePhAlert();
     }
   }
 
@@ -349,6 +351,23 @@ class DischargeTestingEntryPage {
       item.textContent = result.label || result.value || '';
       this.dischargeMaterialResults.appendChild(item);
     });
+  }
+
+  showPhAlert(componentCode) {
+    if (!this.phAlert) {
+      return;
+    }
+    const message = `pH-affecting material detected: ${componentCode}`;
+    this.phAlert.textContent = message;
+    this.phAlert.style.display = 'block';
+  }
+
+  hidePhAlert() {
+    if (!this.phAlert) {
+      return;
+    }
+    this.phAlert.style.display = 'none';
+    this.phAlert.textContent = '';
   }
 
   async checkPhActiveComponent(materialCode) {
@@ -665,6 +684,7 @@ class DischargeTestingEntryPage {
       this.dischargeMaterialCode.value = '';
     }
     this.hideMaterialResults();
+    this.hidePhAlert();
     this.syncActionRequired();
     this.syncMaterialFieldVisibility();
     if (this.dischargeSource && typeof this.dischargeSource.focus === 'function') {
