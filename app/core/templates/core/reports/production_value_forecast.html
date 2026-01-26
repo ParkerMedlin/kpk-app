@@ -212,6 +212,11 @@
                 <button type="button" class="primary" id="analyzeBtn">Analyze Production Schedule</button>
                 <button type="button" class="ghost-btn" id="downloadBtn" disabled style="margin-top: 8px;">Download CSV</button>
             </div>
+            <div class="control-box">
+                <label>Filters</label>
+                <button type="button" class="ghost-btn" id="hideSelectedBtn" disabled>Hide Selected</button>
+                <button type="button" class="ghost-btn" id="showHiddenBtn" disabled style="margin-top: 8px;">Show Hidden Items</button>
+            </div>
         </div>
 
         <div id="alertBox" class="alert hidden"></div>
@@ -249,6 +254,8 @@
     const API_URL = '/core/api/production-value-forecast/';
     const analyzeBtn = document.getElementById('analyzeBtn');
     const downloadBtn = document.getElementById('downloadBtn');
+    const hideSelectedBtn = document.getElementById('hideSelectedBtn');
+    const showHiddenBtn = document.getElementById('showHiddenBtn');
     const nextHoursInput = document.getElementById('nextHoursInput');
     const alertBox = document.getElementById('alertBox');
     const resultsTable = document.getElementById('resultsTable');
@@ -256,17 +263,26 @@
 
     let cachedData = null;
     let isLoading = false;
+    let hiddenIndices = new Set();
 
     analyzeBtn.addEventListener('click', runAnalysis);
     downloadBtn.addEventListener('click', downloadCsv);
+    hideSelectedBtn.addEventListener('click', hideSelected);
+    showHiddenBtn.addEventListener('click', showHidden);
 
     resultsTable.addEventListener('click', (e) => {
         const header = e.target.closest('.line-group-header');
-        if (!header) return;
+        if (header) {
+            const lineGroup = header.dataset.line;
+            const rows = document.querySelectorAll(`.line-group-row[data-line="${lineGroup}"]`);
+            rows.forEach(row => row.classList.toggle('collapsed'));
+            return;
+        }
 
-        const lineGroup = header.dataset.line;
-        const rows = document.querySelectorAll(`.line-group-row[data-line="${lineGroup}"]`);
-        rows.forEach(row => row.classList.toggle('collapsed'));
+        const checkbox = e.target.closest('input[type="checkbox"].row-checkbox');
+        if (checkbox) {
+            updateFilterButtons();
+        }
     });
 
     function setLoading(state) {
@@ -305,9 +321,11 @@
             }
 
             cachedData = payload;
+            hiddenIndices.clear();
             renderSummary(payload);
             renderTable(payload);
             downloadBtn.disabled = false;
+            updateFilterButtons();
         } catch (error) {
             console.error(error);
             showAlert(error.message || 'Unexpected error occurred while analyzing.');
@@ -320,14 +338,24 @@
     }
 
     function renderSummary(payload) {
-        const summary = payload.summary || {};
-        const totalRevenue = formatCurrency(summary.totalValue);
-        const runCount = Number(summary.runCount) || 0;
+        const runs = payload.runs || [];
+
+        // Calculate totals excluding hidden items
+        let totalRevenue = 0;
+        let visibleCount = 0;
+        runs.forEach((run, index) => {
+            if (!hiddenIndices.has(index)) {
+                totalRevenue += run.extendedValue || 0;
+                visibleCount++;
+            }
+        });
+
         const elapsed = `${Math.round(Number(payload.elapsedMs) || 0)} ms`;
+        const hiddenCount = hiddenIndices.size;
 
         summaryStrip.innerHTML = `
-            <div class="kpi"><div class="value">${totalRevenue}</div><div class="label">Total Revenue</div></div>
-            <div class="kpi"><div class="value">${runCount}</div><div class="label">Production Runs</div></div>
+            <div class="kpi"><div class="value">${formatCurrency(totalRevenue)}</div><div class="label">Total Revenue${hiddenCount > 0 ? ` (${hiddenCount} hidden)` : ''}</div></div>
+            <div class="kpi"><div class="value">${visibleCount}</div><div class="label">Production Runs</div></div>
             <div class="kpi"><div class="value">${elapsed}</div><div class="label">Query Time</div></div>
         `;
     }
@@ -351,27 +379,49 @@
         });
 
         let tableHtml = '<div style="overflow-x:auto; max-height:600px;"><table><thead><tr>';
-        tableHtml += '<th>Production Line</th><th>PO #</th><th>Item</th><th>Description</th>';
+        tableHtml += '<th style="width:30px;"></th><th>Production Line</th><th>PO #</th><th>Item</th><th>Description</th>';
         tableHtml += '<th class="num">Start Time</th><th class="num">Qty</th><th class="num">Unit Price</th><th class="num">Extended Value</th>';
         tableHtml += '</tr></thead><tbody>';
 
+        // Create a map to track original indices
+        const runIndices = new Map();
+        runs.forEach((run, index) => {
+            runIndices.set(run, index);
+        });
+
         Object.keys(lineGroups).sort().forEach(line => {
-            const runs = lineGroups[line];
+            const lineRuns = lineGroups[line];
 
             // Sort runs by start_time within each line
-            runs.sort((a, b) => (a.startTime || 0) - (b.startTime || 0));
+            lineRuns.sort((a, b) => (a.startTime || 0) - (b.startTime || 0));
 
-            const lineTotal = runs.reduce((sum, r) => sum + r.extendedValue, 0);
+            // Calculate line total excluding hidden items
+            let lineTotal = 0;
+            let visibleLineCount = 0;
+            lineRuns.forEach(run => {
+                const originalIndex = runIndices.get(run);
+                if (!hiddenIndices.has(originalIndex)) {
+                    lineTotal += run.extendedValue || 0;
+                    visibleLineCount++;
+                }
+            });
 
             // Line group header
             tableHtml += `<tr class="line-group-header" data-line="${line}">`;
-            tableHtml += `<td colspan="5"><strong>${line}</strong> (${runs.length} runs)</td>`;
+            tableHtml += `<td></td>`;
+            tableHtml += `<td colspan="5"><strong>${line}</strong> (${visibleLineCount} of ${lineRuns.length} runs)</td>`;
             tableHtml += `<td colspan="3" class="num"><strong>${formatCurrency(lineTotal)}</strong></td>`;
             tableHtml += '</tr>';
 
             // Line group rows
-            runs.forEach(run => {
-                tableHtml += `<tr class="line-group-row" data-line="${line}">`;
+            lineRuns.forEach(run => {
+                const originalIndex = runIndices.get(run);
+                const isHidden = hiddenIndices.has(originalIndex);
+                const hiddenClass = isHidden ? ' hidden-row' : '';
+                const hiddenStyle = isHidden ? ' style="opacity: 0.4; text-decoration: line-through;"' : '';
+
+                tableHtml += `<tr class="line-group-row${hiddenClass}" data-line="${line}" data-index="${originalIndex}"${hiddenStyle}>`;
+                tableHtml += `<td><input type="checkbox" class="row-checkbox" data-index="${originalIndex}"${isHidden ? ' disabled' : ''}></td>`;
                 tableHtml += `<td></td>`;
                 tableHtml += `<td>${run.poNumber || ''}</td>`;
                 tableHtml += `<td>${run.itemCode || ''}</td>`;
@@ -417,6 +467,38 @@
         a.click();
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
+    }
+
+    function updateFilterButtons() {
+        const checkboxes = document.querySelectorAll('input.row-checkbox:not([disabled])');
+        const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+
+        hideSelectedBtn.disabled = checkedCount === 0 || !cachedData;
+        showHiddenBtn.disabled = hiddenIndices.size === 0 || !cachedData;
+    }
+
+    function hideSelected() {
+        const checkboxes = document.querySelectorAll('input.row-checkbox:checked:not([disabled])');
+        checkboxes.forEach(cb => {
+            const index = parseInt(cb.dataset.index);
+            hiddenIndices.add(index);
+        });
+
+        if (!cachedData) return;
+
+        renderSummary(cachedData);
+        renderTable(cachedData);
+        updateFilterButtons();
+    }
+
+    function showHidden() {
+        hiddenIndices.clear();
+
+        if (!cachedData) return;
+
+        renderSummary(cachedData);
+        renderTable(cachedData);
+        updateFilterButtons();
     }
 
     function formatCurrency(value, minimumFractionDigits = 2, maximumFractionDigits = 2) {
