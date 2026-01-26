@@ -551,7 +551,7 @@ _Auto-detect and record which specific material caused pH deviation. When discha
 
 ### API View Updates
 
-- [ ] **17.10** Update API serialization
+- [x] **17.10** Update API serialization
   - **Do**: In `app/core/views/api.py`, update `_serialize_flush_tote` helper to include `ph_active_component` in output.
   - **Deliverable**: API GET responses include ph_active_component.
 

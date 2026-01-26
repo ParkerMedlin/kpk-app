@@ -2231,6 +2231,7 @@ def _serialize_flush_tote_reading(tote):
         'production_line': tote.discharge_source,
         'discharge_type': tote.discharge_type,
         'discharge_material_code': tote.discharge_material_code,
+        'ph_active_component': tote.ph_active_component,
         'initial_pH': _safe_float(tote.initial_pH),
         'action_required': tote.action_required or '',
         'final_pH': _safe_float(tote.final_pH),
