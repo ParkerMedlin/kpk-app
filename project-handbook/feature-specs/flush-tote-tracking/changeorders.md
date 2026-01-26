@@ -501,4 +501,89 @@ _When discharge_type is Acid or Base, require user to specify the material via a
 
 ---
 
-**Status**: Conplete
+## Phase 17: pH Active Component Tracking
+
+_Auto-detect and record which specific material caused pH deviation. When discharge_material_code matches a watch list item (directly or as a blend component), store the matching item code in ph_active_component._
+
+**Watch List**: `030050`, `030015`, `030024`, `200126`, `030025`, `240079`
+
+### Model Changes
+
+- [ ] **17.1** Define PH_ACTIVE_WATCH_CODES constant
+  - **Do**: In `app/core/models.py`, add `PH_ACTIVE_WATCH_CODES = ('030050', '030015', '030024', '200126', '030025', '240079')` tuple constant to `DischargeTestingRecord` class.
+  - **Deliverable**: Constant defined on model class.
+
+- [ ] **17.2** Add `ph_active_component` field
+  - **Do**: In `app/core/models.py`, add `ph_active_component = models.CharField(max_length=50, blank=True, null=True)` to `DischargeTestingRecord` model; stores the itemcode of the pH-affecting material.
+  - **Deliverable**: Field added to model.
+
+- [ ] **17.3** Create migration
+  - **Do**: Create migration for new field.
+  - **Verify**: `python manage.py makemigrations` succeeds.
+
+- [ ] **17.4** Apply migration (delegate to user)
+  - **Do**: Prompt user to run migrations.
+  - **Verify**: Migration applies cleanly.
+
+### Selector Layer
+
+- [ ] **17.5** Create selector to find pH active component from BOM
+  - **Do**: In `discharge_testing_selectors.py`, add `find_ph_active_component(material_code: str) -> Optional[str]` function: first check if `material_code` is directly in `DischargeTestingRecord.PH_ACTIVE_WATCH_CODES`, return it if so; otherwise query `bill_of_materials` table where `parent_item_code = material_code` and `component_item_code` is in watch list; return first match or None.
+  - **Deliverable**: Selector function returns matching watch list code or None.
+
+- [ ] **17.6** Update selector exports
+  - **Do**: In `app/core/selectors/__init__.py`, add `find_ph_active_component` to imports and exports.
+  - **Deliverable**: Function exported from selectors package.
+
+### Service Layer
+
+- [ ] **17.7** Import selector in service
+  - **Do**: In `discharge_testing_services.py`, add `find_ph_active_component` to imports from selectors.
+  - **Deliverable**: Import statement added.
+
+- [ ] **17.8** Add ph_active_component logic in create_discharge_test
+  - **Do**: In `discharge_testing_services.py`, in `create_discharge_test`, after setting `discharge_material_code`, call `find_ph_active_component(cleaned_material_code)` and assign result to `tote.ph_active_component` if not None.
+  - **Deliverable**: Service auto-populates ph_active_component on create.
+
+- [ ] **17.9** Update service serialization
+  - **Do**: In `discharge_testing_services.py`, update `_serialize_discharge_test` to include `ph_active_component` in returned dict.
+  - **Deliverable**: WebSocket broadcasts include ph_active_component.
+
+### API View Updates
+
+- [ ] **17.10** Update API serialization
+  - **Do**: In `app/core/views/api.py`, update `_serialize_flush_tote` helper to include `ph_active_component` in output.
+  - **Deliverable**: API GET responses include ph_active_component.
+
+### Records View Updates
+
+- [ ] **17.11** Add column to records table
+  - **Do**: In `discharge_testing_records.html`, add table column header "pH Active Component"; in row template, display `ph_active_component` value (or empty/dash if null).
+  - **Deliverable**: Records table shows ph_active_component.
+
+- [ ] **17.12** Update DischargeTestingRecords.js for display
+  - **Do**: In `DischargeTestingRecords.js`, update row rendering to include `ph_active_component`; read-only field (no inline edit).
+  - **Deliverable**: Records JS renders ph_active_component correctly.
+
+---
+
+## Progress
+
+| Phase | Status | Tasks Complete |
+|-------|--------|----------------|
+| 8. Model & Rename | Complete | 13/13 |
+| 9. Selector & Service Updates | Complete | 2/2 |
+| 10. Form & Interface | Complete | 9/9 |
+| 11. Navigation | Complete | 2/2 |
+| 12. Rename line_personnel | Complete | 12/12 |
+| 13. Rename flush_type | Complete | 12/12 |
+| 14. Model-Defined Choices | Complete | 8/8 |
+| 15. Sampling Personnel Dropdown | Complete | 10/10 |
+| 16. Acid/Base Material Autocomplete | Complete | 31/31 |
+| 17. pH Active Component Tracking | In Progress | 0/12 |
+
+**Overall**: 99/111 tasks (89%)
+
+---
+
+**Status**: In Progress
