@@ -71,7 +71,11 @@ from core.services.cost_impact_service import analyze_cost_impacts
 import time
 from django.utils.dateparse import parse_datetime
 from typing import Dict
-from core.selectors import get_discharge_test, list_discharge_tests
+from core.selectors import (
+    get_acid_base_material_options,
+    get_discharge_test,
+    list_discharge_tests,
+)
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -2309,6 +2313,14 @@ def discharge_testing_list_api(request):
         },
         status=201,
     )
+
+
+@login_required
+@require_GET
+def discharge_material_search_api(request):
+    query = (request.GET.get("q") or "").strip()
+    results = get_acid_base_material_options(query)
+    return JsonResponse({"status": "ok", "results": results})
 
 
 @login_required
