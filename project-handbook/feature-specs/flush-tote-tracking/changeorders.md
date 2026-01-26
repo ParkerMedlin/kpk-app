@@ -537,15 +537,15 @@ _Auto-detect and record which specific material caused pH deviation. When discha
 
 ### Service Layer
 
-- [ ] **17.7** Import selector in service
+- [x] **17.7** Import selector in service
   - **Do**: In `discharge_testing_services.py`, add `find_ph_active_component` to imports from selectors.
   - **Deliverable**: Import statement added.
 
-- [ ] **17.8** Add ph_active_component logic in create_discharge_test
+- [x] **17.8** Add ph_active_component logic in create_discharge_test
   - **Do**: In `discharge_testing_services.py`, in `create_discharge_test`, after setting `discharge_material_code`, call `find_ph_active_component(cleaned_material_code)` and assign result to `tote.ph_active_component` if not None.
   - **Deliverable**: Service auto-populates ph_active_component on create.
 
-- [ ] **17.9** Update service serialization
+- [x] **17.9** Update service serialization
   - **Do**: In `discharge_testing_services.py`, update `_serialize_discharge_test` to include `ph_active_component` in returned dict.
   - **Deliverable**: WebSocket broadcasts include ph_active_component.
 
