@@ -47,6 +47,7 @@ def _serialize_discharge_test(tote: DischargeTestingRecord) -> Dict[str, Any]:
             "date": tote.date,
             "discharge_source": tote.discharge_source,
             "discharge_type": tote.discharge_type,
+            "discharge_material_code": tote.discharge_material_code,
             "initial_pH": tote.initial_pH,
             "action_required": tote.action_required,
             "final_pH": tote.final_pH,
@@ -107,6 +108,7 @@ def create_discharge_test(
     *,
     discharge_source: str,
     discharge_type: str,
+    discharge_material_code: Optional[str] = None,
     final_disposition: str,
     sampling_personnel_id: Optional[Union[int, str]] = None,
     user: Optional[User] = None,
@@ -120,9 +122,13 @@ def create_discharge_test(
     """
     cleaned_source = (discharge_source or "").strip()
     cleaned_discharge_type = (discharge_type or "").strip()
+    cleaned_material_code = (discharge_material_code or "").strip()
     cleaned_disposition = (final_disposition or "").strip()
     if not cleaned_disposition:
         raise ValidationError({"final_disposition": "Final disposition is required."})
+
+    if cleaned_discharge_type.lower() in {"acid", "base"} and not cleaned_material_code:
+        raise ValidationError({"discharge_material_code": "Material is required for Acid or Base discharge."})
 
     initial_value = _parse_ph(initial_pH, "initial_pH")
     final_value = _parse_ph(final_pH, "final_pH")
@@ -164,6 +170,7 @@ def create_discharge_test(
     tote = DischargeTestingRecord(
         discharge_source=cleaned_source,
         discharge_type=cleaned_discharge_type,
+        discharge_material_code=cleaned_material_code or None,
         initial_pH=initial_value,
         action_required=cleaned_action,
         final_pH=final_value,
