@@ -269,6 +269,12 @@
     downloadBtn.addEventListener('click', downloadCsv);
     hideSelectedBtn.addEventListener('click', hideSelected);
     showHiddenBtn.addEventListener('click', showHidden);
+    nextHoursInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            runAnalysis();
+        }
+    });
 
     resultsTable.addEventListener('click', (e) => {
         const header = e.target.closest('.line-group-header');
