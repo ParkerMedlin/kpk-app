@@ -37,14 +37,14 @@ class CostImpactResult:
 
 def parse_cost_changes_from_workbook(
     purchasing_costs: Dict[str, Dict[str, Decimal]],
-    min_change_threshold: Decimal = Decimal('0.01')
+    min_change_threshold: Decimal = Decimal('0')
 ) -> List[Dict]:
     """
     Extract items with price changes from purchasing costs workbook.
 
     Args:
         purchasing_costs: Dict mapping item_code to {'est_landed': Decimal, 'next_cost': Decimal}
-        min_change_threshold: Minimum cost change to include (default $0.01)
+        min_change_threshold: Minimum cost change to include (default $0.00)
 
     Returns:
         List of items with cost changes, each containing:
@@ -68,8 +68,8 @@ def parse_cost_changes_from_workbook(
         # Calculate delta
         delta = next_cost - est_landed
 
-        # Skip if change is below threshold
-        if abs(delta) < min_change_threshold:
+        # Skip if change is below threshold (0 means include all deltas)
+        if min_change_threshold and abs(delta) < min_change_threshold:
             continue
 
         # Calculate percentage change
