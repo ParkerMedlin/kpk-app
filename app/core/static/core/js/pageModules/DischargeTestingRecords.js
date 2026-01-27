@@ -291,7 +291,7 @@ class DischargeTestingRecordsPage {
     };
     row.querySelectorAll('[data-field]').forEach((cell) => {
       const field = cell.dataset.field;
-      if (!field || field === 'actions') {
+      if (!field || field === 'actions' || field === 'delete') {
         return;
       }
       if (field === 'sampling_personnel_id') {
@@ -414,6 +414,7 @@ class DischargeTestingRecordsPage {
         || field === 'lab_technician_name'
         || field === 'discharge_material_code'
         || field === 'ph_active_component'
+        || field === 'delete'
       ) {
         return;
       }
