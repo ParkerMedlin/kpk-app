@@ -133,4 +133,39 @@ Remove the redundant `this.form.reset()` call from `resetForm()`. The native for
 
 ---
 
+## Issue 6: Edit Mode Replaces Delete Button With Empty Input
+
+**Problem:** Clicking the Edit button on a records row replaces the trash/delete button with an empty text input field. Exiting edit mode (save or cancel) does not restore it.
+
+**Root Cause Analysis:**
+
+`enterEditMode()` (`DischargeTestingRecords.js` line 405) iterates every `[data-field]` cell in the row and converts each one into an editable input, unless the field name appears in the skip list (lines 407-419). The delete button's cell uses `data-field="delete"` (template line 164), which is **not** in the skip list. It falls through to the generic text input branch (lines 433-437):
+
+```
+cell.innerHTML = '';          // destroys the trash button
+cell.appendChild(input);      // replaces it with an empty <input type="text">
+```
+
+On exit, `applyRowData()` (line 717) restores the `actions` cell (line 780-783) but has no handling for the `delete` cell, so the trash button is never restored.
+
+Additionally, `getRowSnapshot()` (line 286) only skips `actions`, not `delete`, so a spurious `delete: ""` key is captured in the snapshot.
+
+**Affected Code Locations:**
+- `DischargeTestingRecords.js` line 405-441 — `enterEditMode()` field iteration
+- `DischargeTestingRecords.js` line 286-305 — `getRowSnapshot()` field iteration
+
+**Fix Approach:**
+Add `'delete'` to the skip conditions in both methods. If `enterEditMode` never touches the delete cell, the button stays intact through edit/cancel/save and no restoration logic is needed.
+
+### Tasks
+
+- [ ] 6.1 Add `field === 'delete'` to the skip condition in `enterEditMode()` (line 411-419)
+- [ ] 6.2 Add `field === 'delete'` to the skip condition in `getRowSnapshot()` (line 294)
+- [ ] 6.3 Test: Click Edit → delete button remains visible and unchanged
+- [ ] 6.4 Test: Click Cancel → delete button still functional
+- [ ] 6.5 Test: Click Save → delete button still functional
+- [ ] 6.6 Test: Delete button works correctly after editing and saving a row
+
+---
+
 

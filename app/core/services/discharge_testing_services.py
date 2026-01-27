@@ -11,7 +11,6 @@ from django.db import transaction
 from app.websockets import base_consumer
 from core.models import DischargeTestingRecord
 from core.selectors import find_ph_active_component
-from core.websockets.serializer import serialize_for_websocket
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -39,27 +38,6 @@ def _parse_ph(value: Any, field_name: str) -> Optional[Decimal]:
     return parsed
 
 
-def _serialize_discharge_test(tote: DischargeTestingRecord) -> Dict[str, Any]:
-    return serialize_for_websocket(
-        {
-            "id": tote.id,
-            "date": tote.date,
-            "discharge_source": tote.discharge_source,
-            "discharge_type": tote.discharge_type,
-            "discharge_material_code": tote.discharge_material_code,
-            "ph_active_component": tote.ph_active_component,
-            "initial_pH": tote.initial_pH,
-            "action_required": tote.action_required,
-            "final_pH": tote.final_pH,
-            "final_disposition": tote.final_disposition,
-            "lab_technician_id": tote.lab_technician_id,
-            "lab_technician_name": _user_display(tote.lab_technician),
-            "sampling_personnel_id": tote.sampling_personnel_id,
-            "sampling_personnel_name": _sampling_personnel_display(tote),
-        }
-    )
-
-
 def _user_display(user: Optional[User]) -> Optional[str]:
     if not user:
         return None
@@ -79,34 +57,6 @@ def _is_lab_user(user: Optional[User]) -> bool:
 
 def is_lab_user(user: Optional[User]) -> bool:
     return _is_lab_user(user)
-
-
-def _broadcast_discharge_testing_event(event: str, tote: DischargeTestingRecord) -> None:
-    """
-    Broadcast a flush tote event to shared and per-tote websocket groups.
-    """
-    channel_layer = get_channel_layer()
-    if channel_layer is None:
-        logger.warning("Channel layer unavailable; skipping flush tote broadcast")
-        return
-
-    payload = {
-        "type": "flush_tote_event",
-        "event": event,
-        "data": base_consumer.sanitize_payload(_serialize_discharge_test(tote)),
-    }
-
-    group_names: Iterable[str] = {
-        "flush_totes_all",
-        f"flush_tote_{tote.pk}",
-    }
-
-    for group_name in group_names:
-        try:
-            async_to_sync(channel_layer.group_send)(group_name, payload)
-        except Exception:
-            logger.exception("Failed to broadcast flush tote event to %s", group_name)
-
 
 def create_discharge_test(
     *,
@@ -202,7 +152,6 @@ def create_discharge_test(
 
     with transaction.atomic():
         tote.save()
-        transaction.on_commit(lambda: _broadcast_discharge_testing_event("tote_created", tote))
     return tote
 
 
@@ -234,7 +183,6 @@ def record_discharge_initial_ph(
             "lab_technician",
             "sampling_personnel",
         ])
-        transaction.on_commit(lambda: _broadcast_discharge_testing_event("initial_ph_recorded", instance))
     return instance
 
 
@@ -283,7 +231,6 @@ def record_discharge_action_and_final_ph(
             "lab_technician",
             "sampling_personnel",
         ])
-        transaction.on_commit(lambda: _broadcast_discharge_testing_event("final_ph_recorded", instance))
     return instance
 
 
@@ -298,7 +245,6 @@ def delete_discharge_test(
     instance = _resolve_discharge_test(tote)
     with transaction.atomic():
         instance.delete()
-        transaction.on_commit(lambda: _broadcast_discharge_testing_event("tote_deleted", instance))
     return instance
 
 
