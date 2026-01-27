@@ -22,4 +22,6 @@ ISSUES
 ISSUES THAT CAN BE DEFERRED
  - rounding doesn't happen automatically on pH fields, it just tells you you can't enter three decimal places
  - multiline text doesn't look amazing bc it all gets saved as one line, but it's still readable in the table on the records display page
- - 
+ - Implement the table utils to filter and sort the table
+ - Dates and user for initial pH and final pH make interface cluttered
+ - Edit field for pH on testing records page needs to have the inc/dec buttons removed

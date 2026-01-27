@@ -207,19 +207,19 @@
 
 ### Table Structure
 
-- [ ] Table displays all discharge testing records
-- [ ] Columns visible: Date, Discharge Source, Discharge Type, Discharge Material, pH Active Component, Sampling Personnel, Lab Technician, Initial pH, Action Required, Final pH, Final Disposition
-- [ ] Records sorted by date (newest first)
-- [ ] Empty/null fields display appropriately (dash or empty)
+- [x] Table displays all discharge testing records
+- [x] Columns visible: Date, Discharge Source, Discharge Type, Discharge Material, pH Active Component, Sampling Personnel, Lab Technician, Initial pH, Action Required, Final pH, Final Disposition
+- [x] Records sorted by date (newest first)
+- [x] Empty/null fields display appropriately (dash or empty)
 
 ### Field Display
 
-- [ ] Date displays in readable format
-- [ ] Sampling Personnel shows user's display name
-- [ ] Lab Technician shows user's display name
-- [ ] Discharge Material shows itemcode (when present)
-- [ ] pH Active Component shows itemcode (when detected)
-- [ ] pH values display with 2 decimal places
+- [x] Date displays in readable format
+- [x] Sampling Personnel shows user's display name
+- [x] Lab Technician shows user's display name
+- [x] Discharge Material shows itemcode (when present)
+- [x] pH Active Component shows itemcode (when detected)
+- [x] pH values display with 2 decimal places
 
 ---
 
@@ -227,63 +227,29 @@
  
 ### Edit Mode
 
-- [ ] Click edit button → row switches to editable inputs
-- [ ] Editable fields: Discharge Source, Discharge Type, Initial pH, Action Required, Final pH, Final Disposition
-- [ ] Non-editable fields: Date, Sampling Personnel, Lab Technician, Discharge Material, pH Active Component
+- [x] Click edit button → row switches to editable inputs
+- [x] Editable fields: Discharge Source, Discharge Type, Initial pH, Action Required, Final pH, Final Disposition
+- [x] Non-editable fields: Date, Sampling Personnel, Lab Technician, Discharge Material, pH Active Component
 
 ### Save Changes
 
-- [ ] Save valid changes → row updates without page reload
-- [ ] Success feedback shown
-- [ ] Updated values persist on page refresh
+- [x] Save valid changes → row updates without page reload
+- [x] Success feedback shown
+- [x] Updated values persist on page refresh
 
 ### Cancel Edit
 
-- [ ] Cancel → row reverts to previous values
-- [ ] No changes saved to database
+- [x] Cancel → row reverts to previous values
+- [x] No changes saved to database
 
 ### Validation in Edit Mode
 
-- [ ] Save with invalid pH → error shown
-- [ ] Save with missing required field → error shown
+- [x] Save with invalid pH → error shown
+- [x] Save with missing required field → error shown
 
 ---
 
-## 10. API Endpoints
-
-### List/Create (`GET/POST /core/api/discharge-testing/`)
-
-- [ ] GET returns list of records as JSON
-- [ ] GET response includes all fields: id, date, discharge_source, discharge_type, discharge_material_code, ph_active_component, sampling_personnel_id, sampling_personnel_name, lab_technician_id, lab_technician_name, initial_pH, action_required, final_pH, final_disposition
-- [ ] POST with valid data creates record, returns 201
-- [ ] POST with invalid data returns 400 with field errors
-- [ ] POST requires authentication
-
-### Detail (`GET/PATCH /core/api/discharge-testing/<id>/`)
-
-- [ ] GET returns single record
-- [ ] PATCH updates specified fields
-- [ ] PATCH returns updated record
-- [ ] PATCH with invalid data returns 400
-- [ ] Non-existent ID returns 404
-
-### Material Search (`GET /core/api/discharge-material-search/`)
-
-- [ ] Returns results matching `q` parameter
-- [ ] Results have `value` (itemcode) and `label` (itemcode: itemcodedesc)
-- [ ] Empty/short query returns empty results
-- [ ] Requires authentication
-
-### pH Check (`GET /core/api/discharge-material-ph-check/`)
-
-- [ ] Returns `ph_active_component` and `ph_active_component_desc` for watch list item
-- [ ] Returns `ph_active_component` for blend containing watch list component
-- [ ] Returns null values for non-watch-list material
-- [ ] Requires authentication
-
----
-
-## 11. Data Integrity
+## 10. Data Integrity
 
 ### Record Creation
 
@@ -305,7 +271,7 @@
 
 ---
 
-## 12. Edge Cases
+## 11. Edge Cases
 
 ### Special Characters
 
@@ -346,8 +312,5 @@
 | 7. Form Reset | 6 |
 | 8. Records Page – Display | 9 |
 | 9. Records Page – Inline Editing | 7 |
-| 10. API Endpoints | 14 |
-| 11. Data Integrity | 12 |
-| 12. WebSocket Broadcasts | 4 |
-| 13. Edge Cases | 10 |
-| **Total** | **137** |
+| 10. Data Integrity | 12 |
+| 11. Edge Cases | 10 |
