@@ -17,3 +17,9 @@ ISSUES
  - need to make the initial pH field required
  - on the count records we need admin users to be able to delete rows
  - when you click the edit button, the delete button gets replaced with an empty text input field??
+
+
+ISSUES THAT CAN BE DEFERRED
+ - rounding doesn't happen automatically on pH fields, it just tells you you can't enter three decimal places
+ - multiline text doesn't look amazing bc it all gets saved as one line, but it's still readable in the table on the records display page
+ - 

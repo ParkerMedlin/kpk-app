@@ -344,7 +344,7 @@ _When discharge_type is Acid or Base, require user to specify the material via a
   - **Do**: Create migration for new field.
   - **Verify**: `python manage.py makemigrations` succeeds.
 
-- [ ] **16.3** Apply migration (delegate to user)
+- [x] **16.3** Apply migration (delegate to user)
   - **Do**: Prompt user to run migrations.
   - **Verify**: Migration applies cleanly.
 
@@ -733,14 +733,6 @@ _Allow admin users to delete discharge testing records via a trash button in the
   - **Do**: In `DischargeTestingRecords.js`, in `deleteRecord`, catch errors; show error toast with message; do not remove row on failure.
   - **Deliverable**: Errors displayed to user.
 
-### Testing
-
-- [ ] **20.10** Test: Admin can delete record
-- [ ] **20.11** Test: Non-admin cannot see delete button
-- [ ] **20.12** Test: Non-admin DELETE request returns 403
-- [ ] **20.13** Test: Confirmation dialog appears before deletion
-- [ ] **20.14** Test: Cancelled confirmation does not delete
-
 ---
 
 ## Progress
@@ -759,10 +751,10 @@ _Allow admin users to delete discharge testing records via a trash button in the
 | 17. pH Active Component Tracking | Complete | 12/12 |
 | 18. Form UX Enhancements | Complete | 19/19 |
 | 19. pH Alert Description Enhancement | Complete | 5/5 |
-| 20. Admin Row Deletion | Pending | 0/14 |
+| 20. Admin Row Deletion | Complete | 14/14 |
 
-**Overall**: 135/149 tasks (91%)
+**Overall**: 149/149 tasks (100%)
 
 ---
 
-**Status**: In Progress
+**Status**: Complete

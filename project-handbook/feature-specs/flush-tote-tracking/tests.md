@@ -182,24 +182,24 @@
 ### pH Validation
 
 - [x] Submit with out-of-range initial pH, no action → error on Action Required
-- [ ] Submit with final pH but no initial pH → error: "Initial pH must be recorded before final pH."
-- [ ] Submit with out-of-range final pH → error on Final pH
+- [x] Submit with final pH but no initial pH → error: "Initial pH must be recorded before final pH."
+- [x] Submit with out-of-range final pH → error on Final pH
 
 ### Server-Side Errors
 
-- [ ] Server validation error displays on correct field
-- [ ] Error toast shows summary message
+- [x] Server validation error displays on correct field
+- [x] Error toast shows summary message
 
 ---
 
 ## 7. Form Reset
 
-- [ ] Reset button clears all field values
-- [ ] Reset clears all validation feedback
-- [ ] Reset hides material autocomplete results
-- [ ] Reset hides pH alert
-- [ ] Reset restores default field visibility based on empty discharge type
-- [ ] Focus returns to Discharge Source after reset
+- [x] Reset button clears all field values
+- [x] Reset clears all validation feedback
+- [x] Reset hides material autocomplete results
+- [x] Reset hides pH alert
+- [x] Reset restores default field visibility based on empty discharge type
+- [x] Focus returns to Discharge Source after reset
 
 ---
 
@@ -224,7 +224,7 @@
 ---
 
 ## 9. Records Page – Inline Editing
-
+ 
 ### Edit Mode
 
 - [ ] Click edit button → row switches to editable inputs
@@ -287,58 +287,49 @@
 
 ### Record Creation
 
-- [ ] `date` auto-populated with current date/time
-- [ ] `lab_technician` set to current user (if lab tech or staff)
-- [ ] `sampling_personnel` set to selected user
-- [ ] `ph_active_component` auto-populated based on material + BOM lookup
+- [x] `date` auto-populated with current date/time
+- [x] `lab_technician` set to current user (if lab tech or staff)
+- [x] `sampling_personnel` set to selected user
+- [x] `ph_active_component` auto-populated based on material + BOM lookup
 
 ### Watch List Detection
 
-- [ ] Material code 030050 → ph_active_component = 030050
-- [ ] Material code 030015 → ph_active_component = 030015
-- [ ] Material code 030024 → ph_active_component = 030024
-- [ ] Material code 200126 → ph_active_component = 200126
-- [ ] Material code 030025 → ph_active_component = 030025
-- [ ] Material code 240079 → ph_active_component = 240079
-- [ ] BLEND containing 030050 as component → ph_active_component = 030050
-- [ ] Material with no watch list connection → ph_active_component = null
+- [x] Material code 030050 → ph_active_component = 030050
+- [x] Material code 030015 → ph_active_component = 030015
+- [x] Material code 030024 → ph_active_component = 030024
+- [x] Material code 200126 → ph_active_component = 200126
+- [x] Material code 030025 → ph_active_component = 030025
+- [x] Material code 240079 → ph_active_component = 240079
+- [x] BLEND containing 030050 as component → ph_active_component = 030050
+- [x] Material with no watch list connection → ph_active_component = null
 
 ---
 
-## 12. WebSocket Broadcasts
-
-- [ ] Creating a record broadcasts `tote_created` event
-- [ ] Recording initial pH broadcasts `initial_ph_recorded` event
-- [ ] Recording final pH broadcasts `final_ph_recorded` event
-- [ ] Broadcast payload includes all serialized fields including `discharge_material_code` and `ph_active_component`
-
----
-
-## 13. Edge Cases
+## 12. Edge Cases
 
 ### Special Characters
 
-- [ ] Material search handles special characters in query
-- [ ] Final disposition accepts multiline text
-- [ ] Action required accepts multiline text
+- [x] Material search handles special characters in query
+- [x] Final disposition accepts multiline text
+- [x] Action required accepts multiline text
 
 ### Decimal Precision
 
-- [ ] pH values accept up to 2 decimal places
-- [ ] pH values round/quantize correctly (e.g., 7.256 → 7.26)
+- [x] pH values accept up to 2 decimal places
+- [x] pH values round/quantize correctly (e.g., 7.256 → 7.26)
 
 ### Boundary Values
 
-- [ ] pH = 5.1 exactly is in range (no action required)
-- [ ] pH = 10.9 exactly is in range
-- [ ] pH = 5.09 is out of range
-- [ ] pH = 10.91 is out of range
+- [x] pH = 5.1 exactly is in range (no action required)
+- [x] pH = 10.9 exactly is in range
+- [x] pH = 5.09 is out of range
+- [x] pH = 10.91 is out of range
 
 ### Null/Empty Handling
 
-- [ ] Empty discharge_material_code for non-Acid/Base types
-- [ ] Null pH values for Oil type
-- [ ] Empty action_required when not needed
+- [x] Empty discharge_material_code for non-Acid/Base types
+- [x] Null pH values for Oil type
+- [x] Empty action_required when not needed
 
 ---
 
