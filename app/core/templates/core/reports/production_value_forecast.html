@@ -189,6 +189,7 @@
     }
     .line-group-row {
         display: table-row;
+        transition: opacity 0.2s ease;
     }
     .line-group-row.collapsed {
         display: none;
@@ -219,8 +220,7 @@
             </div>
             <div class="control-box">
                 <label>Filters</label>
-                <button type="button" class="ghost-btn" id="hideSelectedBtn" disabled>Hide Selected</button>
-                <button type="button" class="ghost-btn" id="showHiddenBtn" disabled style="margin-top: 8px;">Show Hidden Items</button>
+                <button type="button" class="ghost-btn" id="enableAllBtn" disabled>Enable All</button>
             </div>
         </div>
 
@@ -259,8 +259,7 @@
     const API_URL = '/core/api/production-value-forecast/';
     const analyzeBtn = document.getElementById('analyzeBtn');
     const downloadBtn = document.getElementById('downloadBtn');
-    const hideSelectedBtn = document.getElementById('hideSelectedBtn');
-    const showHiddenBtn = document.getElementById('showHiddenBtn');
+    const enableAllBtn = document.getElementById('enableAllBtn');
     const nextHoursInput = document.getElementById('nextHoursInput');
     const alertBox = document.getElementById('alertBox');
     const resultsTable = document.getElementById('resultsTable');
@@ -268,12 +267,10 @@
 
     let cachedData = null;
     let isLoading = false;
-    let hiddenIndices = new Set();
 
     analyzeBtn.addEventListener('click', runAnalysis);
     downloadBtn.addEventListener('click', downloadCsv);
-    hideSelectedBtn.addEventListener('click', hideSelected);
-    showHiddenBtn.addEventListener('click', showHidden);
+    enableAllBtn.addEventListener('click', enableAll);
     nextHoursInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
@@ -287,19 +284,23 @@
         if (lineCheckbox) {
             const lineGroup = lineCheckbox.dataset.line;
             const isChecked = lineCheckbox.checked;
-            const rowCheckboxes = document.querySelectorAll(`.line-group-row[data-line="${lineGroup}"] input.row-checkbox:not([disabled])`);
+            const rowCheckboxes = document.querySelectorAll(`.line-group-row[data-line="${lineGroup}"] input.row-checkbox`);
             rowCheckboxes.forEach(cb => {
                 cb.checked = isChecked;
+                updateRowVisualState(cb);
             });
-            updateFilterButtons();
+            recalculateTotals();
+            updateEnableAllButton();
             return;
         }
 
         // Handle row checkbox toggle
         const checkbox = e.target.closest('input[type="checkbox"].row-checkbox');
         if (checkbox) {
+            updateRowVisualState(checkbox);
             updateLineCheckboxState(checkbox);
-            updateFilterButtons();
+            recalculateTotals();
+            updateEnableAllButton();
             return;
         }
 
@@ -349,11 +350,10 @@
             }
 
             cachedData = payload;
-            hiddenIndices.clear();
             renderSummary(payload);
             renderTable(payload);
             downloadBtn.disabled = false;
-            updateFilterButtons();
+            updateEnableAllButton();
         } catch (error) {
             console.error(error);
             showAlert(error.message || 'Unexpected error occurred while analyzing.');
@@ -368,22 +368,26 @@
     function renderSummary(payload) {
         const runs = payload.runs || [];
 
-        // Calculate totals excluding hidden items
+        // Calculate totals based on enabled checkboxes
         let totalRevenue = 0;
-        let visibleCount = 0;
+        let enabledCount = 0;
+        let disabledCount = 0;
+
         runs.forEach((run, index) => {
-            if (!hiddenIndices.has(index)) {
+            const checkbox = document.querySelector(`input.row-checkbox[data-index="${index}"]`);
+            if (checkbox && checkbox.checked) {
                 totalRevenue += run.extendedValue || 0;
-                visibleCount++;
+                enabledCount++;
+            } else if (checkbox) {
+                disabledCount++;
             }
         });
 
         const elapsed = `${Math.round(Number(payload.elapsedMs) || 0)} ms`;
-        const hiddenCount = hiddenIndices.size;
 
         summaryStrip.innerHTML = `
-            <div class="kpi"><div class="value">${formatCurrency(totalRevenue)}</div><div class="label">Total Revenue${hiddenCount > 0 ? ` (${hiddenCount} hidden)` : ''}</div></div>
-            <div class="kpi"><div class="value">${visibleCount}</div><div class="label">Production Runs</div></div>
+            <div class="kpi"><div class="value">${formatCurrency(totalRevenue)}</div><div class="label">Total Revenue${disabledCount > 0 ? ` (${disabledCount} disabled)` : ''}</div></div>
+            <div class="kpi"><div class="value">${enabledCount}</div><div class="label">Production Runs</div></div>
             <div class="kpi"><div class="value">${elapsed}</div><div class="label">Query Time</div></div>
         `;
     }
@@ -439,33 +443,25 @@
             // Sort runs by start_time within each line
             lineRuns.sort((a, b) => (a.startTime || 0) - (b.startTime || 0));
 
-            // Calculate line total excluding hidden items
+            // Calculate line total (will be recalculated after checkboxes are set)
             let lineTotal = 0;
-            let visibleLineCount = 0;
             lineRuns.forEach(run => {
-                const originalIndex = runIndices.get(run);
-                if (!hiddenIndices.has(originalIndex)) {
-                    lineTotal += run.extendedValue || 0;
-                    visibleLineCount++;
-                }
+                lineTotal += run.extendedValue || 0;
             });
 
             // Line group header
             tableHtml += `<tr class="line-group-header" data-line="${line}">`;
-            tableHtml += `<td><input type="checkbox" class="line-checkbox" data-line="${line}"></td>`;
-            tableHtml += `<td colspan="5"><strong>${line}</strong> (${visibleLineCount} of ${lineRuns.length} runs)</td>`;
-            tableHtml += `<td colspan="3" class="num"><strong>${formatCurrency(lineTotal)}</strong></td>`;
+            tableHtml += `<td><input type="checkbox" class="line-checkbox" data-line="${line}" checked></td>`;
+            tableHtml += `<td colspan="5"><strong>${line}</strong> (${lineRuns.length} runs)</td>`;
+            tableHtml += `<td colspan="3" class="num line-total" data-line="${line}"><strong>${formatCurrency(lineTotal)}</strong></td>`;
             tableHtml += '</tr>';
 
             // Line group rows
             lineRuns.forEach(run => {
                 const originalIndex = runIndices.get(run);
-                const isHidden = hiddenIndices.has(originalIndex);
-                const hiddenClass = isHidden ? ' hidden-row' : '';
-                const hiddenStyle = isHidden ? ' style="opacity: 0.4; text-decoration: line-through;"' : '';
 
-                tableHtml += `<tr class="line-group-row${hiddenClass}" data-line="${line}" data-index="${originalIndex}"${hiddenStyle}>`;
-                tableHtml += `<td><input type="checkbox" class="row-checkbox" data-index="${originalIndex}"${isHidden ? ' disabled' : ''}></td>`;
+                tableHtml += `<tr class="line-group-row" data-line="${line}" data-index="${originalIndex}">`;
+                tableHtml += `<td><input type="checkbox" class="row-checkbox" data-index="${originalIndex}" checked></td>`;
                 tableHtml += `<td></td>`;
                 tableHtml += `<td>${run.poNumber || ''}</td>`;
                 tableHtml += `<td>${run.itemCode || ''}</td>`;
@@ -480,18 +476,6 @@
 
         tableHtml += '</tbody></table></div>';
         resultsTable.innerHTML = tableHtml;
-
-        // Update line checkbox states based on row checkbox states
-        const allLineCheckboxes = document.querySelectorAll('.line-checkbox');
-        allLineCheckboxes.forEach(lineCheckbox => {
-            const lineGroup = lineCheckbox.dataset.line;
-            const rowCheckboxes = document.querySelectorAll(`.line-group-row[data-line="${lineGroup}"] input.row-checkbox:not([disabled])`);
-            const allChecked = Array.from(rowCheckboxes).every(cb => cb.checked);
-            const someChecked = Array.from(rowCheckboxes).some(cb => cb.checked);
-
-            lineCheckbox.checked = allChecked;
-            lineCheckbox.indeterminate = !allChecked && someChecked;
-        });
     }
 
     function downloadCsv() {
@@ -547,6 +531,19 @@
         window.URL.revokeObjectURL(url);
     }
 
+    function updateRowVisualState(checkbox) {
+        const row = checkbox.closest('.line-group-row');
+        if (!row) return;
+
+        if (checkbox.checked) {
+            row.style.opacity = '1';
+            row.style.textDecoration = 'none';
+        } else {
+            row.style.opacity = '0.4';
+            row.style.textDecoration = 'line-through';
+        }
+    }
+
     function updateLineCheckboxState(rowCheckbox) {
         // Find the line this row belongs to
         const row = rowCheckbox.closest('.line-group-row');
@@ -557,7 +554,7 @@
         if (!lineCheckbox) return;
 
         // Check if all row checkboxes in this line are checked
-        const rowCheckboxes = document.querySelectorAll(`.line-group-row[data-line="${lineGroup}"] input.row-checkbox:not([disabled])`);
+        const rowCheckboxes = document.querySelectorAll(`.line-group-row[data-line="${lineGroup}"] input.row-checkbox`);
         const allChecked = Array.from(rowCheckboxes).every(cb => cb.checked);
         const someChecked = Array.from(rowCheckboxes).some(cb => cb.checked);
 
@@ -565,52 +562,63 @@
         lineCheckbox.indeterminate = !allChecked && someChecked;
     }
 
-    function updateFilterButtons() {
-        const checkboxes = document.querySelectorAll('input.row-checkbox:not([disabled])');
-        const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+    function recalculateTotals() {
+        if (!cachedData) return;
 
-        hideSelectedBtn.disabled = checkedCount === 0 || !cachedData;
-        showHiddenBtn.disabled = hiddenIndices.size === 0 || !cachedData;
+        // Recalculate per-line totals
+        const lines = document.querySelectorAll('.line-total');
+        lines.forEach(lineTotalCell => {
+            const lineGroup = lineTotalCell.dataset.line;
+            const rowCheckboxes = document.querySelectorAll(`.line-group-row[data-line="${lineGroup}"] input.row-checkbox`);
+
+            let lineTotal = 0;
+            let enabledCount = 0;
+            rowCheckboxes.forEach(cb => {
+                if (cb.checked) {
+                    const index = parseInt(cb.dataset.index);
+                    const run = cachedData.runs[index];
+                    if (run) {
+                        lineTotal += run.extendedValue || 0;
+                        enabledCount++;
+                    }
+                }
+            });
+
+            const lineHeader = lineTotalCell.closest('.line-group-header');
+            const lineLabel = lineHeader.querySelector('td:nth-child(2)');
+            const lineNameMatch = lineLabel.textContent.match(/^(.*?)\s*\(/);
+            const lineName = lineNameMatch ? lineNameMatch[1] : lineLabel.textContent;
+
+            lineLabel.innerHTML = `<strong>${lineName}</strong> (${enabledCount} of ${rowCheckboxes.length} runs)`;
+            lineTotalCell.innerHTML = `<strong>${formatCurrency(lineTotal)}</strong>`;
+        });
+
+        // Recalculate overall totals
+        renderSummary(cachedData);
     }
 
-    function hideSelected() {
-        const checkboxes = document.querySelectorAll('input.row-checkbox:checked:not([disabled])');
+    function updateEnableAllButton() {
+        const checkboxes = document.querySelectorAll('input.row-checkbox');
+        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+
+        enableAllBtn.disabled = allChecked || !cachedData;
+    }
+
+    function enableAll() {
+        const checkboxes = document.querySelectorAll('input.row-checkbox');
         checkboxes.forEach(cb => {
-            const index = parseInt(cb.dataset.index);
-            hiddenIndices.add(index);
+            cb.checked = true;
+            updateRowVisualState(cb);
         });
 
-        if (!cachedData) return;
-
-        renderSummary(cachedData);
-        renderTable(cachedData);
-        updateFilterButtons();
-
-        // Update all line checkbox states after hiding
-        const allLineCheckboxes = document.querySelectorAll('.line-checkbox');
-        allLineCheckboxes.forEach(lineCheckbox => {
-            const lineGroup = lineCheckbox.dataset.line;
-            const rowCheckboxes = document.querySelectorAll(`.line-group-row[data-line="${lineGroup}"] input.row-checkbox:not([disabled])`);
-            if (rowCheckboxes.length === 0) {
-                lineCheckbox.checked = false;
-                lineCheckbox.indeterminate = false;
-            } else {
-                const allChecked = Array.from(rowCheckboxes).every(cb => cb.checked);
-                const someChecked = Array.from(rowCheckboxes).some(cb => cb.checked);
-                lineCheckbox.checked = allChecked;
-                lineCheckbox.indeterminate = !allChecked && someChecked;
-            }
+        const lineCheckboxes = document.querySelectorAll('.line-checkbox');
+        lineCheckboxes.forEach(lcb => {
+            lcb.checked = true;
+            lcb.indeterminate = false;
         });
-    }
 
-    function showHidden() {
-        hiddenIndices.clear();
-
-        if (!cachedData) return;
-
-        renderSummary(cachedData);
-        renderTable(cachedData);
-        updateFilterButtons();
+        recalculateTotals();
+        updateEnableAllButton();
     }
 
     function formatCurrency(value, minimumFractionDigits = 2, maximumFractionDigits = 2) {
