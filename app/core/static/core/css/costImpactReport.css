@@ -119,6 +119,15 @@
     gap: 12px;
     align-items: center;
 }
+.cost-impact-report .action-box .action-grid button {
+    box-sizing: border-box;
+    height: 44px;
+    padding: 0 18px;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
 .cost-impact-report button.primary {
     appearance: none;
     border: none;

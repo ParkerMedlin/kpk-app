@@ -20,6 +20,8 @@ HEADER_ROW_INDEX = 3  # 1-based index, matches legacy sheet layout.
 ITEM_HEADER = 'itemcode'
 EST_LANDED_HEADER = 'est landed cost'
 EST_LANDED_ALIASES = ['stdcost', 'std cost', 'standard cost', 'est landed cost', 'estlandedcost']
+FREIGHT_HEADER = 'freight'
+FREIGHT_ALIASES = ['freight', 'freight %', 'freight pct', 'freight percent', 'freight percentage']
 NEXT_COST_HEADER = 'next cost'
 NEXT_COST_ALIASES = ['next cost', 'nextcost']
 COST_FILE_PREFIX = 'zzz- master cost'
@@ -234,7 +236,12 @@ def _parse_rows(row_iter) -> Dict[str, Dict[str, Decimal]]:
             continue
 
         est_cost = _to_decimal_safe(_get_cell_value(row, required_columns.get(EST_LANDED_HEADER)))
+        freight_pct = _to_percent_decimal(_get_cell_value(row, required_columns.get(FREIGHT_HEADER)))
+        if est_cost > 0 and freight_pct:
+            est_cost = est_cost * (Decimal('1') + freight_pct)
         next_cost = _to_decimal_safe(_get_cell_value(row, required_columns.get(NEXT_COST_HEADER)))
+        if next_cost > 0 and freight_pct:
+            next_cost = next_cost * (Decimal('1') + freight_pct)
 
         if est_cost > 0:
             result[item_code] = {'cost': est_cost, 'source': 'Est Landed'}
@@ -284,6 +291,12 @@ def _resolve_required_columns(headers: Dict[int, str]) -> Dict[str, int]:
             est_landed_col = header_lookup[alias]
             break
 
+    freight_col = None
+    for alias in FREIGHT_ALIASES:
+        if alias in header_lookup:
+            freight_col = header_lookup[alias]
+            break
+
     next_cost_col = None
     for alias in NEXT_COST_ALIASES:
         if alias in header_lookup:
@@ -303,6 +316,7 @@ def _resolve_required_columns(headers: Dict[int, str]) -> Dict[str, int]:
     return {
         ITEM_HEADER: item_col,
         EST_LANDED_HEADER: est_landed_col,
+        FREIGHT_HEADER: freight_col,
         NEXT_COST_HEADER: next_cost_col,
     }
 
@@ -323,6 +337,36 @@ def _to_decimal_safe(value) -> Decimal:
         return Decimal(str(value))
     except (InvalidOperation, ValueError, TypeError):
         return Decimal('0')
+
+
+def _to_percent_decimal(value) -> Decimal:
+    if value is None or value == '':
+        return Decimal('0')
+    if isinstance(value, str):
+        raw = value.strip()
+        if raw.endswith('%'):
+            raw = raw[:-1].strip()
+            try:
+                return Decimal(raw) / Decimal('100')
+            except (InvalidOperation, ValueError):
+                return Decimal('0')
+        try:
+            numeric = Decimal(raw)
+        except (InvalidOperation, ValueError):
+            return Decimal('0')
+    elif isinstance(value, Decimal):
+        numeric = value
+    else:
+        try:
+            numeric = Decimal(str(value))
+        except (InvalidOperation, ValueError, TypeError):
+            return Decimal('0')
+
+    if numeric > 1:
+        if numeric <= 100:
+            return numeric / Decimal('100')
+        return numeric
+    return numeric
 
 
 def _parse_rows_with_both_costs(row_iter) -> Dict[str, Dict[str, Decimal]]:
@@ -357,7 +401,12 @@ def _parse_rows_with_both_costs(row_iter) -> Dict[str, Dict[str, Decimal]]:
             continue
 
         est_cost = _to_decimal_safe(_get_cell_value(row, required_columns.get(EST_LANDED_HEADER)))
+        freight_pct = _to_percent_decimal(_get_cell_value(row, required_columns.get(FREIGHT_HEADER)))
+        if est_cost > 0 and freight_pct:
+            est_cost = est_cost * (Decimal('1') + freight_pct)
         next_cost = _to_decimal_safe(_get_cell_value(row, required_columns.get(NEXT_COST_HEADER)))
+        if next_cost > 0 and freight_pct:
+            next_cost = next_cost * (Decimal('1') + freight_pct)
 
         result[item_code] = {
             'est_landed': est_cost,
