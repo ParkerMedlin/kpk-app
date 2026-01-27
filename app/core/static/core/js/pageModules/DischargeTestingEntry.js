@@ -2,7 +2,7 @@ const API_ENDPOINT = '/core/api/discharge-testing/';
 const MATERIAL_SEARCH_ENDPOINT = '/core/api/discharge-material-search/';
 const PH_CHECK_ENDPOINT = '/core/api/discharge-material-ph-check/';
 const ACID_BASE_TYPES = ['Acid', 'Base'];
-const OIL_TYPE = 'Oil';
+const PH_EXEMPT_TYPES = ['Oil', 'Polish'];
 
 const DEFAULT_PH_MIN = 5.1;
 const DEFAULT_PH_MAX = 10.9;
@@ -328,7 +328,7 @@ class DischargeTestingEntryPage {
       return;
     }
     const dischargeTypeValue = this.dischargeType ? this.dischargeType.value : '';
-    const shouldHide = dischargeTypeValue === OIL_TYPE;
+    const shouldHide = PH_EXEMPT_TYPES.includes(dischargeTypeValue);
     this.phFieldsGroup.style.display = shouldHide ? 'none' : '';
 
     if (shouldHide) {
@@ -596,7 +596,7 @@ class DischargeTestingEntryPage {
       this.dischargeMaterialCode ? this.dischargeMaterialCode.value : '',
     );
 
-    const isOilType = dischargeType === OIL_TYPE;
+    const isOilType = PH_EXEMPT_TYPES.includes(dischargeType);
     let initialParsed = { value: null };
     let finalParsed = { value: null };
     if (!isOilType) {

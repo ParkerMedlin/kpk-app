@@ -735,6 +735,43 @@ _Allow admin users to delete discharge testing records via a trash button in the
 
 ---
 
+## Phase 21: Polish Type Behaves Like Oil (pH-Exempt)
+
+_Polish discharge type should hide pH fields, skip pH validation, and bypass action required — identical to Oil behavior._
+
+**Analysis:** Oil-specific behavior is controlled by exactly 2 variables across 2 files. Both use a single check that gates all downstream logic, so the fix is changing 2 comparisons from single-value to set membership.
+
+**No changes needed in:** `api.py` (delegates to services), `models.py` (constraints already allow null pH), `DischargeTestingRecords.js` (no type-specific logic), HTML templates (no Oil-specific logic). `syncMaterialFieldVisibility()` uses `ACID_BASE_TYPES = ['Acid', 'Base']` — Polish is already excluded, so the material field correctly stays hidden.
+
+### Entry Page JS (`DischargeTestingEntry.js`)
+
+- [x] **21.1** Replace `OIL_TYPE` constant with pH-exempt set
+  - **Do**: Replace `const OIL_TYPE = 'Oil';` (line 5) with `const PH_EXEMPT_TYPES = ['Oil', 'Polish'];`
+  - **Deliverable**: Constant updated.
+
+- [x] **21.2** Update `syncPhFieldsVisibility()` to use pH-exempt set
+  - **Do**: Change `dischargeTypeValue === OIL_TYPE` (line 331) to `PH_EXEMPT_TYPES.includes(dischargeTypeValue)`. This controls hiding pH fields group, clearing pH/action values, and removing required attributes.
+  - **Deliverable**: Selecting Polish hides Initial pH, Final pH, and Action Required fields.
+
+- [x] **21.3** Update `collectPayload()` to use pH-exempt set
+  - **Do**: Change `dischargeType === OIL_TYPE` (line 599) to `PH_EXEMPT_TYPES.includes(dischargeType)`. The resulting variable gates all downstream pH skip logic (lines 602, 625, 639, 653), so no further changes needed in this method.
+  - **Deliverable**: Polish submissions skip pH parsing, pH required validation, out-of-range checks, and action required enforcement.
+
+### Service Layer (`discharge_testing_services.py`)
+
+- [x] **21.4** Update `create_discharge_test()` to treat Polish as pH-exempt
+  - **Do**: Change `cleaned_discharge_type.lower() == "oil"` (line 131) to `cleaned_discharge_type.lower() in {"oil", "polish"}`. The resulting variable gates all downstream logic (lines 138, 147, 151), so no further changes needed.
+  - **Deliverable**: Server accepts Polish submissions without pH values and nullifies action_required.
+
+### Testing
+
+- [x] **21.5** Test: Selecting Polish hides pH fields and Action Required on entry form
+- [x] **21.6** Test: Submitting Polish type without pH values succeeds
+- [x] **21.7** Test: Switching from Polish to Acid re-shows pH fields and restores required
+- [x] **21.8** Test: Polish record created with null pH values in database
+
+---
+
 ## Progress
 
 | Phase | Status | Tasks Complete |
@@ -752,9 +789,10 @@ _Allow admin users to delete discharge testing records via a trash button in the
 | 18. Form UX Enhancements | Complete | 19/19 |
 | 19. pH Alert Description Enhancement | Complete | 5/5 |
 | 20. Admin Row Deletion | Complete | 14/14 |
+| 21. Polish pH-Exempt | Pending | 4/8 |
 
-**Overall**: 149/149 tasks (100%)
+**Overall**: 153/157 tasks (97%)
 
 ---
 
-**Status**: Complete
+**Status**: In Progress

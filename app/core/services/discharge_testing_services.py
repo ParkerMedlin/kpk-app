@@ -78,7 +78,7 @@ def create_discharge_test(
     cleaned_discharge_type = (discharge_type or "").strip()
     cleaned_material_code = (discharge_material_code or "").strip()
     cleaned_disposition = (final_disposition or "").strip()
-    is_oil_type = cleaned_discharge_type.lower() == "oil"
+    is_oil_type = cleaned_discharge_type.lower() in {"oil", "polish"}
     if not cleaned_disposition:
         raise ValidationError({"final_disposition": "Final disposition is required."})
 
