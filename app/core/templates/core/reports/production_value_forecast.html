@@ -350,8 +350,8 @@
             }
 
             cachedData = payload;
-            renderSummary(payload);
             renderTable(payload);
+            renderSummary(payload);
             downloadBtn.disabled = false;
             updateEnableAllButton();
         } catch (error) {
