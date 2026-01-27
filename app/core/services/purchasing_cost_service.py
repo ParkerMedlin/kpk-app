@@ -36,6 +36,11 @@ _CACHE: Dict[str, object] = {
     'mtime': None,
     'data': {},
 }
+_BOTH_CACHE: Dict[str, object] = {
+    'path': None,
+    'mtime': None,
+    'data': {},
+}
 
 
 def _resolve_workbook_path(base_path: Optional[str]) -> Optional[str]:
@@ -383,20 +388,40 @@ def load_purchasing_costs_with_both_values(uploaded_file=None) -> Tuple[Dict[str
         parsed = _parse_costs_with_both_from_bytes(data, source_name=getattr(uploaded_file, 'name', None))
         return parsed, uploaded_file.name
 
-    # Load from default server workbook
+    # Load from default server workbook (cached by path + mtime)
     configured_path = getattr(settings, 'COST_WORKBOOK_PATH', None)
     workbook_path = _resolve_workbook_path(configured_path)
     if not workbook_path:
         return {}, None
 
     try:
+        stat = os.stat(workbook_path)
+    except OSError as exc:
+        LOGGER.warning("Unable to read cost workbook '%s': %s", workbook_path, exc)
+        return {}, None
+
+    with _CACHE_LOCK:
+        if (
+            _BOTH_CACHE['path'] == workbook_path
+            and _BOTH_CACHE['mtime'] == stat.st_mtime
+            and isinstance(_BOTH_CACHE['data'], dict)
+        ):
+            return _BOTH_CACHE['data'], os.path.basename(workbook_path)
+
+    try:
         with open(workbook_path, 'rb') as workbook_file:
             data = workbook_file.read()
         parsed = _parse_costs_with_both_from_bytes(data, source_name=workbook_path)
-        return parsed, os.path.basename(workbook_path)
     except Exception as exc:
         LOGGER.warning("Unable to load cost workbook with both values: %s", exc)
         return {}, None
+
+    with _CACHE_LOCK:
+        _BOTH_CACHE['path'] = workbook_path
+        _BOTH_CACHE['mtime'] = stat.st_mtime
+        _BOTH_CACHE['data'] = parsed
+
+    return parsed, os.path.basename(workbook_path)
 
 
 def _parse_costs_with_both_from_bytes(blob: bytes, source_name: Optional[str] = None) -> Dict[str, Dict[str, Decimal]]:

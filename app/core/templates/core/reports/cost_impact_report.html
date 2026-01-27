@@ -45,6 +45,10 @@
                 <label>Analysis</label>
                 <div class="action-grid">
                     <button type="button" class="primary" id="analyzeBtn">Analyze Cost Impacts</button>
+                    <button type="button" class="warning-btn" id="editCostsBtn">Edit Costs (What-If)</button>
+                    <button type="button" class="warning-btn" id="editBomBtn">Edit BOM (What-If)</button>
+                    <button type="button" class="ghost-btn" id="resetWhatIfBtn" style="display: none;">Reset to Workbook</button>
+                    <button type="button" class="ghost-btn" id="resetBomBtn" style="display: none;">Reset BOM Overrides</button>
                     <button type="button" class="ghost-btn" id="downloadBtn" disabled>Download CSV</button>
                 </div>
                 <div id="analysisStatus" class="status-note">Ready to analyze cost changes.</div>
@@ -94,6 +98,116 @@
     </div>
 </div>
 
+<div id="whatIfModal" class="what-if-modal">
+    <div class="what-if-modal-content">
+        <div class="what-if-modal-header">
+            <h2>Edit Costs (What-If Scenario)</h2>
+            <button type="button" class="what-if-modal-close" id="closeWhatIfModal">&times;</button>
+        </div>
+        <div class="what-if-modal-body">
+            <div class="what-if-search">
+                <input type="text" id="whatIfSearch" placeholder="Search by item code or description...">
+            </div>
+            <div class="what-if-table-container">
+                <table class="what-if-table" id="whatIfTable">
+                    <thead>
+                        <tr>
+                            <th class="filter-header sortable" data-col="itemCode" data-type="text">
+                                <div class="th-row">
+                                    <span>Item Code</span>
+                                    <span class="sort-icon">⇅</span>
+                                    <span class="filter-icon">▼</span>
+                                </div>
+                                <div class="filter-dropdown" data-col="itemCode"></div>
+                            </th>
+                            <th class="filter-header sortable" data-col="itemDescription" data-type="text">
+                                <div class="th-row">
+                                    <span>Description</span>
+                                    <span class="sort-icon">⇅</span>
+                                    <span class="filter-icon">▼</span>
+                                </div>
+                                <div class="filter-dropdown" data-col="itemDescription"></div>
+                            </th>
+                            <th class="num filter-header sortable" data-col="estLanded" data-type="number">
+                                <div class="th-row">
+                                    <span>Current Cost (Est Landed)</span>
+                                    <span class="sort-icon">⇅</span>
+                                    <span class="filter-icon">▼</span>
+                                </div>
+                                <div class="filter-dropdown" data-col="estLanded"></div>
+                            </th>
+                            <th class="num filter-header sortable" data-col="nextCost" data-type="number">
+                                <div class="th-row">
+                                    <span>Next Cost</span>
+                                    <span class="sort-icon">⇅</span>
+                                    <span class="filter-icon">▼</span>
+                                </div>
+                                <div class="filter-dropdown" data-col="nextCost"></div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="whatIfTableBody">
+                        <!-- Populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="what-if-modal-footer">
+            <div class="helper-text">Edit costs directly. Changes are applied only within this session.</div>
+            <div class="what-if-actions">
+                <button type="button" class="what-if-cancel-btn" id="cancelWhatIfBtn">Cancel</button>
+                <button type="button" class="what-if-save-btn" id="saveWhatIfBtn">Save & Analyze</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="bomWhatIfModal" class="what-if-modal">
+    <div class="what-if-modal-content bom-modal-content">
+        <div class="what-if-modal-header">
+            <h2>Edit BOM (What-If Scenario)</h2>
+            <button type="button" class="what-if-modal-close" id="closeBomModal">&times;</button>
+        </div>
+        <div class="what-if-modal-body">
+            <div class="bom-loader">
+                <div class="bom-loader-fields">
+                    <label for="bomItemCodeInput">Item Code</label>
+                    <input type="text" id="bomItemCodeInput" placeholder="Enter item code..." autocomplete="off">
+                    <button type="button" class="contrast-btn" id="loadBomBtn">Load BOM</button>
+                </div>
+                <div class="bom-item-meta" id="bomItemMeta">Enter an item code to load its BOM.</div>
+            </div>
+            <div class="what-if-table-container bom-table-container">
+                <table class="what-if-table bom-table" id="bomTable">
+                    <thead>
+                        <tr>
+                            <th>Component Item</th>
+                            <th>Description</th>
+                            <th class="num">Qty / Bill</th>
+                            <th style="width: 90px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bomTableBody">
+                        <!-- Populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="bom-table-actions">
+                <button type="button" class="ghost-btn" id="addBomRowBtn">Add Component</button>
+            </div>
+            <datalist id="componentItemList"></datalist>
+        </div>
+        <div class="what-if-modal-footer">
+            <div class="helper-text">Edit components and quantities to simulate substitutions. Changes apply only in this session.</div>
+            <div class="what-if-actions">
+                <button type="button" class="what-if-cancel-btn" id="cancelBomBtn">Cancel</button>
+                <button type="button" class="ghost-btn" id="saveBomOnlyBtn">Save</button>
+                <button type="button" class="what-if-save-btn" id="saveBomBtn">Save & Analyze</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <form id="csrfProxyForm" style="display:none;">{% csrf_token %}</form>
 {% endblock content %}
 
@@ -102,6 +216,8 @@
 <script>
 (() => {
     const API_URL = '/core/api/cost-impact-analysis/';
+    const WORKBOOK_DATA_URL = '/core/api/cost-workbook-data/';
+    const BOM_DATA_URL = '/core/api/bom-data/';
     const warehouse = 'MTG';
     const analyzeBtn = document.getElementById('analyzeBtn');
     const downloadBtn = document.getElementById('downloadBtn');
@@ -116,13 +232,63 @@
     const filterBox = document.getElementById('filterBox');
     const componentFilter = document.getElementById('componentFilter');
 
+    // What-If Modal Elements
+    const editCostsBtn = document.getElementById('editCostsBtn');
+    const resetWhatIfBtn = document.getElementById('resetWhatIfBtn');
+    const whatIfModal = document.getElementById('whatIfModal');
+    const closeWhatIfModal = document.getElementById('closeWhatIfModal');
+    const cancelWhatIfBtn = document.getElementById('cancelWhatIfBtn');
+    const saveWhatIfBtn = document.getElementById('saveWhatIfBtn');
+    const whatIfSearch = document.getElementById('whatIfSearch');
+    const whatIfTableBody = document.getElementById('whatIfTableBody');
+    const editBomBtn = document.getElementById('editBomBtn');
+    const resetBomBtn = document.getElementById('resetBomBtn');
+    const bomWhatIfModal = document.getElementById('bomWhatIfModal');
+    const closeBomModal = document.getElementById('closeBomModal');
+    const cancelBomBtn = document.getElementById('cancelBomBtn');
+    const saveBomOnlyBtn = document.getElementById('saveBomOnlyBtn');
+    const saveBomBtn = document.getElementById('saveBomBtn');
+    const bomItemCodeInput = document.getElementById('bomItemCodeInput');
+    const loadBomBtn = document.getElementById('loadBomBtn');
+    const bomItemMeta = document.getElementById('bomItemMeta');
+    const bomTableBody = document.getElementById('bomTableBody');
+    const addBomRowBtn = document.getElementById('addBomRowBtn');
+    const componentItemList = document.getElementById('componentItemList');
+
     let cachedData = null;
     let isLoading = false;
     let currentFilter = '';
+    let filterIndex = null;
+    let filterTimer = null;
+    let whatIfCostState = null; // null = no overrides, or Map of edits
+    let whatIfBomState = new Map();
+    let workbookData = null; // Cached workbook data for modal
+    let workbookBaseMap = new Map();
+    let whatIfRows = [];
+    let whatIfRowMap = new Map();
+    let whatIfSort = { column: 'itemCode', direction: 'asc' };
+    let whatIfTextFilters = new Map();
+    let whatIfNumberFilters = new Map();
+    let whatIfSearchTerm = '';
+    let whatIfHeadersInitialized = false;
+    let whatIfFilterSignature = '';
+    let whatIfLastOrder = [];
+    let whatIfLastSort = { column: '', direction: '' };
+    let whatIfEditVersion = 0;
+    let whatIfRenderedVersion = 0;
+    let componentLookupMap = new Map();
+    let componentLookupReady = false;
+    let bomCurrentItem = null;
+    let bomComponents = [];
 
     costFileInput.addEventListener('change', () => {
         if (costFileInput.files && costFileInput.files.length) {
             costStatus.textContent = `Override ready: ${costFileInput.files[0].name}`;
+            // Clear what-if state when uploading new workbook
+            if (whatIfCostState) {
+                clearWhatIfState();
+                showAlert('What-if costs cleared due to new workbook upload.');
+            }
         } else {
             costStatus.textContent = 'Using server workbook.';
         }
@@ -135,13 +301,143 @@
 
     componentFilter.addEventListener('input', (e) => {
         currentFilter = e.target.value.trim().toUpperCase();
-        if (cachedData) {
-            renderResults(cachedData);
+        if (filterTimer) {
+            clearTimeout(filterTimer);
         }
+        if (cachedData) {
+            setFilterLoading(true);
+        }
+        filterTimer = setTimeout(() => {
+            if (cachedData) {
+                renderResults(cachedData);
+                setFilterLoading(false);
+            }
+        }, 150);
     });
 
     analyzeBtn.addEventListener('click', runAnalysis);
     downloadBtn.addEventListener('click', downloadCsv);
+
+    // What-If Modal Event Listeners
+    editCostsBtn.addEventListener('click', openWhatIfModal);
+    resetWhatIfBtn.addEventListener('click', resetWhatIfCosts);
+    closeWhatIfModal.addEventListener('click', closeModal);
+    cancelWhatIfBtn.addEventListener('click', closeModal);
+    saveWhatIfBtn.addEventListener('click', saveWhatIfCosts);
+    editBomBtn.addEventListener('click', openBomModal);
+    resetBomBtn.addEventListener('click', resetBomOverrides);
+    closeBomModal.addEventListener('click', closeBom);
+    cancelBomBtn.addEventListener('click', closeBom);
+    saveBomOnlyBtn.addEventListener('click', saveBomOnly);
+    saveBomBtn.addEventListener('click', saveBomOverrides);
+    loadBomBtn.addEventListener('click', () => {
+        const code = (bomItemCodeInput.value || '').trim().toUpperCase();
+        if (!code) {
+            showAlert('Enter an item code to load a BOM.');
+            return;
+        }
+        loadBomForItem(code);
+    });
+    bomItemCodeInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            loadBomBtn.click();
+        }
+    });
+    addBomRowBtn.addEventListener('click', addBomRow);
+
+    whatIfSearch.addEventListener('input', (e) => {
+        whatIfSearchTerm = e.target.value.toLowerCase();
+        renderWhatIfTable();
+    });
+
+    // Close modal when clicking outside (ignore mouse drags that start inside)
+    let suppressWhatIfClose = false;
+    let suppressBomClose = false;
+
+    whatIfModal.querySelector('.what-if-modal-content').addEventListener('mousedown', () => {
+        suppressWhatIfClose = true;
+    });
+    bomWhatIfModal.querySelector('.what-if-modal-content').addEventListener('mousedown', () => {
+        suppressBomClose = true;
+    });
+
+    whatIfModal.addEventListener('click', (e) => {
+        if (e.target === whatIfModal) {
+            if (suppressWhatIfClose) {
+                suppressWhatIfClose = false;
+                return;
+            }
+            closeModal();
+        }
+        suppressWhatIfClose = false;
+    });
+
+    bomWhatIfModal.addEventListener('click', (e) => {
+        if (e.target === bomWhatIfModal) {
+            if (suppressBomClose) {
+                suppressBomClose = false;
+                return;
+            }
+            closeBom();
+        }
+        suppressBomClose = false;
+    });
+
+    bomTableBody.addEventListener('input', (e) => {
+        const row = e.target.closest('tr');
+        if (!row) return;
+        const index = Number(row.getAttribute('data-index'));
+        if (Number.isNaN(index)) return;
+        const componentInput = row.querySelector('.bom-component-input');
+        const qtyInput = row.querySelector('.bom-qty-input');
+        const descCell = row.querySelector('.bom-desc');
+        if (!componentInput || !qtyInput || !descCell) return;
+
+        const componentCode = (componentInput.value || '').trim().toUpperCase();
+        componentInput.value = componentCode;
+        const description = componentLookupMap.get(componentCode) || '';
+        descCell.textContent = description;
+
+        bomComponents[index] = {
+            component_item_code: componentCode,
+            component_item_description: description,
+            qtyperbill: Number(qtyInput.value || 0),
+        };
+    });
+
+    bomTableBody.addEventListener('click', (e) => {
+        const removeBtn = e.target.closest('.bom-delete-btn');
+        if (!removeBtn) return;
+        const row = e.target.closest('tr');
+        if (!row) return;
+        const index = Number(row.getAttribute('data-index'));
+        if (Number.isNaN(index)) return;
+        bomComponents.splice(index, 1);
+        renderBomTable();
+    });
+
+    whatIfTableBody.addEventListener('focusout', (e) => {
+        const input = e.target.closest('.cost-input');
+        if (!input) return;
+        commitCostInput(input);
+    });
+
+    whatIfTableBody.addEventListener('keydown', (e) => {
+        const input = e.target.closest('.cost-input');
+        if (!input) return;
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            input.blur();
+        } else if (e.key === 'Escape') {
+            e.preventDefault();
+            const original = input.getAttribute('data-original');
+            if (original !== null) {
+                input.value = original;
+            }
+            input.blur();
+        }
+    });
 
     // Auto-run analysis on page load with server workbook
     function autoRunAnalysis() {
@@ -207,6 +503,13 @@
                 const formData = new FormData();
                 formData.append('warehouse', warehouse);
                 formData.append('cost_override', overrideFile);
+                // Include what-if costs if active
+                if (whatIfCostState) {
+                    formData.append('what_if_costs', JSON.stringify(Object.fromEntries(whatIfCostState)));
+                }
+                if (whatIfBomState && whatIfBomState.size) {
+                    formData.append('what_if_boms', JSON.stringify(Object.fromEntries(whatIfBomState)));
+                }
                 response = await fetch(API_URL, {
                     method: 'POST',
                     headers: {
@@ -218,6 +521,13 @@
                 });
             } else {
                 const params = new URLSearchParams({ warehouse });
+                // Include what-if costs if active
+                if (whatIfCostState) {
+                    params.append('what_if_costs', JSON.stringify(Object.fromEntries(whatIfCostState)));
+                }
+                if (whatIfBomState && whatIfBomState.size) {
+                    params.append('what_if_boms', JSON.stringify(Object.fromEntries(whatIfBomState)));
+                }
                 response = await fetch(`${API_URL}?${params.toString()}`, {
                     headers: { 'Accept': 'application/json' },
                     credentials: 'same-origin',
@@ -230,6 +540,7 @@
             }
 
             cachedData = payload;
+            filterIndex = buildFilterIndex(payload);
             renderSummary(payload);
             renderResults(payload);
             downloadBtn.disabled = false;
@@ -263,6 +574,9 @@
 
     function renderResults(payload) {
         filterBox.style.display = 'block';
+        if (resultsContainer.classList.contains('filter-loading')) {
+            resultsContainer.classList.remove('filter-loading');
+        }
 
         let rawMaterialChanges = payload.rawMaterialChanges || [];
         let affectedBlends = payload.affectedBlends || [];
@@ -277,42 +591,52 @@
 
         // Apply filter if active
         if (currentFilter) {
-            // Filter raw materials by item code
+            const index = filterIndex || buildFilterIndex(payload);
+            filterIndex = index;
+
             rawMaterialChanges = rawMaterialChanges.filter(item =>
-                item.itemCode.toUpperCase().includes(currentFilter)
+                (item.itemCode || '').toUpperCase().includes(currentFilter)
             );
 
-            // Get affected raw material codes
-            const filteredRawCodes = new Set(rawMaterialChanges.map(item => item.itemCode.toUpperCase()));
+            const filteredRawCodes = rawMaterialChanges.map(item => (item.itemCode || '').toUpperCase());
+            const rawSet = new Set(filteredRawCodes);
 
-            // Filter blends that use filtered raw materials
-            affectedBlends = affectedBlends.filter(blend => {
-                const components = blend.changed_components || [];
-                return components.some(comp => filteredRawCodes.has(comp.component_code.toUpperCase()));
+            let blendIndexSet = new Set();
+            filteredRawCodes.forEach(code => {
+                const indices = index.blendsByRaw.get(code);
+                if (!indices) return;
+                indices.forEach(idx => blendIndexSet.add(idx));
             });
+            affectedBlends = affectedBlends.filter((_, idx) => blendIndexSet.has(idx));
 
-            // Get filtered blend codes
-            const filteredBlendCodes = new Set(affectedBlends.map(blend => blend.item_code.toUpperCase()));
+            const filteredBlendCodes = new Set(affectedBlends.map(blend => (blend.item_code || blend.blend_code || '').toUpperCase()));
 
-            // Filter finished goods that use filtered blends OR raw materials
-            affectedFinishedGoods = affectedFinishedGoods.filter(fg => {
-                const blends = fg.affected_blends || [];
-                const rawMaterials = fg.affected_raw_materials || [];
-                return blends.some(blend => filteredBlendCodes.has(blend.blend_code.toUpperCase())) ||
-                       rawMaterials.some(raw => filteredRawCodes.has(raw.component_code.toUpperCase()));
+            let fgIndexSet = new Set();
+            filteredBlendCodes.forEach(code => {
+                const indices = index.fgsByBlend.get(code);
+                if (!indices) return;
+                indices.forEach(idx => fgIndexSet.add(idx));
             });
+            rawSet.forEach(code => {
+                const indices = index.fgsByRaw.get(code);
+                if (!indices) return;
+                indices.forEach(idx => fgIndexSet.add(idx));
+            });
+            affectedFinishedGoods = affectedFinishedGoods.filter((_, idx) => fgIndexSet.has(idx));
 
-            // Get all affected item codes (raw materials + blends + finished goods)
             const allAffectedCodes = new Set([
-                ...filteredRawCodes,
+                ...rawSet,
                 ...filteredBlendCodes,
-                ...new Set(affectedFinishedGoods.map(fg => fg.item_code.toUpperCase()))
+                ...affectedFinishedGoods.map(fg => (fg.item_code || '').toUpperCase()),
             ]);
 
-            // Filter sales orders for affected items
-            salesOrderImpacts = salesOrderImpacts.filter(order =>
-                allAffectedCodes.has(order.item_code.toUpperCase())
-            );
+            let orderIndexSet = new Set();
+            allAffectedCodes.forEach(code => {
+                const indices = index.ordersByItem.get(code);
+                if (!indices) return;
+                indices.forEach(idx => orderIndexSet.add(idx));
+            });
+            salesOrderImpacts = salesOrderImpacts.filter((_, idx) => orderIndexSet.has(idx));
         }
 
         let html = '';
@@ -923,6 +1247,853 @@
             badge.textContent = visibleCount;
         }
     };
+
+    async function ensureWorkbookData() {
+        if (workbookData) {
+            return workbookData;
+        }
+        const response = await fetch(WORKBOOK_DATA_URL, {
+            headers: { 'Accept': 'application/json' },
+            credentials: 'same-origin',
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(payload.error || 'Unable to load workbook data.');
+        }
+        workbookData = payload;
+        workbookBaseMap = new Map();
+        (workbookData.items || []).forEach(item => {
+            workbookBaseMap.set(item.itemCode, {
+                estLanded: Number(item.estLanded) || 0,
+                nextCost: Number(item.nextCost) || 0,
+                itemDescription: item.itemDescription || '',
+            });
+        });
+        return workbookData;
+    }
+
+    function setFilterLoading(active) {
+        if (active) {
+            resultsContainer.classList.add('filter-loading');
+        } else {
+            resultsContainer.classList.remove('filter-loading');
+        }
+    }
+
+    function buildFilterIndex(payload) {
+        const index = {
+            blendsByRaw: new Map(),
+            fgsByBlend: new Map(),
+            fgsByRaw: new Map(),
+            ordersByItem: new Map(),
+        };
+
+        const blends = payload.affectedBlends || [];
+        blends.forEach((blend, blendIndex) => {
+            const components = blend.changed_components || [];
+            components.forEach(comp => {
+                const code = (comp.component_code || '').toUpperCase();
+                if (!code) return;
+                if (!index.blendsByRaw.has(code)) {
+                    index.blendsByRaw.set(code, new Set());
+                }
+                index.blendsByRaw.get(code).add(blendIndex);
+            });
+        });
+
+        const finishedGoods = payload.affectedFinishedGoods || [];
+        finishedGoods.forEach((fg, fgIndex) => {
+            const blendsUsed = fg.affected_blends || [];
+            blendsUsed.forEach(blend => {
+                const code = (blend.blend_code || '').toUpperCase();
+                if (!code) return;
+                if (!index.fgsByBlend.has(code)) {
+                    index.fgsByBlend.set(code, new Set());
+                }
+                index.fgsByBlend.get(code).add(fgIndex);
+            });
+
+            const raws = fg.affected_raw_materials || [];
+            raws.forEach(raw => {
+                const code = (raw.component_code || '').toUpperCase();
+                if (!code) return;
+                if (!index.fgsByRaw.has(code)) {
+                    index.fgsByRaw.set(code, new Set());
+                }
+                index.fgsByRaw.get(code).add(fgIndex);
+            });
+        });
+
+        const orders = payload.salesOrderImpacts || [];
+        orders.forEach((order, orderIndex) => {
+            const code = (order.item_code || '').toUpperCase();
+            if (!code) return;
+            if (!index.ordersByItem.has(code)) {
+                index.ordersByItem.set(code, new Set());
+            }
+            index.ordersByItem.get(code).add(orderIndex);
+        });
+
+        return index;
+    }
+
+    // What-If Functions
+    async function openWhatIfModal() {
+        try {
+            await ensureWorkbookData();
+            if (!whatIfRows.length) {
+                buildWhatIfRows(workbookData.items || []);
+            }
+            if (!whatIfHeadersInitialized) {
+                initializeWhatIfHeaders();
+                whatIfHeadersInitialized = true;
+            }
+            renderWhatIfTable();
+            whatIfModal.classList.add('active');
+        } catch (error) {
+            console.error(error);
+            showAlert(error.message || 'Unable to load workbook data.');
+        }
+    }
+
+    function initializeWhatIfHeaders() {
+        const headers = document.querySelectorAll('#whatIfTable thead th.filter-header');
+        headers.forEach(th => {
+            const filterIcon = th.querySelector('.filter-icon');
+            if (filterIcon) {
+                filterIcon.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleWhatIfFilterDropdown(th);
+                });
+            }
+
+            th.addEventListener('click', (e) => {
+                if (e.target.closest('.filter-dropdown') || e.target.closest('.filter-icon')) {
+                    return;
+                }
+                toggleWhatIfSort(th.dataset.col);
+            });
+        });
+
+        document.addEventListener('click', (e) => {
+            const openDropdowns = document.querySelectorAll('#whatIfTable .filter-dropdown.open');
+            openDropdowns.forEach(dropdown => {
+                if (!dropdown.contains(e.target) && !e.target.closest('.filter-icon')) {
+                    dropdown.classList.remove('open');
+                }
+            });
+        });
+    }
+
+    function toggleWhatIfSort(column) {
+        if (whatIfSort.column === column) {
+            whatIfSort.direction = whatIfSort.direction === 'asc' ? 'desc' : 'asc';
+        } else {
+            whatIfSort.column = column;
+            whatIfSort.direction = 'asc';
+        }
+        renderWhatIfTable();
+    }
+
+    function toggleWhatIfFilterDropdown(th) {
+        const dropdown = th.querySelector('.filter-dropdown');
+        if (!dropdown) return;
+        const isOpen = dropdown.classList.contains('open');
+        document.querySelectorAll('#whatIfTable .filter-dropdown.open').forEach(d => d.classList.remove('open'));
+        if (isOpen) {
+            dropdown.classList.remove('open');
+            return;
+        }
+
+        const column = th.dataset.col;
+        const type = th.dataset.type;
+        dropdown.innerHTML = '';
+        if (type === 'number') {
+            buildNumberFilterDropdown(dropdown, column);
+        } else {
+            buildTextFilterDropdown(dropdown, column);
+        }
+        dropdown.classList.add('open');
+    }
+
+    function buildTextFilterDropdown(dropdown, column) {
+        const allValues = getUniqueTextValues(column);
+        const activeSet = whatIfTextFilters.get(column) || new Set(allValues);
+
+        dropdown.innerHTML = `
+            <div class="filter-search">
+                <input type="text" placeholder="Search...">
+            </div>
+            <div class="filter-options"></div>
+            <div class="filter-actions">
+                <div>
+                    <button type="button" class="filter-all">All</button>
+                    <button type="button" class="filter-none">None</button>
+                </div>
+                <button type="button" class="apply-btn">Apply</button>
+            </div>
+        `;
+
+        const optionsEl = dropdown.querySelector('.filter-options');
+        optionsEl.innerHTML = allValues.map(value => {
+            const encoded = encodeURIComponent(value);
+            return `
+                <label class="filter-option">
+                    <input type="checkbox" value="${encoded}" ${activeSet.has(value) ? 'checked' : ''}>
+                    <span>${escapeHtml(value || '(blank)')}</span>
+                </label>
+            `;
+        }).join('');
+
+        const searchInput = dropdown.querySelector('.filter-search input');
+        searchInput.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const options = optionsEl.querySelectorAll('.filter-option');
+            options.forEach(option => {
+                const text = option.textContent.toLowerCase();
+                option.style.display = text.includes(term) ? 'flex' : 'none';
+            });
+        });
+
+        dropdown.querySelector('.filter-all').addEventListener('click', () => {
+            optionsEl.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = true);
+        });
+        dropdown.querySelector('.filter-none').addEventListener('click', () => {
+            optionsEl.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+        });
+        dropdown.querySelector('.apply-btn').addEventListener('click', () => {
+            const selected = new Set();
+            optionsEl.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
+                selected.add(decodeURIComponent(cb.value));
+            });
+            if (selected.size === allValues.length) {
+                whatIfTextFilters.delete(column);
+            } else {
+                whatIfTextFilters.set(column, selected);
+            }
+            dropdown.classList.remove('open');
+            renderWhatIfTable();
+        });
+    }
+
+    function buildNumberFilterDropdown(dropdown, column) {
+        const active = whatIfNumberFilters.get(column) || { min: '', max: '' };
+        dropdown.innerHTML = `
+            <div class="number-filter">
+                <label>Min</label>
+                <input type="number" step="0.0001" value="${active.min !== '' ? active.min : ''}">
+                <label>Max</label>
+                <input type="number" step="0.0001" value="${active.max !== '' ? active.max : ''}">
+            </div>
+            <div class="filter-actions">
+                <button type="button" class="filter-clear">Clear</button>
+                <button type="button" class="apply-btn">Apply</button>
+            </div>
+        `;
+
+        const inputs = dropdown.querySelectorAll('.number-filter input');
+        dropdown.querySelector('.filter-clear').addEventListener('click', () => {
+            inputs.forEach(input => input.value = '');
+        });
+        dropdown.querySelector('.apply-btn').addEventListener('click', () => {
+            const minVal = inputs[0].value === '' ? '' : Number(inputs[0].value);
+            const maxVal = inputs[1].value === '' ? '' : Number(inputs[1].value);
+            if (minVal === '' && maxVal === '') {
+                whatIfNumberFilters.delete(column);
+            } else {
+                whatIfNumberFilters.set(column, { min: minVal, max: maxVal });
+            }
+            dropdown.classList.remove('open');
+            renderWhatIfTable();
+        });
+    }
+
+    function getUniqueTextValues(column) {
+        const values = new Set();
+        whatIfRows.forEach(row => {
+            const value = row.item[column] || '';
+            values.add(String(value));
+        });
+        return Array.from(values).sort((a, b) => a.localeCompare(b));
+    }
+
+    function buildWhatIfRows(items) {
+        whatIfRows = [];
+        whatIfRowMap = new Map();
+        whatIfTableBody.textContent = '';
+
+        items.forEach(raw => {
+            const item = {
+                itemCode: String(raw.itemCode || ''),
+                itemDescription: String(raw.itemDescription || ''),
+                estLanded: Number(raw.estLanded) || 0,
+                nextCost: Number(raw.nextCost) || 0,
+            };
+
+            const row = document.createElement('tr');
+            const codeTd = document.createElement('td');
+            codeTd.className = 'component-code';
+            codeTd.textContent = item.itemCode;
+
+            const descTd = document.createElement('td');
+            descTd.textContent = item.itemDescription;
+
+            const estTd = document.createElement('td');
+            estTd.className = 'num';
+            const estInput = document.createElement('input');
+            estInput.className = 'cost-input';
+            estInput.type = 'number';
+            estInput.step = '0.0001';
+            estInput.setAttribute('data-item', encodeURIComponent(item.itemCode));
+            estInput.setAttribute('data-field', 'est_landed');
+            const estValue = item.estLanded.toFixed(4);
+            estInput.value = estValue;
+            estInput.setAttribute('data-original', estValue);
+            estTd.appendChild(estInput);
+
+            const nextTd = document.createElement('td');
+            nextTd.className = 'num';
+            const nextInput = document.createElement('input');
+            nextInput.className = 'cost-input';
+            nextInput.type = 'number';
+            nextInput.step = '0.0001';
+            nextInput.setAttribute('data-item', encodeURIComponent(item.itemCode));
+            nextInput.setAttribute('data-field', 'next_cost');
+            const nextValue = item.nextCost.toFixed(4);
+            nextInput.value = nextValue;
+            nextInput.setAttribute('data-original', nextValue);
+            nextTd.appendChild(nextInput);
+
+            row.append(codeTd, descTd, estTd, nextTd);
+
+            const rowObj = {
+                item,
+                row,
+                estInput,
+                nextInput,
+                codeLower: item.itemCode.toLowerCase(),
+                descLower: item.itemDescription.toLowerCase(),
+                displayEst: item.estLanded,
+                displayNext: item.nextCost,
+            };
+            whatIfRows.push(rowObj);
+            whatIfRowMap.set(item.itemCode, rowObj);
+        });
+    }
+
+    function buildFilterSignature() {
+        const textFilters = Array.from(whatIfTextFilters.entries())
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([key, set]) => `${key}:${Array.from(set).sort().join('|')}`)
+            .join(';');
+        const numberFilters = Array.from(whatIfNumberFilters.entries())
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([key, range]) => `${key}:${range.min ?? ''}-${range.max ?? ''}`)
+            .join(';');
+        return `${whatIfSearchTerm}|${textFilters}|${numberFilters}`;
+    }
+
+    function renderWhatIfTable() {
+        if (!whatIfRows.length) {
+            whatIfTableBody.textContent = '';
+            return;
+        }
+
+        const filterSignature = buildFilterSignature();
+        const sameFilters = filterSignature === whatIfFilterSignature;
+        const isReversedSort = (
+            sameFilters
+            && whatIfLastOrder.length
+            && whatIfLastSort.column === whatIfSort.column
+            && whatIfLastSort.direction !== whatIfSort.direction
+            && whatIfEditVersion === whatIfRenderedVersion
+        );
+
+        let orderedRows;
+        if (isReversedSort) {
+            orderedRows = whatIfLastOrder.slice().reverse();
+        } else {
+            const filteredRows = [];
+            for (const rowObj of whatIfRows) {
+                if (whatIfSearchTerm && !(rowObj.codeLower.includes(whatIfSearchTerm) || rowObj.descLower.includes(whatIfSearchTerm))) {
+                    continue;
+                }
+
+                let rejected = false;
+                for (const [column, selected] of whatIfTextFilters.entries()) {
+                    const value = String(rowObj.item[column] || '');
+                    if (!selected.has(value)) {
+                        rejected = true;
+                        break;
+                    }
+                }
+                if (rejected) {
+                    continue;
+                }
+
+                const display = getWhatIfDisplayCosts(rowObj);
+                rowObj.displayEst = display.estLanded;
+                rowObj.displayNext = display.nextCost;
+
+                for (const [column, range] of whatIfNumberFilters.entries()) {
+                    const value = column === 'estLanded' ? rowObj.displayEst : rowObj.displayNext;
+                    if (range.min !== '' && value < range.min) {
+                        rejected = true;
+                        break;
+                    }
+                    if (range.max !== '' && value > range.max) {
+                        rejected = true;
+                        break;
+                    }
+                }
+                if (rejected) {
+                    continue;
+                }
+
+                filteredRows.push(rowObj);
+            }
+            orderedRows = applyWhatIfSort(filteredRows);
+        }
+
+        const fragment = document.createDocumentFragment();
+        orderedRows.forEach(rowObj => {
+            if (!isReversedSort) {
+                const estValue = rowObj.displayEst.toFixed(4);
+                if (rowObj.estInput.value !== estValue) {
+                    rowObj.estInput.value = estValue;
+                    rowObj.estInput.setAttribute('data-original', estValue);
+                }
+                const nextValue = rowObj.displayNext.toFixed(4);
+                if (rowObj.nextInput.value !== nextValue) {
+                    rowObj.nextInput.value = nextValue;
+                    rowObj.nextInput.setAttribute('data-original', nextValue);
+                }
+
+                const isEdited = getWhatIfEditFlags(rowObj.item.itemCode);
+                rowObj.estInput.classList.toggle('edited', isEdited.estLanded);
+                rowObj.nextInput.classList.toggle('edited', isEdited.nextCost);
+            }
+
+            fragment.appendChild(rowObj.row);
+        });
+
+        while (whatIfTableBody.firstChild) {
+            whatIfTableBody.removeChild(whatIfTableBody.firstChild);
+        }
+        whatIfTableBody.appendChild(fragment);
+
+        whatIfFilterSignature = filterSignature;
+        whatIfLastOrder = orderedRows;
+        whatIfLastSort = { column: whatIfSort.column, direction: whatIfSort.direction };
+        whatIfRenderedVersion = whatIfEditVersion;
+
+        updateWhatIfHeaderIndicators();
+    }
+
+    function applyWhatIfSort(rows) {
+        const sorted = rows.slice();
+        const column = whatIfSort.column;
+        const direction = whatIfSort.direction === 'asc' ? 1 : -1;
+        sorted.sort((a, b) => {
+            let aVal;
+            let bVal;
+            if (column === 'estLanded') {
+                aVal = a.displayEst;
+                bVal = b.displayEst;
+            } else if (column === 'nextCost') {
+                aVal = a.displayNext;
+                bVal = b.displayNext;
+            } else if (column === 'itemDescription') {
+                aVal = a.descLower;
+                bVal = b.descLower;
+            } else {
+                aVal = a.codeLower;
+                bVal = b.codeLower;
+            }
+            if (aVal < bVal) return -1 * direction;
+            if (aVal > bVal) return 1 * direction;
+            return 0;
+        });
+        return sorted;
+    }
+
+    function getWhatIfDisplayCosts(rowObj) {
+        let estLanded = rowObj.item.estLanded;
+        let nextCost = rowObj.item.nextCost;
+        if (whatIfCostState && whatIfCostState.has(rowObj.item.itemCode)) {
+            const override = whatIfCostState.get(rowObj.item.itemCode);
+            const overrideEst = override.est_landed;
+            const overrideNext = override.next_cost;
+            if (overrideEst !== '' && overrideEst !== undefined && overrideEst !== null) {
+                const parsedEst = Number(overrideEst);
+                if (!Number.isNaN(parsedEst)) {
+                    estLanded = parsedEst;
+                }
+            }
+            if (overrideNext !== '' && overrideNext !== undefined && overrideNext !== null) {
+                const parsedNext = Number(overrideNext);
+                if (!Number.isNaN(parsedNext)) {
+                    nextCost = parsedNext;
+                }
+            }
+        }
+        return { estLanded, nextCost };
+    }
+
+    function getWhatIfEditFlags(itemCode) {
+        let editedEst = false;
+        let editedNext = false;
+        if (whatIfCostState && whatIfCostState.has(itemCode)) {
+            const override = whatIfCostState.get(itemCode);
+            editedEst = Boolean(override.est_landed);
+            editedNext = Boolean(override.next_cost);
+        }
+        return { estLanded: editedEst, nextCost: editedNext };
+    }
+
+    function commitCostInput(input) {
+        const itemCode = decodeURIComponent(input.getAttribute('data-item') || '');
+        const field = input.getAttribute('data-field');
+        const rawValue = input.value.trim();
+        const original = input.getAttribute('data-original') || '0';
+        if (rawValue === '') {
+            input.value = original;
+            return;
+        }
+        const numValue = Number(rawValue);
+        if (Number.isNaN(numValue) || numValue < 0) {
+            input.value = original;
+            return;
+        }
+
+        const base = workbookBaseMap.get(itemCode) || { estLanded: 0, nextCost: 0 };
+        const baseValue = field === 'est_landed' ? base.estLanded : base.nextCost;
+        const normalized = Number(numValue.toFixed(4));
+
+        if (!whatIfCostState) {
+            whatIfCostState = new Map();
+        }
+        if (!whatIfCostState.has(itemCode)) {
+            whatIfCostState.set(itemCode, { est_landed: '', next_cost: '' });
+        }
+        const entry = whatIfCostState.get(itemCode);
+        if (normalized === Number(baseValue.toFixed(4))) {
+            entry[field] = '';
+        } else {
+            entry[field] = normalized.toString();
+        }
+
+        if (!entry.est_landed && !entry.next_cost) {
+            whatIfCostState.delete(itemCode);
+        }
+        if (whatIfCostState.size === 0) {
+            whatIfCostState = null;
+        }
+
+        input.value = normalized.toFixed(4);
+        input.setAttribute('data-original', input.value);
+        input.classList.toggle('edited', entry && entry[field]);
+        updateWhatIfIndicators(Boolean(whatIfCostState && whatIfCostState.size));
+        whatIfEditVersion += 1;
+
+        if (whatIfSort.column === 'estLanded' || whatIfSort.column === 'nextCost' || whatIfNumberFilters.size) {
+            renderWhatIfTable();
+        }
+    }
+
+    function updateWhatIfHeaderIndicators() {
+        const headers = document.querySelectorAll('#whatIfTable thead th.filter-header');
+        headers.forEach(th => {
+            const column = th.dataset.col;
+            const type = th.dataset.type;
+            let active = false;
+            if (type === 'number') {
+                const range = whatIfNumberFilters.get(column);
+                active = Boolean(range && (range.min !== '' || range.max !== ''));
+            } else {
+                active = whatIfTextFilters.has(column);
+            }
+            th.classList.toggle('active', active);
+            const sortIcon = th.querySelector('.sort-icon');
+            if (sortIcon) {
+                if (whatIfSort.column === column) {
+                    sortIcon.textContent = whatIfSort.direction === 'asc' ? '▲' : '▼';
+                    sortIcon.classList.add('sorted');
+                } else {
+                    sortIcon.textContent = '⇅';
+                    sortIcon.classList.remove('sorted');
+                }
+            }
+        });
+    }
+
+    function escapeHtml(value) {
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function closeModal() {
+        whatIfModal.classList.remove('active');
+        whatIfSearch.value = '';
+        whatIfSearchTerm = '';
+        renderWhatIfTable();
+        document.querySelectorAll('#whatIfTable .filter-dropdown.open').forEach(dropdown => {
+            dropdown.classList.remove('open');
+        });
+    }
+
+    async function saveWhatIfCosts() {
+        closeModal();
+
+        // Show indicator
+        updateWhatIfIndicators(true);
+
+        // Re-run analysis with what-if costs
+        await runAnalysis();
+    }
+
+    function resetWhatIfCosts() {
+        clearWhatIfState();
+        runAnalysis();
+    }
+
+    function clearWhatIfState() {
+        whatIfCostState = null;
+        updateWhatIfIndicators(false);
+        if (whatIfModal.classList.contains('active')) {
+            renderWhatIfTable();
+        }
+    }
+
+    async function openBomModal() {
+        try {
+            await ensureWorkbookData();
+            ensureComponentLookup();
+            if (bomCurrentItem) {
+                bomItemCodeInput.value = bomCurrentItem.itemCode;
+                bomItemMeta.textContent = `${bomCurrentItem.itemCode} · ${bomCurrentItem.itemDescription || 'No description'}`;
+                renderBomTable();
+            } else {
+                bomTableBody.innerHTML = '';
+                bomItemMeta.textContent = 'Enter an item code to load its BOM.';
+            }
+            bomWhatIfModal.classList.add('active');
+        } catch (error) {
+            console.error(error);
+            showAlert(error.message || 'Unable to load BOM data.');
+        }
+    }
+
+    function closeBom() {
+        bomWhatIfModal.classList.remove('active');
+    }
+
+    function ensureComponentLookup() {
+        if (componentLookupReady) return;
+        componentLookupMap = new Map();
+        componentItemList.innerHTML = '';
+        (workbookData.items || []).forEach(item => {
+            const code = String(item.itemCode || '').toUpperCase();
+            const desc = String(item.itemDescription || '');
+            if (!code) return;
+            componentLookupMap.set(code, desc);
+            const option = document.createElement('option');
+            option.value = code;
+            option.textContent = desc;
+            componentItemList.appendChild(option);
+        });
+        componentLookupReady = true;
+    }
+
+    async function loadBomForItem(itemCode) {
+        const existing = whatIfBomState.get(itemCode);
+        if (existing) {
+            bomCurrentItem = {
+                itemCode: existing.item_code,
+                itemDescription: existing.item_description,
+                isBlend: Boolean(existing.is_blend),
+            };
+            bomComponents = existing.components.map(comp => ({
+                component_item_code: comp.component_item_code,
+                component_item_description: comp.component_item_description || componentLookupMap.get(comp.component_item_code) || '',
+                qtyperbill: Number(comp.qtyperbill) || 0,
+            }));
+            bomItemMeta.textContent = `${bomCurrentItem.itemCode} · ${bomCurrentItem.itemDescription || 'No description'}`;
+            renderBomTable();
+            return;
+        }
+
+        try {
+            const response = await fetch(`${BOM_DATA_URL}?item_code=${encodeURIComponent(itemCode)}`, {
+                headers: { 'Accept': 'application/json' },
+                credentials: 'same-origin',
+            });
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(payload.error || 'Unable to load BOM data.');
+            }
+            bomCurrentItem = {
+                itemCode: payload.item_code || itemCode,
+                itemDescription: payload.item_description || '',
+                isBlend: Boolean(payload.is_blend),
+            };
+            bomItemMeta.textContent = `${bomCurrentItem.itemCode} · ${bomCurrentItem.itemDescription || 'No description'}`;
+            bomComponents = (payload.components || []).map(comp => ({
+                component_item_code: String(comp.component_item_code || '').toUpperCase(),
+                component_item_description: comp.component_item_description || componentLookupMap.get(String(comp.component_item_code || '').toUpperCase()) || '',
+                qtyperbill: Number(comp.qtyperbill) || 0,
+            }));
+            renderBomTable();
+        } catch (error) {
+            console.error(error);
+            showAlert(error.message || 'Unable to load BOM data.');
+        }
+    }
+
+    function renderBomTable() {
+        bomTableBody.innerHTML = '';
+        if (!bomComponents.length) {
+            return;
+        }
+        bomComponents.forEach((component, index) => {
+            const row = document.createElement('tr');
+            row.setAttribute('data-index', String(index));
+
+            const codeCell = document.createElement('td');
+            const codeInput = document.createElement('input');
+            codeInput.type = 'text';
+            codeInput.className = 'bom-component-input';
+            codeInput.setAttribute('list', 'componentItemList');
+            codeInput.value = component.component_item_code || '';
+            codeCell.appendChild(codeInput);
+
+            const descCell = document.createElement('td');
+            descCell.className = 'bom-desc';
+            descCell.textContent = component.component_item_description || '';
+
+            const qtyCell = document.createElement('td');
+            qtyCell.className = 'num';
+            const qtyInput = document.createElement('input');
+            qtyInput.type = 'number';
+            qtyInput.step = '0.0001';
+            qtyInput.className = 'bom-qty-input';
+            qtyInput.value = Number(component.qtyperbill || 0).toFixed(4);
+            qtyCell.appendChild(qtyInput);
+
+            const actionCell = document.createElement('td');
+            const deleteBtn = document.createElement('button');
+            deleteBtn.type = 'button';
+            deleteBtn.className = 'bom-delete-btn';
+            deleteBtn.textContent = 'Remove';
+            actionCell.appendChild(deleteBtn);
+
+            row.append(codeCell, descCell, qtyCell, actionCell);
+            bomTableBody.appendChild(row);
+        });
+    }
+
+    function addBomRow() {
+        if (!bomCurrentItem) {
+            showAlert('Load an item BOM before adding components.');
+            return;
+        }
+        bomComponents.push({
+            component_item_code: '',
+            component_item_description: '',
+            qtyperbill: 0,
+        });
+        renderBomTable();
+    }
+
+    function saveBomOverrides() {
+        if (!saveBomOnly()) {
+            return;
+        }
+        closeBom();
+        runAnalysis();
+    }
+
+    function saveBomOnly() {
+        if (!bomCurrentItem) {
+            showAlert('Load an item BOM before saving.');
+            return false;
+        }
+
+        const filteredComponents = bomComponents
+            .map(comp => ({
+                component_item_code: String(comp.component_item_code || '').trim().toUpperCase(),
+                component_item_description: comp.component_item_description || componentLookupMap.get(String(comp.component_item_code || '').trim().toUpperCase()) || '',
+                qtyperbill: Number(comp.qtyperbill) || 0,
+            }))
+            .filter(comp => comp.component_item_code && comp.qtyperbill > 0);
+
+        if (!filteredComponents.length) {
+            whatIfBomState.delete(bomCurrentItem.itemCode);
+        } else {
+            whatIfBomState.set(bomCurrentItem.itemCode, {
+                item_code: bomCurrentItem.itemCode,
+                item_description: bomCurrentItem.itemDescription || '',
+                is_blend: bomCurrentItem.isBlend,
+                components: filteredComponents,
+            });
+        }
+
+        updateBomIndicators(whatIfBomState.size > 0);
+        bomItemMeta.textContent = `${bomCurrentItem.itemCode} · ${bomCurrentItem.itemDescription || 'No description'} (saved)`;
+        return true;
+    }
+
+    function resetBomOverrides() {
+        whatIfBomState = new Map();
+        updateBomIndicators(false);
+        runAnalysis();
+    }
+
+    function updateBomIndicators(active) {
+        if (active) {
+            let indicator = document.querySelector('.bom-what-if-indicator');
+            if (!indicator) {
+                indicator = document.createElement('span');
+                indicator.className = 'bom-what-if-indicator';
+                indicator.textContent = 'BOM WHAT-IF';
+                document.querySelector('.page-header h1').appendChild(indicator);
+            }
+            resetBomBtn.style.display = 'block';
+        } else {
+            const indicator = document.querySelector('.bom-what-if-indicator');
+            if (indicator) {
+                indicator.remove();
+            }
+            resetBomBtn.style.display = 'none';
+        }
+    }
+
+    function updateWhatIfIndicators(active) {
+        if (active) {
+            // Show "WHAT-IF SCENARIO" indicator in page header
+            let indicator = document.querySelector('.what-if-indicator');
+            if (!indicator) {
+                indicator = document.createElement('span');
+                indicator.className = 'what-if-indicator';
+                indicator.textContent = 'WHAT-IF SCENARIO';
+                document.querySelector('.page-header h1').appendChild(indicator);
+            }
+            // Show reset button
+            resetWhatIfBtn.style.display = 'block';
+        } else {
+            // Hide indicator
+            const indicator = document.querySelector('.what-if-indicator');
+            if (indicator) {
+                indicator.remove();
+            }
+            // Hide reset button
+            resetWhatIfBtn.style.display = 'none';
+        }
+    }
 })();
 </script>
 {% endblock belowdeckscripts %}
