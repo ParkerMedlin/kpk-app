@@ -159,8 +159,8 @@ Add `'delete'` to the skip conditions in both methods. If `enterEditMode` never 
 
 ### Tasks
 
-- [ ] 6.1 Add `field === 'delete'` to the skip condition in `enterEditMode()` (line 411-419)
-- [ ] 6.2 Add `field === 'delete'` to the skip condition in `getRowSnapshot()` (line 294)
+- [x] 6.1 Add `field === 'delete'` to the skip condition in `enterEditMode()` (line 411-419)
+- [x] 6.2 Add `field === 'delete'` to the skip condition in `getRowSnapshot()` (line 294)
 - [ ] 6.3 Test: Click Edit → delete button remains visible and unchanged
 - [ ] 6.4 Test: Click Cancel → delete button still functional
 - [ ] 6.5 Test: Click Save → delete button still functional
