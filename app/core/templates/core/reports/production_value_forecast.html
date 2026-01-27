@@ -553,6 +553,9 @@
         const num = Number(value) || 0;
         return num.toLocaleString(undefined, { maximumFractionDigits });
     }
+
+    // Run analysis with default settings on page load
+    runAnalysis();
 })();
 </script>
 {% endblock belowdeckscripts %}
