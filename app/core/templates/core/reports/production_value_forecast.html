@@ -176,11 +176,16 @@
         background: #eff6ff !important;
         font-weight: 600;
         color: #1e40af;
-        cursor: pointer;
         user-select: none;
     }
     .line-group-header:hover {
         background: #dbeafe !important;
+    }
+    .line-group-header input[type="checkbox"] {
+        cursor: pointer;
+    }
+    .line-group-header td:not(:first-child) {
+        cursor: pointer;
     }
     .line-group-row {
         display: table-row;
@@ -277,17 +282,34 @@
     });
 
     resultsTable.addEventListener('click', (e) => {
+        // Handle line checkbox toggle
+        const lineCheckbox = e.target.closest('input[type="checkbox"].line-checkbox');
+        if (lineCheckbox) {
+            const lineGroup = lineCheckbox.dataset.line;
+            const isChecked = lineCheckbox.checked;
+            const rowCheckboxes = document.querySelectorAll(`.line-group-row[data-line="${lineGroup}"] input.row-checkbox:not([disabled])`);
+            rowCheckboxes.forEach(cb => {
+                cb.checked = isChecked;
+            });
+            updateFilterButtons();
+            return;
+        }
+
+        // Handle row checkbox toggle
+        const checkbox = e.target.closest('input[type="checkbox"].row-checkbox');
+        if (checkbox) {
+            updateLineCheckboxState(checkbox);
+            updateFilterButtons();
+            return;
+        }
+
+        // Handle line header collapse/expand (but not on checkbox)
         const header = e.target.closest('.line-group-header');
-        if (header) {
+        if (header && !e.target.closest('input[type="checkbox"]')) {
             const lineGroup = header.dataset.line;
             const rows = document.querySelectorAll(`.line-group-row[data-line="${lineGroup}"]`);
             rows.forEach(row => row.classList.toggle('collapsed'));
             return;
-        }
-
-        const checkbox = e.target.closest('input[type="checkbox"].row-checkbox');
-        if (checkbox) {
-            updateFilterButtons();
         }
     });
 
@@ -430,7 +452,7 @@
 
             // Line group header
             tableHtml += `<tr class="line-group-header" data-line="${line}">`;
-            tableHtml += `<td></td>`;
+            tableHtml += `<td><input type="checkbox" class="line-checkbox" data-line="${line}"></td>`;
             tableHtml += `<td colspan="5"><strong>${line}</strong> (${visibleLineCount} of ${lineRuns.length} runs)</td>`;
             tableHtml += `<td colspan="3" class="num"><strong>${formatCurrency(lineTotal)}</strong></td>`;
             tableHtml += '</tr>';
@@ -458,6 +480,18 @@
 
         tableHtml += '</tbody></table></div>';
         resultsTable.innerHTML = tableHtml;
+
+        // Update line checkbox states based on row checkbox states
+        const allLineCheckboxes = document.querySelectorAll('.line-checkbox');
+        allLineCheckboxes.forEach(lineCheckbox => {
+            const lineGroup = lineCheckbox.dataset.line;
+            const rowCheckboxes = document.querySelectorAll(`.line-group-row[data-line="${lineGroup}"] input.row-checkbox:not([disabled])`);
+            const allChecked = Array.from(rowCheckboxes).every(cb => cb.checked);
+            const someChecked = Array.from(rowCheckboxes).some(cb => cb.checked);
+
+            lineCheckbox.checked = allChecked;
+            lineCheckbox.indeterminate = !allChecked && someChecked;
+        });
     }
 
     function downloadCsv() {
@@ -513,6 +547,24 @@
         window.URL.revokeObjectURL(url);
     }
 
+    function updateLineCheckboxState(rowCheckbox) {
+        // Find the line this row belongs to
+        const row = rowCheckbox.closest('.line-group-row');
+        if (!row) return;
+
+        const lineGroup = row.dataset.line;
+        const lineCheckbox = document.querySelector(`.line-checkbox[data-line="${lineGroup}"]`);
+        if (!lineCheckbox) return;
+
+        // Check if all row checkboxes in this line are checked
+        const rowCheckboxes = document.querySelectorAll(`.line-group-row[data-line="${lineGroup}"] input.row-checkbox:not([disabled])`);
+        const allChecked = Array.from(rowCheckboxes).every(cb => cb.checked);
+        const someChecked = Array.from(rowCheckboxes).some(cb => cb.checked);
+
+        lineCheckbox.checked = allChecked;
+        lineCheckbox.indeterminate = !allChecked && someChecked;
+    }
+
     function updateFilterButtons() {
         const checkboxes = document.querySelectorAll('input.row-checkbox:not([disabled])');
         const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
@@ -533,6 +585,22 @@
         renderSummary(cachedData);
         renderTable(cachedData);
         updateFilterButtons();
+
+        // Update all line checkbox states after hiding
+        const allLineCheckboxes = document.querySelectorAll('.line-checkbox');
+        allLineCheckboxes.forEach(lineCheckbox => {
+            const lineGroup = lineCheckbox.dataset.line;
+            const rowCheckboxes = document.querySelectorAll(`.line-group-row[data-line="${lineGroup}"] input.row-checkbox:not([disabled])`);
+            if (rowCheckboxes.length === 0) {
+                lineCheckbox.checked = false;
+                lineCheckbox.indeterminate = false;
+            } else {
+                const allChecked = Array.from(rowCheckboxes).every(cb => cb.checked);
+                const someChecked = Array.from(rowCheckboxes).some(cb => cb.checked);
+                lineCheckbox.checked = allChecked;
+                lineCheckbox.indeterminate = !allChecked && someChecked;
+            }
+        });
     }
 
     function showHidden() {
