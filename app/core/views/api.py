@@ -60,10 +60,15 @@ from core.services.purchasing_cost_service import (
     load_purchasing_costs_from_file,
     load_purchasing_costs_with_both_values,
 )
-from core.services.cost_impact_service import analyze_cost_impacts
+from core.services.cost_impact_service import analyze_cost_impacts, merge_what_if_costs
 import time
 from django.utils.dateparse import parse_datetime
 from typing import Dict
+
+try:
+    import orjson as _orjson
+except ImportError:  # pragma: no cover - optional acceleration
+    _orjson = None
 
 logger = logging.getLogger(__name__)
 
@@ -2137,6 +2142,8 @@ def get_json_cost_impact_analysis(request):
     # Load purchasing costs with both est_landed and next_cost
     pricing_label = "Standard costs only"
     uploaded_file = None
+    what_if_costs_raw = data_source.get("what_if_costs")
+    what_if_boms_raw = data_source.get("what_if_boms")
 
     if request.method == "POST" and request.FILES.get("cost_override"):
         uploaded_file = request.FILES["cost_override"]
@@ -2146,7 +2153,38 @@ def get_json_cost_impact_analysis(request):
     except PurchasingCostParseError as exc:
         return JsonResponse({"error": str(exc)}, status=400)
 
-    if workbook_name:
+    # Apply what-if cost overrides if provided
+    if what_if_costs_raw:
+        try:
+            if _orjson is not None:
+                payload = (
+                    what_if_costs_raw
+                    if isinstance(what_if_costs_raw, (bytes, bytearray))
+                    else what_if_costs_raw.encode("utf-8")
+                )
+                what_if_costs = _orjson.loads(payload)
+            else:
+                what_if_costs = json.loads(what_if_costs_raw)
+            purchasing_costs = merge_what_if_costs(purchasing_costs, what_if_costs)
+            pricing_label = "What-If Scenario"
+        except (json.JSONDecodeError, TypeError, ValueError) as exc:
+            return JsonResponse({"error": f"Invalid what_if_costs format: {str(exc)}"}, status=400)
+
+    bom_overrides = None
+    if what_if_boms_raw:
+        try:
+            if _orjson is not None:
+                payload = (
+                    what_if_boms_raw
+                    if isinstance(what_if_boms_raw, (bytes, bytearray))
+                    else what_if_boms_raw.encode("utf-8")
+                )
+                bom_overrides = _orjson.loads(payload)
+            else:
+                bom_overrides = json.loads(what_if_boms_raw)
+        except (json.JSONDecodeError, TypeError, ValueError) as exc:
+            return JsonResponse({"error": f"Invalid what_if_boms format: {str(exc)}"}, status=400)
+    elif workbook_name:
         if uploaded_file:
             pricing_label = f"Uploaded workbook ({workbook_name})"
         else:
@@ -2163,7 +2201,8 @@ def get_json_cost_impact_analysis(request):
     result = analyze_cost_impacts(
         purchasing_costs=purchasing_costs,
         warehouse=warehouse,
-        limit=limit
+        limit=limit,
+        bom_overrides=bom_overrides,
     )
 
     elapsed_ms = round((time.perf_counter() - started) * 1000, 2)
@@ -2191,6 +2230,88 @@ def get_json_cost_impact_analysis(request):
     }
 
     return JsonResponse(payload)
+
+
+@login_required
+@require_http_methods(["GET"])
+def get_json_cost_workbook_data(request):
+    """Fetch all workbook items with descriptions for what-if cost editing."""
+    try:
+        purchasing_costs, workbook_name = load_purchasing_costs_with_both_values()
+    except Exception as exc:
+        return JsonResponse({"error": f"Unable to load workbook: {str(exc)}"}, status=400)
+
+    if not purchasing_costs:
+        return JsonResponse({
+            "error": "No workbook available. Please configure server workbook path."
+        }, status=400)
+
+    # Build item list with descriptions
+    item_codes = sorted(purchasing_costs.keys())
+    items_with_desc = CiItem.objects.filter(itemcode__in=item_codes).values_list('itemcode', 'itemcodedesc')
+    desc_map = dict(items_with_desc)
+
+    items = []
+    for item_code in item_codes:
+        cost_data = purchasing_costs.get(item_code, {})
+        items.append({
+            'itemCode': item_code,
+            'itemDescription': desc_map.get(item_code, ''),
+            'estLanded': float(cost_data.get('est_landed', 0)),
+            'nextCost': float(cost_data.get('next_cost', 0))
+        })
+
+    return JsonResponse({
+        'workbook_name': workbook_name or 'Unknown',
+        'items': items
+    })
+
+
+@login_required
+@require_http_methods(["GET"])
+def get_json_bom_data(request):
+    """Fetch BOM components for a given item code."""
+    item_code = (request.GET.get("item_code") or "").strip().upper()
+    if not item_code:
+        return JsonResponse({"error": "item_code is required."}, status=400)
+
+    bom_rows = BillOfMaterials.objects.filter(
+        item_code__iexact=item_code
+    ).values(
+        'item_code',
+        'item_description',
+        'component_item_code',
+        'component_item_description',
+        'qtyperbill',
+        'standard_uom',
+    )
+
+    components = []
+    item_description = ''
+    for row in bom_rows:
+        if not item_description:
+            item_description = row.get('item_description') or ''
+        components.append({
+            'component_item_code': row.get('component_item_code') or '',
+            'component_item_description': row.get('component_item_description') or '',
+            'qtyperbill': float(row.get('qtyperbill') or 0),
+            'standard_uom': row.get('standard_uom') or '',
+        })
+
+    if not components:
+        return JsonResponse({"error": f"No BOM found for item_code {item_code}."}, status=404)
+
+    if not item_description:
+        item = CiItem.objects.filter(itemcode__iexact=item_code).values('itemcodedesc').first()
+        if item:
+            item_description = item.get('itemcodedesc') or ''
+
+    return JsonResponse({
+        'item_code': item_code,
+        'item_description': item_description,
+        'is_blend': item_description.upper().startswith('BLEND') if item_description else False,
+        'components': components,
+    })
 
 
 @require_http_methods(["GET"])
