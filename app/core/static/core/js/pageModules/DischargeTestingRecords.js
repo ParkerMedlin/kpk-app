@@ -427,8 +427,7 @@ class DischargeTestingRecordsPage {
         input = this.createTextarea(field, currentValue);
       } else if (field === 'initial_pH' || field === 'final_pH') {
         input = this.createTextInput(field, currentValue, {
-          type: 'number',
-          step: '0.01',
+          type: 'text',
           inputMode: 'decimal',
         });
       } else {
@@ -809,14 +808,7 @@ class DischargeTestingRecordsPage {
     }
     const displayValue = formatPhDisplay(value);
     cell.dataset.value = value == null ? '' : value;
-    const byText = updatedBy || '--';
-    const timeText = formatDateTime(updatedAt);
-
-    cell.innerHTML = `
-      <div class="fw-semibold">${escapeHtml(displayValue)}</div>
-      <div class="text-muted small" data-role="${prefix}-ph-updated-by">${escapeHtml(byText)}</div>
-      <div class="text-muted small" data-role="${prefix}-ph-updated-at">${escapeHtml(timeText)}</div>
-    `;
+    cell.innerHTML = `<div class="fw-semibold">${escapeHtml(displayValue)}</div>`;
   }
 
   setSamplingPersonnelCell(row, id, name) {

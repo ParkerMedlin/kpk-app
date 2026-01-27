@@ -91,16 +91,6 @@
                             <div class="fw-semibold">
                                 {% if tote.initial_pH is not None %}{{ tote.initial_pH }}{% else %}--{% endif %}
                             </div>
-                            <div class="text-muted small" data-role="initial-ph-updated-by">
-                                {% if tote.lab_technician %}
-                                    {{ tote.lab_technician.get_full_name|default:tote.lab_technician.username }}
-                                {% else %}
-                                    --
-                                {% endif %}
-                            </div>
-                            <div class="text-muted small" data-role="initial-ph-updated-at">
-                                {{ tote.date|date:'Y-m-d H:i' }}
-                            </div>
                         </td>
                         <td data-field="action_required" data-edit-group="lab" data-value="{{ tote.action_required|default_if_none:'' }}" class="text-break">
                             {% if tote.action_required %}
@@ -119,16 +109,6 @@
                         <td data-field="final_pH" data-edit-group="lab" data-value="{{ tote.final_pH|default_if_none:'' }}">
                             <div class="fw-semibold">
                                 {% if tote.final_pH is not None %}{{ tote.final_pH }}{% else %}--{% endif %}
-                            </div>
-                            <div class="text-muted small" data-role="final-ph-updated-by">
-                                {% if tote.lab_technician %}
-                                    {{ tote.lab_technician.get_full_name|default:tote.lab_technician.username }}
-                                {% else %}
-                                    --
-                                {% endif %}
-                            </div>
-                            <div class="text-muted small" data-role="final-ph-updated-at">
-                                {{ tote.date|date:'Y-m-d H:i' }}
                             </div>
                         </td>
                         <td

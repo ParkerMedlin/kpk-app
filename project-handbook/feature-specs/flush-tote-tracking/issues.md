@@ -161,10 +161,52 @@ Add `'delete'` to the skip conditions in both methods. If `enterEditMode` never 
 
 - [x] 6.1 Add `field === 'delete'` to the skip condition in `enterEditMode()` (line 411-419)
 - [x] 6.2 Add `field === 'delete'` to the skip condition in `getRowSnapshot()` (line 294)
-- [ ] 6.3 Test: Click Edit → delete button remains visible and unchanged
-- [ ] 6.4 Test: Click Cancel → delete button still functional
-- [ ] 6.5 Test: Click Save → delete button still functional
-- [ ] 6.6 Test: Delete button works correctly after editing and saving a row
+- [x] 6.3 Test: Click Edit → delete button remains visible and unchanged
+- [x] 6.4 Test: Click Cancel → delete button still functional
+- [x] 6.5 Test: Click Save → delete button still functional
+- [x] 6.6 Test: Delete button works correctly after editing and saving a row
+
+---
+
+## Issue 7: Records Page pH Cell Clutter and Input Spinners
+
+### 7a: pH Cells Show Redundant Date/User Info
+
+**Problem:** Each pH cell (Initial pH and Final pH) renders three lines: the pH value, the lab technician name, and a timestamp. This makes the table visually cluttered with information that adds little value in a dense table view.
+
+**Current rendering** (template lines 90-103 and 119-132, JS `setPhCell` lines 804-818):
+
+```
+7.20                    ← pH value (bold)
+John Smith              ← lab technician name (small muted)
+2026-01-25 14:30        ← timestamp (small muted)
+```
+
+**Expected:** Show only the pH value. Remove the updated-by and updated-at sub-lines.
+
+**Code Locations:**
+- `discharge_testing_records.html` lines 90-103 (initial pH cell) and lines 119-132 (final pH cell)
+- `DischargeTestingRecords.js` lines 804-818 (`setPhCell` method)
+
+### 7b: pH Edit Inputs Show Browser Spinner Buttons
+
+**Problem:** When a row enters edit mode, the pH fields render as `<input type="number">` (JS line 427-431), which displays browser-native increment/decrement spinner arrows. These are unnecessary for pH entry and add visual noise.
+
+**Code Location:**
+- `DischargeTestingRecords.js` lines 427-431 — `createTextInput` called with `type: 'number'`
+
+**Fix Approach:** Switch pH inputs to `type="text"` with `inputMode="decimal"` to get the numeric keyboard on mobile without the spinner arrows. The existing `parsePhValue()` already handles string-to-number parsing, so no validation changes are needed.
+
+### Tasks
+
+- [x] 7.1 Remove updated-by and updated-at divs from initial pH cell in template (lines 94-103)
+- [x] 7.2 Remove updated-by and updated-at divs from final pH cell in template (lines 123-132)
+- [x] 7.3 Simplify `setPhCell()` in JS to render only the pH value without updated-by/updated-at lines
+- [x] 7.4 Change pH edit inputs from `type: 'number'` to `type: 'text'` with `inputMode: 'decimal'`
+- [x] 7.5 Remove `step: '0.01'` (only relevant for `type="number"`)
+- [ ] 7.6 Test: pH cells display only the value, no sub-lines
+- [ ] 7.7 Test: pH edit inputs have no spinner arrows
+- [ ] 7.8 Test: pH values still parse and validate correctly after type change
 
 ---
 
