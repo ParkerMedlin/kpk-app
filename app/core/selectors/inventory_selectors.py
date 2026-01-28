@@ -165,7 +165,7 @@ def get_latest_transaction_dates(item_codes):
     
     return result
 
-def get_relevant_ci_item_itemcodes(filter_string):
+def get_relevant_ci_item_itemcodes(filter_string, exclude_audit_group_items=True):
     """Get itemcodes from CI_Item table based on filter criteria.
     
     Retrieves itemcodes, descriptions and quantities on hand from CI_Item and IM_ItemWarehouse
@@ -173,51 +173,57 @@ def get_relevant_ci_item_itemcodes(filter_string):
 
     Args:
         filter_string (str): Type of items to retrieve - 'blends_and_components', 'blends', 'components', 'non_blend', or None for all
+        exclude_audit_group_items (bool): When True, exclude items assigned to audit groups.
 
     Returns:
         list: List of tuples containing (itemcode, itemcodedesc, quantityonhand) for matching items
         
     Note:
-        Excludes items already in audit groups and specific excluded itemcodes.
+        Optionally excludes items already in audit groups and specific excluded itemcodes.
         Only returns items with positive quantity on hand.
     """
+    audit_group_clause = (
+        "AND ci.itemcode NOT IN (SELECT item_code FROM core_auditgroup)"
+        if exclude_audit_group_items
+        else ""
+    )
     if filter_string == 'blends_and_components':
-        sql_query = """
+        sql_query = f"""
             SELECT ci.itemcode, ci.itemcodedesc, iw.QuantityOnHand, ci.standardunitofmeasure FROM ci_item ci
             JOIN im_itemwarehouse iw ON ci.itemcode = iw.itemcode
             WHERE ( itemcodedesc like 'BLEND%' 
                 or itemcodedesc like 'CHEM%' 
                 or itemcodedesc like 'DYE%' 
                 or itemcodedesc like 'FRAGRANCE%')
-            AND ci.itemcode NOT IN (SELECT item_code FROM core_auditgroup)
+            {audit_group_clause}
             AND ci.itemcode NOT IN ('030143', '030182')
             and ci.itemcode not like '/%'
             and iw.QuantityOnHand > 0
             """
     elif filter_string == 'blends':
-        sql_query = """
+        sql_query = f"""
             SELECT ci.itemcode, ci.itemcodedesc, iw.QuantityOnHand, ci.standardunitofmeasure FROM ci_item ci
             JOIN im_itemwarehouse iw ON ci.itemcode = iw.itemcode
             WHERE (itemcodedesc like 'BLEND%')
-            AND ci.itemcode NOT IN (SELECT item_code FROM core_auditgroup)
+            {audit_group_clause}
             AND ci.itemcode NOT IN ('030143', '030182')
             and ci.itemcode not like '/%'
             and iw.QuantityOnHand > 0
             """
     elif filter_string == 'components':
-        sql_query = """
+        sql_query = f"""
             SELECT ci.itemcode, ci.itemcodedesc, iw.QuantityOnHand, ci.standardunitofmeasure FROM ci_item ci
             JOIN im_itemwarehouse iw ON ci.itemcode = iw.itemcode
             WHERE (itemcodedesc like 'CHEM%'
                 or itemcodedesc like 'DYE%'
                 or itemcodedesc like 'FRAGRANCE%')
-            AND ci.itemcode NOT IN (SELECT item_code FROM core_auditgroup)
+            {audit_group_clause}
             AND ci.itemcode NOT IN ('030143', '030182')
             and ci.itemcode not like '/%'
             and iw.QuantityOnHand > 0
             """
     elif filter_string == 'non_blend':
-        sql_query = """
+        sql_query = f"""
             SELECT ci.itemcode, ci.itemcodedesc, iw.QuantityOnHand, ci.standardunitofmeasure FROM ci_item ci
             JOIN im_itemwarehouse iw ON ci.itemcode = iw.itemcode
             WHERE (or itemcodedesc like 'ADAPTER%' 
@@ -270,13 +276,13 @@ def get_relevant_ci_item_itemcodes(filter_string):
                 or itemcodedesc like 'TRAY%' 
                 or itemcodedesc like 'TUB%' 
                 or itemcodedesc like 'TUBE%')
-            AND ci.itemcode NOT IN (SELECT item_code FROM core_auditgroup)
+            {audit_group_clause}
             AND ci.itemcode NOT IN ('030143', '030182')
             and ci.itemcode not like '/%'
             and iw.QuantityOnHand > 0
             """
     else:
-        sql_query = """
+        sql_query = f"""
             SELECT ci.itemcode, ci.itemcodedesc, iw.QuantityOnHand, ci.standardunitofmeasure FROM ci_item ci
             JOIN im_itemwarehouse iw ON ci.itemcode = iw.itemcode
             WHERE (itemcodedesc like 'BLEND%' 
@@ -333,7 +339,7 @@ def get_relevant_ci_item_itemcodes(filter_string):
                 or itemcodedesc like 'TRAY%' 
                 or itemcodedesc like 'TUB%' 
                 or itemcodedesc like 'TUBE%')
-            AND ci.itemcode NOT IN (SELECT item_code FROM core_auditgroup)
+            {audit_group_clause}
             AND ci.itemcode NOT IN ('030143', '030182')
             and ci.itemcode not like '/%'
             and iw.QuantityOnHand > 0
