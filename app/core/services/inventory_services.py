@@ -305,7 +305,10 @@ def build_uncounted_items_display(
     }
     filter_string = filter_map.get(item_type)
 
-    all_items = get_relevant_ci_item_itemcodes(filter_string)
+    all_items = get_relevant_ci_item_itemcodes(
+        filter_string,
+        exclude_audit_group_items=False,
+    )
 
     uncounted_items = [
         item for item in all_items
@@ -332,8 +335,10 @@ def build_uncounted_items_display(
         item_desc = item[1]
 
         audit_group_record = audit_groups.get(item_code)
-        record_type = _classify_item_code(item_code)
-        display_type = 'component' if record_type == 'blendcomponent' else record_type
+        if filter_string:
+            display_type = item_type
+        else:
+            display_type = _classify_by_description(item_desc)
         display_items.append({
             'item_code': item_code,
             'item_description': item_desc or '',
@@ -428,6 +433,20 @@ def _classify_item_code(item_code):
         return 'blend'
     if upper_code.startswith(_COMPONENT_PREFIXES):
         return 'blendcomponent'
+    return 'warehouse'
+
+
+def _classify_by_description(description):
+    if not description:
+        return 'warehouse'
+    text = str(description).strip()
+    if not text:
+        return 'warehouse'
+    upper_desc = text.upper()
+    if upper_desc.startswith('BLEND'):
+        return 'blend'
+    if upper_desc.startswith(('CHEM', 'DYE', 'FRAGRANCE')):
+        return 'component'
     return 'warehouse'
 
 
