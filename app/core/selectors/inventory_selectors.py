@@ -1,5 +1,8 @@
+from datetime import timedelta
+
 from django.db import connection
-from django.db.models import Q
+from django.db.models import Q, Max
+from django.utils import timezone
 from core.models import (
     ImItemWarehouse,
     BlendCountRecord,
@@ -9,6 +12,7 @@ from core.models import (
     ComponentUsage,
     SubComponentUsage,
     AuditGroup,
+    CountCollectionLink,
 )
 from prodverse.models import WarehouseCountRecord
 import logging
@@ -400,3 +404,103 @@ def get_distinct_audit_groups():
         .distinct()
         .order_by('audit_group')
     )
+
+
+def get_recently_counted_item_codes(days=3):
+    """Return set of item codes included in countlists created within the last X days."""
+    try:
+        days_value = int(days)
+    except (TypeError, ValueError):
+        days_value = 3
+
+    if days_value < 0:
+        days_value = 0
+
+    cutoff = timezone.now() - timedelta(days=days_value)
+    recent_links = CountCollectionLink.objects.filter(created_at__gte=cutoff)
+
+    count_ids = set()
+    item_codes = set()
+    for link in recent_links:
+        for raw_id in link.count_id_list or []:
+            if raw_id is None:
+                continue
+            if isinstance(raw_id, int):
+                count_ids.add(raw_id)
+                continue
+            raw_str = str(raw_id).strip()
+            if not raw_str:
+                continue
+            if raw_str.isdigit():
+                count_ids.add(int(raw_str))
+            else:
+                item_codes.add(raw_str)
+
+    if count_ids:
+        blend_codes = BlendCountRecord.objects.filter(id__in=count_ids).values_list('item_code', flat=True)
+        component_codes = BlendComponentCountRecord.objects.filter(id__in=count_ids).values_list('item_code', flat=True)
+        item_codes.update(code for code in blend_codes if code)
+        item_codes.update(code for code in component_codes if code)
+
+    return item_codes
+
+
+def get_all_active_item_codes(item_type=None):
+    """Return CiItem queryset filtered by item type."""
+    queryset = CiItem.objects.exclude(itemcode__isnull=True)
+
+    if not item_type or item_type == 'all':
+        return queryset
+
+    if item_type == 'blend':
+        return queryset.filter(itemcode__startswith='BLEND-')
+
+    if item_type == 'component':
+        return queryset.filter(
+            Q(itemcode__startswith='CHEM-') |
+            Q(itemcode__startswith='DYE-') |
+            Q(itemcode__startswith='FRAGRANCE-')
+        )
+
+    if item_type == 'warehouse':
+        return queryset.exclude(
+            Q(itemcode__startswith='BLEND-') |
+            Q(itemcode__startswith='CHEM-') |
+            Q(itemcode__startswith='DYE-') |
+            Q(itemcode__startswith='FRAGRANCE-')
+        )
+
+    return queryset
+
+
+def get_last_counted_dates(item_codes):
+    """Return mapping of item_code -> last counted_date for provided items."""
+    if not item_codes:
+        return {}
+
+    blend_dates = dict(
+        BlendCountRecord.objects
+        .filter(item_code__in=item_codes, counted_date__isnull=False, counted=True)
+        .values('item_code')
+        .annotate(last_date=Max('counted_date'))
+        .values_list('item_code', 'last_date')
+    )
+
+    component_dates = dict(
+        BlendComponentCountRecord.objects
+        .filter(item_code__in=item_codes, counted_date__isnull=False, counted=True)
+        .values('item_code')
+        .annotate(last_date=Max('counted_date'))
+        .values_list('item_code', 'last_date')
+    )
+
+    last_dates = dict(blend_dates)
+    for item_code, date_value in component_dates.items():
+        existing = last_dates.get(item_code)
+        if existing is None or (date_value and date_value > existing):
+            last_dates[item_code] = date_value
+
+    for item_code in item_codes:
+        last_dates.setdefault(item_code, None)
+
+    return last_dates
