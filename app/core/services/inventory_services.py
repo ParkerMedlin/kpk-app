@@ -32,6 +32,7 @@ from core.selectors.inventory_selectors import (
     get_recently_counted_item_codes,
     get_relevant_ci_item_itemcodes,
     get_last_counted_dates,
+    get_latest_count_dates_any,
 )
 from core.services.purchasing_alias_services import extract_supply_type
 
@@ -328,6 +329,7 @@ def build_uncounted_items_display(
     item_codes = [item[0] for item in uncounted_items]
     audit_groups = get_audit_group_records(item_codes)
     last_counted_dates = get_last_counted_dates(item_codes)
+    latest_count_dates = get_latest_count_dates_any(item_codes)
 
     display_items = []
     for item in uncounted_items:
@@ -346,6 +348,7 @@ def build_uncounted_items_display(
             'audit_group': audit_group_record.audit_group if audit_group_record else None,
             'audit_group_id': audit_group_record.id if audit_group_record else None,
             'last_counted_date': last_counted_dates.get(item_code),
+            'latest_count_date': latest_count_dates.get(item_code),
         })
 
     return display_items
