@@ -494,3 +494,36 @@ def get_last_counted_dates(item_codes):
         last_dates.setdefault(item_code, None)
 
     return last_dates
+
+
+def get_latest_count_dates_any(item_codes):
+    """Return mapping of item_code -> latest counted_date regardless of counted flag."""
+    if not item_codes:
+        return {}
+
+    blend_dates = dict(
+        BlendCountRecord.objects
+        .filter(item_code__in=item_codes, counted_date__isnull=False)
+        .values('item_code')
+        .annotate(last_date=Max('counted_date'))
+        .values_list('item_code', 'last_date')
+    )
+
+    component_dates = dict(
+        BlendComponentCountRecord.objects
+        .filter(item_code__in=item_codes, counted_date__isnull=False)
+        .values('item_code')
+        .annotate(last_date=Max('counted_date'))
+        .values_list('item_code', 'last_date')
+    )
+
+    last_dates = dict(blend_dates)
+    for item_code, date_value in component_dates.items():
+        existing = last_dates.get(item_code)
+        if existing is None or (date_value and date_value > existing):
+            last_dates[item_code] = date_value
+
+    for item_code in item_codes:
+        last_dates.setdefault(item_code, None)
+
+    return last_dates
