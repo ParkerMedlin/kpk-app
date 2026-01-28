@@ -53,6 +53,35 @@ Use template: [tasks-template.md](tasks-template.md)
 
 **Ask for approval before implementation.**
 
+## Phase 4: Tests
+
+After implementation, create `tests.md` with:
+- Grouped test cases organized by feature area
+- Checkbox items for manual verification
+- Coverage of access control, field display, validation, happy paths, error paths, data integrity, and edge cases
+- Summary table with test counts per section
+
+Use template: [tests-template.md](tests-template.md)
+
+## Ongoing: Issues
+
+When bugs or unexpected behavior are discovered during testing, document them in `issues.md`:
+- Each issue gets a numbered heading with a short title
+- Include: Problem description, Expected Behavior, Root Cause Analysis (when non-obvious), Code Locations, Fix Approach, and Tasks
+- Tasks are numbered as `[issue].[task]` (e.g., 3.2) with checkboxes
+
+Use template: [issues-template.md](issues-template.md)
+
+## Ongoing: Change Orders
+
+When requirements change or new functionality is added after initial implementation, document in `changeorders.md`:
+- Each change is a numbered Phase continuing from tasks.md
+- Include analysis of affected code and explicit side-effect verification
+- Tasks follow the same Do/Deliverable format as tasks.md
+- Progress table tracks completion across all phases
+
+Use template: [changeorders-template.md](changeorders-template.md)
+
 ## Where to Store Specs
 
 Create a feature folder at `project-handbook/feature-specs/{feature-name}/` containing:
@@ -60,7 +89,10 @@ Create a feature folder at `project-handbook/feature-specs/{feature-name}/` cont
 project-handbook/feature-specs/{feature-name}/
 ├── requirements.md
 ├── design.md
-└── tasks.md
+├── tasks.md
+├── tests.md          (after implementation)
+├── issues.md         (as bugs are found)
+└── changeorders.md   (as requirements evolve)
 ```
 
 ## KPK Context (Pre-Answered Decisions)
