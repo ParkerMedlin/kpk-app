@@ -47,10 +47,12 @@ from core.services.inventory_services import (
 from core.selectors.production_planning_selectors import get_schedulable_blend_shortages
 from core.selectors.inventory_selectors import *
 from core.selectors.reports_selectors import *
+from core.selectors import get_sampling_personnel_options, list_discharge_tests
 from core.kpkapp_utils.string_utils import get_unencoded_item_code
 from core.services.lot_numbers_services import generate_next_lot_number
 from core.services.blend_scheduling_services import get_blend_schedule_querysets, prepare_blend_schedule_queryset
 from core.services.purchasing_alias_services import normalize_supply_type
+from core.services.discharge_testing_services import is_lab_user
 from django.core.paginator import Paginator
 from core.selectors.batch_issue_selectors import (
     get_batch_issue_runs,
@@ -2137,6 +2139,37 @@ def display_container_classifications(request):
     }
 
     return render(request, 'core/lotnumbers/containerclassificationrecords.html', context)
+
+
+@login_required
+@ensure_csrf_cookie
+def discharge_testing_entry_view(request):
+    """Render the discharge testing entry form for lab technicians."""
+    if not is_lab_user(request.user):
+        return HttpResponseForbidden('Lab technician access required.')
+
+    context = {
+        'production_line_choices': DischargeTestingRecord.DISCHARGE_SOURCE_CHOICES,
+        'discharge_type_options': DischargeTestingRecord.DISCHARGE_TYPE_CHOICES,
+        'sampling_personnel_options': get_sampling_personnel_options(),
+    }
+    return render(request, 'core/discharge_testing_entry.html', context)
+
+
+@login_required
+@ensure_csrf_cookie
+def discharge_testing_records_view(request):
+    """Render the discharge testing records page with initial options and data."""
+    if not (request.user.is_staff or request.user.is_superuser):
+        return HttpResponseForbidden('Staff access required.')
+
+    context = {
+        'production_line_choices': DischargeTestingRecord.DISCHARGE_SOURCE_CHOICES,
+        'discharge_type_options': DischargeTestingRecord.DISCHARGE_TYPE_CHOICES,
+        'sampling_personnel_options': get_sampling_personnel_options(),
+        'flush_totes': list_discharge_tests(),
+    }
+    return render(request, 'core/discharge_testing_records.html', context)
 
 
 @login_required

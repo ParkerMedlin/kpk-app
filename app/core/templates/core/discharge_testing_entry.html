@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}<title>Discharge Testing Entry</title>{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{% static 'core/js/pageModules/DischargeTestingEntry.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<div id="discharge-testing-entry-app" class="container-fluid px-0" data-ph-min="5.1" data-ph-max="10.9">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <div>
+            <h1 class="mb-1">Discharge Testing Entry</h1>
+            <p class="text-muted mb-0">Complete all fields in one session. Required: discharge source, discharge type, sampling personnel.</p>
+        </div>
+        <span class="badge bg-secondary text-uppercase">pH range 5.1 - 10.9</span>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form id="discharge-testing-entry-form" class="row gy-3">
+                {% csrf_token %}
+                <div class="col-md-3">
+                    <label class="form-label" for="discharge-testing-entry-discharge-source">Discharge Source</label>
+                    <select id="discharge-testing-entry-discharge-source" name="discharge_source" class="form-select" required>
+                        <option value="">Select source...</option>
+                        {% for value, label in production_line_choices %}
+                            <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="discharge-testing-entry-discharge-type">Discharge Type</label>
+                    <select id="discharge-testing-entry-discharge-type" name="discharge_type" class="form-select" required>
+                        <option value="">Select discharge type...</option>
+                        {% for value, label in discharge_type_options %}
+                            <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3" data-role="discharge-material-group" style="display: none;">
+                    <label class="form-label" for="discharge-testing-entry-discharge-material">Discharge Material</label>
+                    <input
+                        id="discharge-testing-entry-discharge-material"
+                        class="form-control"
+                        type="text"
+                        autocomplete="off"
+                        placeholder="Start typing a BLEND or CHEM item..."
+                    />
+                    <input
+                        id="discharge-testing-entry-discharge-material-code"
+                        name="discharge_material_code"
+                        type="hidden"
+                    />
+                    <div id="discharge-testing-entry-discharge-material-results"></div>
+                </div>
+                <div id="discharge-testing-entry-ph-alert" class="alert alert-warning fw-bold" style="display: none;" role="alert"></div>
+                <div class="col-md-3">
+                    <label class="form-label" for="discharge-testing-entry-sampling-personnel">Sampling Personnel</label>
+                    <select
+                        id="discharge-testing-entry-sampling-personnel"
+                        name="sampling_personnel_id"
+                        class="form-select"
+                        required
+                    >
+                        <option value="">Select sampling personnel...</option>
+                        {% for id, name in sampling_personnel_options %}
+                            <option value="{{ id }}">{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="discharge-testing-entry-lab-technician">Lab Technician</label>
+                    <input
+                        id="discharge-testing-entry-lab-technician"
+                        class="form-control"
+                        type="text"
+                        value="{{ user.get_full_name|default:user.username }}"
+                        readonly
+                        aria-readonly="true"
+                    />
+                </div>
+                <div class="col-12" data-role="ph-fields-group">
+                    <div class="row gy-3">
+                        <div class="col-md-4">
+                            <label class="form-label" for="discharge-testing-entry-initial-ph">Initial pH</label>
+                            <input
+                                id="discharge-testing-entry-initial-ph"
+                                name="initial_pH"
+                                class="form-control"
+                                type="number"
+                                step="0.01"
+                                inputmode="decimal"
+                                placeholder="e.g., 7.25"
+                                required
+                            />
+                            <div class="form-text">Required before final approval. Range 5.1 to 10.9.</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="discharge-testing-entry-final-ph">Final pH</label>
+                            <input
+                                id="discharge-testing-entry-final-ph"
+                                name="final_pH"
+                                class="form-control"
+                                type="number"
+                                step="0.01"
+                                inputmode="decimal"
+                                placeholder="e.g., 7.00"
+                            />
+                            <div class="form-text">Required for approval.</div>
+                        </div>
+                        <div class="col-12" data-role="action-required-group">
+                            <label class="form-label" for="discharge-testing-entry-action-required">Action Required</label>
+                            <textarea
+                                id="discharge-testing-entry-action-required"
+                                name="action_required"
+                                class="form-control"
+                                rows="3"
+                                placeholder="Describe corrective action if initial pH is out of range."
+                            ></textarea>
+                            <div class="form-text">Required when initial pH is outside 5.1 to 10.9.</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <label class="form-label" for="discharge-testing-entry-final-disposition">Final Disposition</label>
+                    <textarea
+                        id="discharge-testing-entry-final-disposition"
+                        name="final_disposition"
+                        class="form-control"
+                        rows="3"
+                        placeholder="Describe what happens to the container after testing."
+                        required
+                    ></textarea>
+                </div>
+                <div class="col-12 d-flex flex-wrap gap-2 justify-content-end">
+                    <button type="reset" class="btn btn-outline-secondary" id="discharge-testing-entry-reset">Clear</button>
+                    <button type="submit" class="btn btn-primary" id="discharge-testing-entry-submit">
+                        <i class="fas fa-save"></i> Submit Entry
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

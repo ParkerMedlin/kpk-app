@@ -1,7 +1,12 @@
 {% comment %}Lab navigation items.{% endcomment %}
-<li class="nav-item">
-    <a class="nav-link" href="/core/tank-levels">Tank Levels</a>
-</li>
-<li class="nav-item">
-    <a class="nav-link" href="/core/lot-num-records">Lot Numbers</a>
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" id="labBlendingDropdownToggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        Blending
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="labBlendingDropdownToggle">
+        <li><a class="dropdown-item" href="/core/tank-levels">Tank Levels</a></li>
+        <li><a class="dropdown-item" href="/core/lot-num-records">Lot Numbers</a></li>
+        <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item" href="/core/discharge-testing/">Discharge Testing Entry</a></li>
+    </ul>
 </li>

@@ -1,7 +1,9 @@
 from pickle import TRUE
 from xml.etree.ElementTree import TreeBuilder
+from decimal import Decimal
 from django.db import models
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 import os
 from django.contrib.postgres.fields import ArrayField
 from django.contrib.auth.models import User
@@ -1401,3 +1403,95 @@ class PurchasingAlias(models.Model):
 
     def __str__(self):
         return f"{self.vendor_name} - {self.vendor_part_number} (for {self.internal_item_code or 'N/A'})"
+
+
+class DischargeTestingRecord(models.Model):
+    """Tracks pH testing, actions, and approval of discharged materials."""
+
+    PRODUCTION_LINE_JB = 'JB Line'
+    PRODUCTION_LINE_INLINE = 'INLINE'
+    PRODUCTION_LINE_PD = 'PD Line'
+    WAREHOUSE = 'Warehouse'
+    DISCHARGE_SOURCE_CHOICES = [
+        (PRODUCTION_LINE_JB, 'JB Line'),
+        (PRODUCTION_LINE_INLINE, 'INLINE'),
+        (PRODUCTION_LINE_PD, 'PD Line'),
+        (WAREHOUSE, 'Warehouse'),
+    ]
+
+    PH_MIN = Decimal('5.10')
+    PH_MAX = Decimal('10.90')
+    DISCHARGE_TYPE_CHOICES = [
+        ('Acid', 'Acid'),
+        ('Base', 'Base'),
+        ('Soap', 'Soap'),
+        ('Polish', 'Polish'),
+        ('Oil', 'Oil'),
+    ]
+    PH_ACTIVE_WATCH_CODES = (
+        '030050',
+        '030015',
+        '030024',
+        '200126',
+        '030025',
+        '240079',
+    )
+
+    date = models.DateTimeField(auto_now_add=True, db_index=True)
+    discharge_source = models.CharField(max_length=20, choices=DISCHARGE_SOURCE_CHOICES)
+    discharge_type = models.CharField(max_length=100, choices=DISCHARGE_TYPE_CHOICES)
+    discharge_material_code = models.CharField(max_length=50, blank=True, null=True)
+    ph_active_component = models.CharField(max_length=50, blank=True, null=True)
+    initial_pH = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
+    action_required = models.TextField(blank=True, null=True)
+    final_pH = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
+    final_disposition = models.TextField()
+    lab_technician = models.ForeignKey(
+        User,
+        related_name='discharge_tests_lab',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    sampling_personnel = models.ForeignKey(
+        User,
+        related_name='discharge_tests_sampling',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+
+    class Meta:
+        db_table = 'core_dischargetestingrecord'
+        ordering = ['-date', '-id']
+        indexes = [
+            models.Index(fields=['discharge_source'])
+        ]
+        constraints = [
+            models.CheckConstraint(
+                name='discharge_testing_final_ph_range',
+                check=(
+                    models.Q(final_pH__isnull=True)
+                    | (
+                        models.Q(final_pH__gte=Decimal('5.10'))
+                        & models.Q(final_pH__lte=Decimal('10.90'))
+                    )
+                ),
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.discharge_type} ({self.discharge_source}) @ {self.date.strftime('%Y-%m-%d %H:%M')}"
+
+    @classmethod
+    def is_ph_in_range(cls, value):
+        return value is not None and cls.PH_MIN <= value <= cls.PH_MAX
+
+    def clean(self):
+        errors = {}
+
+        if self.final_pH is not None and self.initial_pH is None:
+            errors['final_pH'] = 'Initial pH must be recorded before final pH.'
+
+        if errors:
+            raise ValidationError(errors)
