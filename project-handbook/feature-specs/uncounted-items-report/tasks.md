@@ -101,7 +101,7 @@ Implementation tasks for the Uncounted Items Report feature. Work through sequen
 
 ## Phase 4: Frontend
 
-- [ ] **4.1** Create template
+- [x] **4.1** Create template
   - **Do**: Create `app/core/templates/core/inventorycounts/uncounted_items.html` with:
     - Filter bar (days input, item type dropdown, search, reset button)
     - DataTable with columns: checkbox, item code, description, item type, audit group (editable), last counted
@@ -155,10 +155,10 @@ Implementation tasks for the Uncounted Items Report feature. Work through sequen
 | 1. Data Layer | Complete | 5/5 |
 | 2. Business Logic | Complete | 2/2 |
 | 3. API/Views | Complete | 3/3 |
-| 4. Frontend | Not Started | 0/3 |
+| 4. Frontend | In Progress | 1/3 |
 | 5. Integration | Not Started | 0/2 |
 
-**Overall**: 10/15 tasks (67%)
+**Overall**: 11/15 tasks (73%)
 
 ---
 
