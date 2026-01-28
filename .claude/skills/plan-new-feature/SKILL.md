@@ -130,3 +130,5 @@ After tasks are approved:
 - Mark each task complete as you finish
 - Stop for review at natural breakpoints (end of phase, complex decisions)
 - Reference task numbers in commit messages
+
+**User Actions**: Some tasks require the user to perform actions directly (e.g., running migrations, deploying). Mark these clearly as "(USER ACTION)" in the task title. LLM should not attempt to run database migrations.
