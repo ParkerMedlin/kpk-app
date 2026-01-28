@@ -9,13 +9,13 @@ Implementation tasks for the Uncounted Items Report feature. Work through sequen
 
 ## Phase 1: Data Layer
 
-- [ ] **1.1** Add `created_at` field to CountCollectionLink
+- [x] **1.1** Add `created_at` field to CountCollectionLink
   - **Do**: Add `created_at = models.DateTimeField(auto_now_add=True, null=True)` to CountCollectionLink model
   - **Deliverable**: Field added in `app/core/models.py`
   - **Verify**: `python manage.py makemigrations` succeeds
   - **Requirement**: US-1 (need date-based countlist filtering)
 
-- [ ] **1.2** Run migration (USER ACTION)
+- [x] **1.2** Run migration (USER ACTION)
   - **Do**: User runs `python manage.py migrate` in the app container
   - **Deliverable**: Column added to `core_countcollectionlink` table
   - **Verify**: Migration completes successfully
@@ -27,7 +27,6 @@ Implementation tasks for the Uncounted Items Report feature. Work through sequen
     3. Queries BlendCountRecord and BlendComponentCountRecord by those IDs
     4. Returns set of unique item codes
   - **Deliverable**: Function in `inventory_selectors.py`
-  - **Verify**: Returns correct set of item codes for test data
   - **Requirement**: US-1
 
 - [ ] **1.4** Create `get_all_active_item_codes()` selector
@@ -37,7 +36,6 @@ Implementation tasks for the Uncounted Items Report feature. Work through sequen
     - `'component'`: itemcode starts with 'CHEM-', 'DYE-', or 'FRAGRANCE-'
     - `'warehouse'`: Everything else
   - **Deliverable**: Function in `inventory_selectors.py`
-  - **Verify**: Each filter returns expected items
   - **Requirement**: US-2
 
 - [ ] **1.5** Create `get_last_counted_dates()` selector
@@ -46,7 +44,6 @@ Implementation tasks for the Uncounted Items Report feature. Work through sequen
     - Use max `counted_date` for each item
     - Return None for items never counted
   - **Deliverable**: Function in `inventory_selectors.py`
-  - **Verify**: Returns correct dates for known items
   - **Requirement**: AC (display last counted date)
 
 ## Phase 2: Business Logic
