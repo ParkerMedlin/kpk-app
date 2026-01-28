@@ -74,7 +74,7 @@ Implementation tasks for the Uncounted Items Report feature. Work through sequen
 
 ## Phase 3: API/Views
 
-- [ ] **3.1** Create `display_uncounted_items()` view
+- [x] **3.1** Create `display_uncounted_items()` view
   - **Do**: Add view to `app/core/views/web.py` that:
     1. Reads GET params: days (default 3), itemType, search
     2. Calls `build_uncounted_items_display()`
@@ -83,7 +83,7 @@ Implementation tasks for the Uncounted Items Report feature. Work through sequen
   - **Verify**: Page renders with correct data
   - **Requirement**: US-1, US-2
 
-- [ ] **3.2** Create `api_create_countlist_from_items()` API view
+- [x] **3.2** Create `api_create_countlist_from_items()` API view
   - **Do**: Add view to `app/core/views/api.py` that:
     1. Accepts POST with `item_codes` list
     2. Calls `create_countlist_from_item_codes()`
@@ -92,7 +92,7 @@ Implementation tasks for the Uncounted Items Report feature. Work through sequen
   - **Verify**: Returns valid collection_id
   - **Requirement**: US-3
 
-- [ ] **3.3** Add URL routes
+- [x] **3.3** Add URL routes
   - **Do**: Add to `app/core/urls.py`:
     - `path('uncounted-items/', views.display_uncounted_items, name='uncounted_items')`
     - `path('api/countlist/from-items/', views.api_create_countlist_from_items, name='api_create_countlist_from_items')`
@@ -154,11 +154,11 @@ Implementation tasks for the Uncounted Items Report feature. Work through sequen
 |-------|--------|----------------|
 | 1. Data Layer | Complete | 5/5 |
 | 2. Business Logic | Complete | 2/2 |
-| 3. API/Views | Not Started | 0/3 |
+| 3. API/Views | Complete | 3/3 |
 | 4. Frontend | Not Started | 0/3 |
 | 5. Integration | Not Started | 0/2 |
 
-**Overall**: 7/15 tasks (47%)
+**Overall**: 10/15 tasks (67%)
 
 ---
 
