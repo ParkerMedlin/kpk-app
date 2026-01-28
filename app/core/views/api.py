@@ -85,6 +85,11 @@ try:
 except ImportError:  # pragma: no cover - optional acceleration
     _orjson = None
 
+try:
+    import orjson as _orjson
+except ImportError:  # pragma: no cover - optional acceleration
+    _orjson = None
+
 logger = logging.getLogger(__name__)
 User = get_user_model()
 
@@ -2246,6 +2251,7 @@ def get_json_cost_impact_analysis(request):
     }
 
     return JsonResponse(payload)
+
 
 @login_required
 @require_http_methods(["GET"])

@@ -48,9 +48,9 @@
                     <td>{{ item.item_description }}</td>
                     <td>{{ item.lot_number }}</td>
                     <td class='text-center'>{{ item.lot_quantity|floatformat:0 }}</td>
-                    <td>{{ item.date_created|date:"M d, Y" }}</td>
+                    <td data-order="{{ item.date_created|date:'Y-m-d' }}">{{ item.date_created|date:"M d, Y" }}</td>
                     <td>{{ item.qty_on_hand }}</td>
-                    <td>
+                    <td data-order="{{ item.date_entered|date:'Y-m-d' }}">
                         {% if not item.date_entered %}
                             Not Entered
                         {% else %}
@@ -104,13 +104,5 @@
 {% endblock content %}
 
 {% block belowdeckscripts %}
-    <script>
-        $(document).ready(function(){
-            $('#lotNumsReportTable').DataTable({
-                paging: false,
-                dom: 'Bfrtip',
-                buttons: ['copy', 'csv', 'excel', 'print']
-            });
-        });
-    </script>
+    <script type="module" src="{% static 'core/js/pageModules/lotNumbersReport.js' %}"></script>
 {% endblock %}

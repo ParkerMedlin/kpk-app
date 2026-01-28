@@ -229,6 +229,14 @@ _MISC_REPORT_DEFINITIONS = [
         'requires_start_time': False,
         'direct_url': '/core/xmr-tank-control-limits/',
     },
+    {
+        'slug': 'Production-Value-Forecast',
+        'label': 'Production Value Forecast',
+        'requires_item': False,
+        'requires_quantity': False,
+        'requires_start_time': False,
+        'direct_url': '/core/production-value-forecast/',
+    },
 ]
 
 

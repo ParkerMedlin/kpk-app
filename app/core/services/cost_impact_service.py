@@ -9,8 +9,8 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal, InvalidOperation
-from typing import Dict, List, Optional, Tuple
-from collections import defaultdict
+from typing import Dict, List, Optional, Tuple, Mapping
+from collections import defaultdict, ChainMap
 
 from django.db.models import Q, F, DecimalField, ExpressionWrapper
 
@@ -37,14 +37,14 @@ class CostImpactResult:
 
 def parse_cost_changes_from_workbook(
     purchasing_costs: Dict[str, Dict[str, Decimal]],
-    min_change_threshold: Decimal = Decimal('0.01')
+    min_change_threshold: Decimal = Decimal('0')
 ) -> List[Dict]:
     """
     Extract items with price changes from purchasing costs workbook.
 
     Args:
         purchasing_costs: Dict mapping item_code to {'est_landed': Decimal, 'next_cost': Decimal}
-        min_change_threshold: Minimum cost change to include (default $0.01)
+        min_change_threshold: Minimum cost change to include (default $0.00)
 
     Returns:
         List of items with cost changes, each containing:
@@ -68,8 +68,8 @@ def parse_cost_changes_from_workbook(
         # Calculate delta
         delta = next_cost - est_landed
 
-        # Skip if change is below threshold
-        if abs(delta) < min_change_threshold:
+        # Skip if change is below threshold (0 means include all deltas)
+        if min_change_threshold and abs(delta) < min_change_threshold:
             continue
 
         # Calculate percentage change
@@ -99,9 +99,164 @@ def parse_cost_changes_from_workbook(
     return cost_changes
 
 
+def _parse_decimal_override(value) -> Optional[Decimal]:
+    if value is None:
+        return None
+    if isinstance(value, Decimal):
+        return value
+    if isinstance(value, (int, float)):
+        return Decimal(str(value))
+    if isinstance(value, str):
+        cleaned = value.strip()
+        if not cleaned:
+            return None
+        try:
+            return Decimal(cleaned)
+        except (InvalidOperation, ValueError):
+            return None
+    try:
+        return Decimal(str(value))
+    except (InvalidOperation, ValueError, TypeError):
+        return None
+
+
+def _is_blend_description(description: Optional[str]) -> bool:
+    if not description:
+        return False
+    return str(description).strip().upper().startswith('BLEND')
+
+
+def _normalize_bom_overrides(
+    bom_overrides: Optional[Dict]
+) -> Dict[str, Dict]:
+    if not isinstance(bom_overrides, dict):
+        return {}
+
+    normalized: Dict[str, Dict] = {}
+    for item_code, payload in bom_overrides.items():
+        if not isinstance(payload, dict):
+            continue
+
+        code = str(item_code or '').strip().upper()
+        if not code:
+            continue
+
+        components = payload.get('components')
+        if not isinstance(components, list):
+            continue
+
+        item_description = str(payload.get('item_description') or '')
+        is_blend = payload.get('is_blend')
+        if is_blend is None:
+            is_blend = _is_blend_description(item_description)
+        else:
+            is_blend = bool(is_blend)
+
+        normalized_components = []
+        for comp in components:
+            if not isinstance(comp, dict):
+                continue
+
+            comp_code = (
+                comp.get('component_item_code')
+                or comp.get('componentItemCode')
+                or comp.get('component_code')
+                or comp.get('componentCode')
+                or ''
+            )
+            comp_code = str(comp_code or '').strip().upper()
+            if not comp_code:
+                continue
+
+            qty_raw = comp.get('qtyperbill')
+            if qty_raw is None:
+                qty_raw = comp.get('qty_per_bill')
+            if qty_raw is None:
+                qty_raw = comp.get('qty')
+            qty = _parse_decimal_override(qty_raw)
+            if qty is None:
+                continue
+
+            normalized_components.append({
+                'component_item_code': comp_code,
+                'component_item_description': str(
+                    comp.get('component_item_description')
+                    or comp.get('componentItemDescription')
+                    or ''
+                ),
+                'qtyperbill': qty,
+                'standard_uom': comp.get('standard_uom') or '',
+            })
+
+        normalized[code] = {
+            'item_description': item_description,
+            'is_blend': is_blend,
+            'components': normalized_components,
+        }
+
+    return normalized
+
+
+def merge_what_if_costs(
+    base_costs: Dict[str, Dict[str, Decimal]],
+    what_if_costs: Dict[str, Dict[str, str]]
+) -> Mapping[str, Dict[str, Decimal]]:
+    """
+    Merge what-if cost overrides into base workbook costs.
+
+    Args:
+        base_costs: Base cost data from workbook with 'est_landed' and 'next_cost'
+        what_if_costs: User overrides with 'est_landed' and 'next_cost' as strings
+
+    Returns:
+        Merged cost dictionary with overrides applied
+    """
+    if not what_if_costs:
+        return base_costs
+
+    overrides: Dict[str, Dict[str, Decimal]] = {}
+
+    for item_code, override_values in what_if_costs.items():
+        if not isinstance(override_values, dict):
+            continue
+
+        has_est = 'est_landed' in override_values
+        has_next = 'next_cost' in override_values
+        if not has_est and not has_next:
+            continue
+
+        base_entry = base_costs.get(item_code)
+        merged_entry = dict(base_entry) if base_entry else {
+            'est_landed': Decimal('0'),
+            'next_cost': Decimal('0'),
+        }
+
+        applied = False
+        if has_est:
+            est_landed = _parse_decimal_override(override_values.get('est_landed'))
+            if est_landed is not None and est_landed != merged_entry.get('est_landed'):
+                merged_entry['est_landed'] = est_landed
+                applied = True
+
+        if has_next:
+            next_cost = _parse_decimal_override(override_values.get('next_cost'))
+            if next_cost is not None and next_cost != merged_entry.get('next_cost'):
+                merged_entry['next_cost'] = next_cost
+                applied = True
+
+        if applied:
+            overrides[item_code] = merged_entry
+
+    if not overrides:
+        return base_costs
+
+    return ChainMap(overrides, base_costs)
+
+
 def trace_blend_impacts(
     changed_items: List[Dict],
-    warehouse: str = "MTG"
+    warehouse: str = "MTG",
+    bom_overrides: Optional[Dict[str, Dict]] = None
 ) -> List[Dict]:
     """
     Trace which BLEND items are affected by raw material cost changes.
@@ -117,6 +272,8 @@ def trace_blend_impacts(
         return []
 
     changed_item_codes = {item['item_code'] for item in changed_items}
+    cost_change_map = {item['item_code']: item for item in changed_items}
+    overrides = bom_overrides or {}
 
     # Find all BLEND items that use the changed raw materials as components
     blend_boms = BillOfMaterials.objects.filter(
@@ -132,15 +289,27 @@ def trace_blend_impacts(
 
     # Group by BLEND item
     blends_dict = defaultdict(list)
+    blend_desc_map: Dict[str, str] = {}
     for bom in blend_boms:
         bill_code = bom['item_code']
         blends_dict[bill_code].append(bom)
+        if bill_code not in blend_desc_map:
+            blend_desc_map[bill_code] = bom.get('item_description') or ''
+
+    for blend_code, override in overrides.items():
+        if not override.get('is_blend'):
+            continue
+        components = override.get('components', [])
+        blends_dict[blend_code] = components
+        blend_desc_map[blend_code] = override.get('item_description') or ''
 
     affected_blends = []
 
     # Calculate cost delta for each BLEND
     for blend_code, components in blends_dict.items():
-        blend_desc = components[0]['item_description'] if components else ''
+        blend_desc = blend_desc_map.get(blend_code, '')
+        if not blend_desc and components:
+            blend_desc = components[0].get('item_description') or ''
 
         # Calculate the total cost increase for this BLEND
         total_current_cost = Decimal('0')
@@ -149,13 +318,10 @@ def trace_blend_impacts(
 
         for comp in components:
             comp_code = comp['component_item_code']
-            qty_per_bill = Decimal(str(comp['qtyperbill'] or 0))
+            qty_per_bill = Decimal(str(comp.get('qtyperbill') or 0))
 
             # Find the cost change for this component
-            cost_change = next(
-                (item for item in changed_items if item['item_code'] == comp_code),
-                None
-            )
+            cost_change = cost_change_map.get(comp_code)
 
             if cost_change:
                 current = Decimal(str(cost_change['current_cost']))
@@ -191,7 +357,8 @@ def trace_blend_impacts(
 
 def trace_direct_raw_material_impacts(
     changed_items: List[Dict],
-    warehouse: str = "MTG"
+    warehouse: str = "MTG",
+    bom_overrides: Optional[Dict[str, Dict]] = None
 ) -> List[Dict]:
     """
     Trace which finished goods are DIRECTLY affected by raw material changes (not through BLENDs).
@@ -207,6 +374,8 @@ def trace_direct_raw_material_impacts(
         return []
 
     changed_item_codes = {item['item_code'] for item in changed_items}
+    cost_change_map = {item['item_code']: item for item in changed_items}
+    overrides = bom_overrides or {}
 
     # Find finished goods that DIRECTLY use these raw materials
     fg_boms = BillOfMaterials.objects.filter(
@@ -222,27 +391,36 @@ def trace_direct_raw_material_impacts(
 
     # Group by finished good
     fg_dict = defaultdict(list)
+    fg_desc_map: Dict[str, str] = {}
     for bom in fg_boms:
         fg_code = bom['item_code']
         fg_dict[fg_code].append(bom)
+        if fg_code not in fg_desc_map:
+            fg_desc_map[fg_code] = bom.get('item_description') or ''
+
+    for fg_code, override in overrides.items():
+        if override.get('is_blend'):
+            continue
+        components = override.get('components', [])
+        fg_dict[fg_code] = components
+        fg_desc_map[fg_code] = override.get('item_description') or ''
 
     finished_goods = []
 
     for fg_code, components in fg_dict.items():
-        fg_desc = components[0]['item_description'] if components else ''
+        fg_desc = fg_desc_map.get(fg_code, '')
+        if not fg_desc and components:
+            fg_desc = components[0].get('item_description') or ''
 
         total_cost_delta = Decimal('0')
         affected_raw_components = []
 
         for comp in components:
             comp_code = comp['component_item_code']
-            qty_per_bill = Decimal(str(comp['qtyperbill'] or 0))
+            qty_per_bill = Decimal(str(comp.get('qtyperbill') or 0))
 
             # Find the cost change for this component
-            cost_change = next(
-                (item for item in changed_items if item['item_code'] == comp_code),
-                None
-            )
+            cost_change = cost_change_map.get(comp_code)
 
             if cost_change:
                 delta = Decimal(str(cost_change['delta']))
@@ -271,7 +449,8 @@ def trace_direct_raw_material_impacts(
 
 def trace_finished_goods_impacts(
     affected_blends: List[Dict],
-    warehouse: str = "MTG"
+    warehouse: str = "MTG",
+    bom_overrides: Optional[Dict[str, Dict]] = None
 ) -> List[Dict]:
     """
     Trace which finished goods are affected by BLEND cost changes.
@@ -287,6 +466,8 @@ def trace_finished_goods_impacts(
         return []
 
     blend_codes = {blend['blend_code'] for blend in affected_blends}
+    blend_map = {blend['blend_code']: blend for blend in affected_blends}
+    overrides = bom_overrides or {}
 
     # Find finished goods that use these BLENDs
     fg_boms = BillOfMaterials.objects.filter(
@@ -302,26 +483,35 @@ def trace_finished_goods_impacts(
 
     # Group by finished good
     fg_dict = defaultdict(list)
+    fg_desc_map: Dict[str, str] = {}
     for bom in fg_boms:
         fg_code = bom['item_code']
         fg_dict[fg_code].append(bom)
+        if fg_code not in fg_desc_map:
+            fg_desc_map[fg_code] = bom.get('item_description') or ''
+
+    for fg_code, override in overrides.items():
+        if override.get('is_blend'):
+            continue
+        components = override.get('components', [])
+        fg_dict[fg_code] = components
+        fg_desc_map[fg_code] = override.get('item_description') or ''
 
     finished_goods = []
 
     for fg_code, components in fg_dict.items():
-        fg_desc = components[0]['item_description'] if components else ''
+        fg_desc = fg_desc_map.get(fg_code, '')
+        if not fg_desc and components:
+            fg_desc = components[0].get('item_description') or ''
 
         total_cost_delta = Decimal('0')
         affected_blend_components = []
 
         for comp in components:
             comp_code = comp['component_item_code']
-            qty_per_bill = Decimal(str(comp['qtyperbill'] or 0))
+            qty_per_bill = Decimal(str(comp.get('qtyperbill') or 0))
 
-            blend_impact = next(
-                (blend for blend in affected_blends if blend['blend_code'] == comp_code),
-                None
-            )
+            blend_impact = blend_map.get(comp_code)
 
             if blend_impact:
                 blend_delta = Decimal(str(blend_impact['cost_delta']))
@@ -437,7 +627,8 @@ def calculate_sales_order_impacts(
 def analyze_cost_impacts(
     purchasing_costs: Dict[str, Dict[str, Decimal]],
     warehouse: str = "MTG",
-    limit: int = 500
+    limit: int = 500,
+    bom_overrides: Optional[Dict] = None
 ) -> CostImpactResult:
     """
     Perform full cost impact analysis.
@@ -467,13 +658,15 @@ def analyze_cost_impacts(
         }
         return result
 
+    normalized_bom_overrides = _normalize_bom_overrides(bom_overrides)
+
     # Step 2: Trace BLEND impacts
-    affected_blends = trace_blend_impacts(raw_material_changes, warehouse)
+    affected_blends = trace_blend_impacts(raw_material_changes, warehouse, normalized_bom_overrides)
     result.affected_blends = affected_blends
 
     # Step 3: Trace finished goods impacts (both through BLENDs and direct raw materials)
-    fg_from_blends = trace_finished_goods_impacts(affected_blends, warehouse)
-    fg_from_raw_materials = trace_direct_raw_material_impacts(raw_material_changes, warehouse)
+    fg_from_blends = trace_finished_goods_impacts(affected_blends, warehouse, normalized_bom_overrides)
+    fg_from_raw_materials = trace_direct_raw_material_impacts(raw_material_changes, warehouse, normalized_bom_overrides)
 
     # Merge finished goods impacts (combine if same item has both types of impacts)
     merged_fg = {}

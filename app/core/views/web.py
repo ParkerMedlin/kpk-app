@@ -159,6 +159,13 @@ def display_sales_order_vs_bom_cost_report(request):
 
 @login_required
 @ensure_csrf_cookie
+def display_production_value_forecast_report(request):
+    """Render the Production Value Forecast report UI."""
+    return render(request, 'core/reports/production_value_forecast.html')
+
+
+@login_required
+@ensure_csrf_cookie
 def display_cost_impact_report(request):
     """Render the Cost Impact Analysis report UI."""
     return render(request, 'core/reports/cost_impact_report.html')
