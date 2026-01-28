@@ -48,7 +48,7 @@ Implementation tasks for the Uncounted Items Report feature. Work through sequen
 
 ## Phase 2: Business Logic
 
-- [ ] **2.1** Create `build_uncounted_items_display()` service
+- [x] **2.1** Create `build_uncounted_items_display()` service
   - **Do**: Add function to `app/core/services/inventory_services.py` that:
     1. Calls `get_recently_counted_item_codes(days)`
     2. Calls `get_all_active_item_codes(item_type)`
@@ -61,7 +61,7 @@ Implementation tasks for the Uncounted Items Report feature. Work through sequen
   - **Verify**: Returns correct uncounted items with all fields populated
   - **Requirement**: US-1, US-2, AC
 
-- [ ] **2.2** Create `create_countlist_from_item_codes()` service
+- [x] **2.2** Create `create_countlist_from_item_codes()` service
   - **Do**: Add function to `inventory_services.py` that:
     1. Determines record_type from item codes (blend vs component)
     2. Creates count records for each item (or gets existing)
@@ -153,12 +153,12 @@ Implementation tasks for the Uncounted Items Report feature. Work through sequen
 | Phase | Status | Tasks Complete |
 |-------|--------|----------------|
 | 1. Data Layer | Complete | 5/5 |
-| 2. Business Logic | Not Started | 0/2 |
+| 2. Business Logic | Complete | 2/2 |
 | 3. API/Views | Not Started | 0/3 |
 | 4. Frontend | Not Started | 0/3 |
 | 5. Integration | Not Started | 0/2 |
 
-**Overall**: 5/15 tasks (33%)
+**Overall**: 7/15 tasks (47%)
 
 ---
 
