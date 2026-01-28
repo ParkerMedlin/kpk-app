@@ -20,7 +20,7 @@ Implementation tasks for the Uncounted Items Report feature. Work through sequen
   - **Deliverable**: Column added to `core_countcollectionlink` table
   - **Verify**: Migration completes successfully
 
-- [ ] **1.3** Create `get_recently_counted_item_codes()` selector
+- [x] **1.3** Create `get_recently_counted_item_codes()` selector
   - **Do**: Add function to `app/core/selectors/inventory_selectors.py` that:
     1. Queries CountCollectionLinks where `created_at >= cutoff` (or `created_at IS NULL` treated as old)
     2. Extracts all IDs from `count_id_list` JSON arrays
@@ -29,7 +29,7 @@ Implementation tasks for the Uncounted Items Report feature. Work through sequen
   - **Deliverable**: Function in `inventory_selectors.py`
   - **Requirement**: US-1
 
-- [ ] **1.4** Create `get_all_active_item_codes()` selector
+- [x] **1.4** Create `get_all_active_item_codes()` selector
   - **Do**: Add function to `inventory_selectors.py` that returns CiItem queryset filtered by item_type:
     - `None`/`'all'`: All items
     - `'blend'`: itemcode starts with 'BLEND-'
@@ -38,7 +38,7 @@ Implementation tasks for the Uncounted Items Report feature. Work through sequen
   - **Deliverable**: Function in `inventory_selectors.py`
   - **Requirement**: US-2
 
-- [ ] **1.5** Create `get_last_counted_dates()` selector
+- [x] **1.5** Create `get_last_counted_dates()` selector
   - **Do**: Add function to `inventory_selectors.py` that returns `{item_code: last_counted_date}` dict
     - Search both BlendCountRecord and BlendComponentCountRecord
     - Use max `counted_date` for each item
@@ -152,13 +152,13 @@ Implementation tasks for the Uncounted Items Report feature. Work through sequen
 
 | Phase | Status | Tasks Complete |
 |-------|--------|----------------|
-| 1. Data Layer | Not Started | 0/5 |
+| 1. Data Layer | Complete | 5/5 |
 | 2. Business Logic | Not Started | 0/2 |
 | 3. API/Views | Not Started | 0/3 |
 | 4. Frontend | Not Started | 0/3 |
 | 5. Integration | Not Started | 0/2 |
 
-**Overall**: 0/15 tasks (0%)
+**Overall**: 5/15 tasks (33%)
 
 ---
 
