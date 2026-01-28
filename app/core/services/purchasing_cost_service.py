@@ -20,6 +20,8 @@ HEADER_ROW_INDEX = 3  # 1-based index, matches legacy sheet layout.
 ITEM_HEADER = 'itemcode'
 EST_LANDED_HEADER = 'est landed cost'
 EST_LANDED_ALIASES = ['stdcost', 'std cost', 'standard cost', 'est landed cost', 'estlandedcost']
+FREIGHT_HEADER = 'freight'
+FREIGHT_ALIASES = ['freight', 'freight %', 'freight pct', 'freight percent', 'freight percentage']
 NEXT_COST_HEADER = 'next cost'
 NEXT_COST_ALIASES = ['next cost', 'nextcost']
 COST_FILE_PREFIX = 'zzz- master cost'
@@ -32,6 +34,11 @@ class PurchasingCostParseError(Exception):
 
 _CACHE_LOCK = Lock()
 _CACHE: Dict[str, object] = {
+    'path': None,
+    'mtime': None,
+    'data': {},
+}
+_BOTH_CACHE: Dict[str, object] = {
     'path': None,
     'mtime': None,
     'data': {},
@@ -229,7 +236,12 @@ def _parse_rows(row_iter) -> Dict[str, Dict[str, Decimal]]:
             continue
 
         est_cost = _to_decimal_safe(_get_cell_value(row, required_columns.get(EST_LANDED_HEADER)))
+        freight_pct = _to_percent_decimal(_get_cell_value(row, required_columns.get(FREIGHT_HEADER)))
+        if est_cost > 0 and freight_pct:
+            est_cost = est_cost * (Decimal('1') + freight_pct)
         next_cost = _to_decimal_safe(_get_cell_value(row, required_columns.get(NEXT_COST_HEADER)))
+        if next_cost > 0 and freight_pct:
+            next_cost = next_cost * (Decimal('1') + freight_pct)
 
         if est_cost > 0:
             result[item_code] = {'cost': est_cost, 'source': 'Est Landed'}
@@ -279,6 +291,12 @@ def _resolve_required_columns(headers: Dict[int, str]) -> Dict[str, int]:
             est_landed_col = header_lookup[alias]
             break
 
+    freight_col = None
+    for alias in FREIGHT_ALIASES:
+        if alias in header_lookup:
+            freight_col = header_lookup[alias]
+            break
+
     next_cost_col = None
     for alias in NEXT_COST_ALIASES:
         if alias in header_lookup:
@@ -298,6 +316,7 @@ def _resolve_required_columns(headers: Dict[int, str]) -> Dict[str, int]:
     return {
         ITEM_HEADER: item_col,
         EST_LANDED_HEADER: est_landed_col,
+        FREIGHT_HEADER: freight_col,
         NEXT_COST_HEADER: next_cost_col,
     }
 
@@ -318,6 +337,36 @@ def _to_decimal_safe(value) -> Decimal:
         return Decimal(str(value))
     except (InvalidOperation, ValueError, TypeError):
         return Decimal('0')
+
+
+def _to_percent_decimal(value) -> Decimal:
+    if value is None or value == '':
+        return Decimal('0')
+    if isinstance(value, str):
+        raw = value.strip()
+        if raw.endswith('%'):
+            raw = raw[:-1].strip()
+            try:
+                return Decimal(raw) / Decimal('100')
+            except (InvalidOperation, ValueError):
+                return Decimal('0')
+        try:
+            numeric = Decimal(raw)
+        except (InvalidOperation, ValueError):
+            return Decimal('0')
+    elif isinstance(value, Decimal):
+        numeric = value
+    else:
+        try:
+            numeric = Decimal(str(value))
+        except (InvalidOperation, ValueError, TypeError):
+            return Decimal('0')
+
+    if numeric > 1:
+        if numeric <= 100:
+            return numeric / Decimal('100')
+        return numeric
+    return numeric
 
 
 def _parse_rows_with_both_costs(row_iter) -> Dict[str, Dict[str, Decimal]]:
@@ -352,7 +401,12 @@ def _parse_rows_with_both_costs(row_iter) -> Dict[str, Dict[str, Decimal]]:
             continue
 
         est_cost = _to_decimal_safe(_get_cell_value(row, required_columns.get(EST_LANDED_HEADER)))
+        freight_pct = _to_percent_decimal(_get_cell_value(row, required_columns.get(FREIGHT_HEADER)))
+        if est_cost > 0 and freight_pct:
+            est_cost = est_cost * (Decimal('1') + freight_pct)
         next_cost = _to_decimal_safe(_get_cell_value(row, required_columns.get(NEXT_COST_HEADER)))
+        if next_cost > 0 and freight_pct:
+            next_cost = next_cost * (Decimal('1') + freight_pct)
 
         result[item_code] = {
             'est_landed': est_cost,
@@ -383,20 +437,40 @@ def load_purchasing_costs_with_both_values(uploaded_file=None) -> Tuple[Dict[str
         parsed = _parse_costs_with_both_from_bytes(data, source_name=getattr(uploaded_file, 'name', None))
         return parsed, uploaded_file.name
 
-    # Load from default server workbook
+    # Load from default server workbook (cached by path + mtime)
     configured_path = getattr(settings, 'COST_WORKBOOK_PATH', None)
     workbook_path = _resolve_workbook_path(configured_path)
     if not workbook_path:
         return {}, None
 
     try:
+        stat = os.stat(workbook_path)
+    except OSError as exc:
+        LOGGER.warning("Unable to read cost workbook '%s': %s", workbook_path, exc)
+        return {}, None
+
+    with _CACHE_LOCK:
+        if (
+            _BOTH_CACHE['path'] == workbook_path
+            and _BOTH_CACHE['mtime'] == stat.st_mtime
+            and isinstance(_BOTH_CACHE['data'], dict)
+        ):
+            return _BOTH_CACHE['data'], os.path.basename(workbook_path)
+
+    try:
         with open(workbook_path, 'rb') as workbook_file:
             data = workbook_file.read()
         parsed = _parse_costs_with_both_from_bytes(data, source_name=workbook_path)
-        return parsed, os.path.basename(workbook_path)
     except Exception as exc:
         LOGGER.warning("Unable to load cost workbook with both values: %s", exc)
         return {}, None
+
+    with _CACHE_LOCK:
+        _BOTH_CACHE['path'] = workbook_path
+        _BOTH_CACHE['mtime'] = stat.st_mtime
+        _BOTH_CACHE['data'] = parsed
+
+    return parsed, os.path.basename(workbook_path)
 
 
 def _parse_costs_with_both_from_bytes(blob: bytes, source_name: Optional[str] = None) -> Dict[str, Dict[str, Decimal]]:

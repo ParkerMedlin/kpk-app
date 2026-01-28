@@ -1,0 +1,643 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}<title>Production Value Forecast</title>{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<style>
+    :root { color-scheme: light; }
+    .production-forecast {
+        font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        margin: 0;
+        background: #f4f4f9;
+        color: #1a202c;
+        padding-bottom: 20px;
+    }
+    .production-forecast .card-shell {
+        max-width: 1300px;
+        margin: 0 auto;
+        background: #fff;
+        padding: 32px;
+        border-radius: 14px;
+        box-shadow: 0 20px 50px rgba(15, 23, 42, 0.12);
+    }
+    .production-forecast .page-header {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 24px;
+    }
+    .production-forecast .page-header h1 {
+        margin: 0;
+        font-size: 28px;
+        color: #0f172a;
+    }
+    .production-forecast .page-header p {
+        margin: 0;
+        color: #475569;
+    }
+    .production-forecast .control-wrap {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+    .production-forecast .control-box {
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 18px;
+        background: #fff;
+    }
+    .production-forecast label {
+        font-size: 13px;
+        font-weight: 600;
+        display: block;
+        margin-bottom: 8px;
+        color: #1f2937;
+    }
+    .production-forecast input[type="number"] {
+        width: 100%;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 12px;
+        font-size: 14px;
+    }
+    .production-forecast button.primary {
+        appearance: none;
+        border: none;
+        border-radius: 10px;
+        padding: 14px;
+        font-size: 15px;
+        font-weight: 600;
+        color: #fff;
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        cursor: pointer;
+        box-shadow: 0 12px 30px rgba(37, 99, 235, 0.35);
+        transition: transform 0.1s ease, opacity 0.2s ease;
+        width: 100%;
+    }
+    .production-forecast button.primary:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+    .production-forecast button.primary:not(:disabled):active { transform: translateY(1px); }
+    .ghost-btn {
+        border: 1px solid #2563eb;
+        color: #2563eb;
+        background: transparent;
+        border-radius: 8px;
+        padding: 10px 18px;
+        font-weight: 600;
+        cursor: pointer;
+        width: 100%;
+    }
+    .ghost-btn:disabled {
+        border-color: #cbd5e1;
+        color: #94a3b8;
+        cursor: not-allowed;
+    }
+    .alert {
+        border-radius: 10px;
+        padding: 12px 16px;
+        font-size: 14px;
+        margin: 18px 0;
+    }
+    .alert.error {
+        background: #fff5f5;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
+    }
+    .alert.hidden { display: none; }
+    .kpi-box {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 12px;
+        margin: 24px 0 12px;
+    }
+    .kpi {
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 14px;
+        text-align: center;
+        background: #fafafa;
+    }
+    .kpi .value {
+        font-size: 22px;
+        font-weight: 700;
+        color: #0f172a;
+    }
+    .kpi .label {
+        margin-top: 6px;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: #94a3b8;
+    }
+    .table-container {
+        margin-top: 10px;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        overflow: hidden;
+        background: #fff;
+    }
+    .table-container table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+    }
+    .table-container th,
+    .table-container td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .table-container th {
+        background: #0f172a;
+        color: #fff;
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        text-align: left;
+    }
+    .table-container tr:nth-child(even) { background: #fafafa; }
+    .table-container tr:hover { background: #eef2ff; }
+    .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .results-placeholder {
+        padding: 80px 20px;
+        text-align: center;
+        color: #94a3b8;
+        font-size: 14px;
+    }
+    .line-group-header {
+        background: #eff6ff !important;
+        font-weight: 600;
+        color: #1e40af;
+        user-select: none;
+    }
+    .line-group-header:hover {
+        background: #dbeafe !important;
+    }
+    .line-group-header input[type="checkbox"] {
+        cursor: pointer;
+    }
+    .line-group-header td:not(:first-child) {
+        cursor: pointer;
+    }
+    .line-group-row {
+        display: table-row;
+        transition: opacity 0.2s ease;
+    }
+    .line-group-row.collapsed {
+        display: none;
+    }
+</style>
+{% endblock scripts %}
+
+{% block content %}
+<div class="production-forecast">
+    <div class="card-shell">
+        <div class="page-header">
+            <h1>Production Value Forecast</h1>
+            <p>Project revenue from scheduled production runs matched to sales orders over an adjustable time horizon.</p>
+        </div>
+
+        <div class="control-wrap">
+            <div class="control-box">
+                <label>Time Horizon (Hours)</label>
+                <input type="number" id="nextHoursInput" value="40" min="1" step="1">
+                <div style="font-size: 12px; color: #64748b; margin-top: 6px;">
+                    Default: 40 work hours
+                </div>
+            </div>
+            <div class="control-box">
+                <label>Analysis</label>
+                <button type="button" class="primary" id="analyzeBtn">Analyze Production Schedule</button>
+                <button type="button" class="ghost-btn" id="downloadBtn" disabled style="margin-top: 8px;">Download CSV</button>
+            </div>
+            <div class="control-box">
+                <label>Filters</label>
+                <button type="button" class="ghost-btn" id="enableAllBtn" disabled>Enable All</button>
+            </div>
+        </div>
+
+        <div id="alertBox" class="alert hidden"></div>
+
+        <div class="kpi-box" id="summaryStrip">
+            <div class="kpi">
+                <div class="value">$0.00</div>
+                <div class="label">Total Revenue</div>
+            </div>
+            <div class="kpi">
+                <div class="value">0</div>
+                <div class="label">Production Runs</div>
+            </div>
+            <div class="kpi">
+                <div class="value">0 ms</div>
+                <div class="label">Query Time</div>
+            </div>
+        </div>
+
+        <div class="table-container" id="resultsTable">
+            <div class="results-placeholder">
+                Run the analysis to view projected revenue from scheduled production.
+            </div>
+        </div>
+    </div>
+</div>
+
+<form id="csrfProxyForm" style="display:none;">{% csrf_token %}</form>
+{% endblock content %}
+
+{% block belowdeckscripts %}
+{{ block.super }}
+<script>
+(() => {
+    const API_URL = '/core/api/production-value-forecast/';
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const enableAllBtn = document.getElementById('enableAllBtn');
+    const nextHoursInput = document.getElementById('nextHoursInput');
+    const alertBox = document.getElementById('alertBox');
+    const resultsTable = document.getElementById('resultsTable');
+    const summaryStrip = document.getElementById('summaryStrip');
+
+    let cachedData = null;
+    let isLoading = false;
+
+    analyzeBtn.addEventListener('click', runAnalysis);
+    downloadBtn.addEventListener('click', downloadCsv);
+    enableAllBtn.addEventListener('click', enableAll);
+    nextHoursInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            runAnalysis();
+        }
+    });
+
+    resultsTable.addEventListener('click', (e) => {
+        // Handle line checkbox toggle
+        const lineCheckbox = e.target.closest('input[type="checkbox"].line-checkbox');
+        if (lineCheckbox) {
+            const lineGroup = lineCheckbox.dataset.line;
+            const isChecked = lineCheckbox.checked;
+            const rowCheckboxes = document.querySelectorAll(`.line-group-row[data-line="${lineGroup}"] input.row-checkbox`);
+            rowCheckboxes.forEach(cb => {
+                cb.checked = isChecked;
+                updateRowVisualState(cb);
+            });
+            recalculateTotals();
+            updateEnableAllButton();
+            return;
+        }
+
+        // Handle row checkbox toggle
+        const checkbox = e.target.closest('input[type="checkbox"].row-checkbox');
+        if (checkbox) {
+            updateRowVisualState(checkbox);
+            updateLineCheckboxState(checkbox);
+            recalculateTotals();
+            updateEnableAllButton();
+            return;
+        }
+
+        // Handle line header collapse/expand (but not on checkbox)
+        const header = e.target.closest('.line-group-header');
+        if (header && !e.target.closest('input[type="checkbox"]')) {
+            const lineGroup = header.dataset.line;
+            const rows = document.querySelectorAll(`.line-group-row[data-line="${lineGroup}"]`);
+            rows.forEach(row => row.classList.toggle('collapsed'));
+            return;
+        }
+    });
+
+    function setLoading(state) {
+        isLoading = state;
+        analyzeBtn.disabled = state;
+        analyzeBtn.textContent = state ? 'Analyzing…' : 'Analyze Production Schedule';
+        clearAlert();
+    }
+
+    function showAlert(message) {
+        alertBox.textContent = message;
+        alertBox.className = 'alert error';
+    }
+
+    function clearAlert() {
+        alertBox.textContent = '';
+        alertBox.className = 'alert hidden';
+    }
+
+    async function runAnalysis() {
+        if (isLoading) return;
+        setLoading(true);
+
+        const nextHours = parseFloat(nextHoursInput.value) || 40;
+
+        try {
+            const params = new URLSearchParams({ next_hours: nextHours });
+            const response = await fetch(`${API_URL}?${params.toString()}`, {
+                headers: { 'Accept': 'application/json' },
+                credentials: 'same-origin',
+            });
+
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(payload.error || 'Unable to analyze production schedule.');
+            }
+
+            cachedData = payload;
+            renderTable(payload);
+            renderSummary(payload);
+            downloadBtn.disabled = false;
+            updateEnableAllButton();
+        } catch (error) {
+            console.error(error);
+            showAlert(error.message || 'Unexpected error occurred while analyzing.');
+            resultsTable.innerHTML = '<div class="results-placeholder">Unable to load results.</div>';
+            cachedData = null;
+            downloadBtn.disabled = true;
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    function renderSummary(payload) {
+        const runs = payload.runs || [];
+
+        // Calculate totals based on enabled checkboxes
+        let totalRevenue = 0;
+        let enabledCount = 0;
+        let disabledCount = 0;
+
+        runs.forEach((run, index) => {
+            const checkbox = document.querySelector(`input.row-checkbox[data-index="${index}"]`);
+            if (checkbox && checkbox.checked) {
+                totalRevenue += run.extendedValue || 0;
+                enabledCount++;
+            } else if (checkbox) {
+                disabledCount++;
+            }
+        });
+
+        const elapsed = `${Math.round(Number(payload.elapsedMs) || 0)} ms`;
+
+        summaryStrip.innerHTML = `
+            <div class="kpi"><div class="value">${formatCurrency(totalRevenue)}</div><div class="label">Total Revenue${disabledCount > 0 ? ` (${disabledCount} disabled)` : ''}</div></div>
+            <div class="kpi"><div class="value">${enabledCount}</div><div class="label">Production Runs</div></div>
+            <div class="kpi"><div class="value">${elapsed}</div><div class="label">Query Time</div></div>
+        `;
+    }
+
+    function renderTable(payload) {
+        const runs = payload.runs || [];
+        if (!runs.length) {
+            resultsTable.innerHTML = '<div class="results-placeholder">No production runs matched to sales orders in this time window.</div>';
+            downloadBtn.disabled = true;
+            return;
+        }
+
+        // Group by production line
+        const lineGroups = {};
+        runs.forEach(run => {
+            const line = run.prodLine || 'Unknown';
+            if (!lineGroups[line]) {
+                lineGroups[line] = [];
+            }
+            lineGroups[line].push(run);
+        });
+
+        let tableHtml = '<div style="overflow-x:auto; max-height:600px;"><table><thead><tr>';
+        tableHtml += '<th style="width:30px;"></th><th>Production Line</th><th>PO #</th><th>Item</th><th>Description</th>';
+        tableHtml += '<th class="num">Start Time</th><th class="num">Qty</th><th class="num">Unit Price</th><th class="num">Extended Value</th>';
+        tableHtml += '</tr></thead><tbody>';
+
+        // Create a map to track original indices
+        const runIndices = new Map();
+        runs.forEach((run, index) => {
+            runIndices.set(run, index);
+        });
+
+        // Custom production line sort order
+        const lineOrder = ['hx', 'dm', 'inline', 'pd line', 'jb line', 'blister', 'oil line', 'kits'];
+        const sortedLines = Object.keys(lineGroups).sort((a, b) => {
+            const aLower = (a || '').toLowerCase();
+            const bLower = (b || '').toLowerCase();
+            const aIndex = lineOrder.indexOf(aLower);
+            const bIndex = lineOrder.indexOf(bLower);
+
+            if (aIndex !== -1 && bIndex !== -1) {
+                return aIndex - bIndex;
+            }
+            if (aIndex !== -1) return -1;
+            if (bIndex !== -1) return 1;
+            return a.localeCompare(b);
+        });
+
+        sortedLines.forEach(line => {
+            const lineRuns = lineGroups[line];
+
+            // Sort runs by start_time within each line
+            lineRuns.sort((a, b) => (a.startTime || 0) - (b.startTime || 0));
+
+            // Calculate line total (will be recalculated after checkboxes are set)
+            let lineTotal = 0;
+            lineRuns.forEach(run => {
+                lineTotal += run.extendedValue || 0;
+            });
+
+            // Line group header
+            tableHtml += `<tr class="line-group-header" data-line="${line}">`;
+            tableHtml += `<td><input type="checkbox" class="line-checkbox" data-line="${line}" checked></td>`;
+            tableHtml += `<td colspan="5"><strong>${line}</strong> (${lineRuns.length} runs)</td>`;
+            tableHtml += `<td colspan="3" class="num line-total" data-line="${line}"><strong>${formatCurrency(lineTotal)}</strong></td>`;
+            tableHtml += '</tr>';
+
+            // Line group rows
+            lineRuns.forEach(run => {
+                const originalIndex = runIndices.get(run);
+
+                tableHtml += `<tr class="line-group-row" data-line="${line}" data-index="${originalIndex}">`;
+                tableHtml += `<td><input type="checkbox" class="row-checkbox" data-index="${originalIndex}" checked></td>`;
+                tableHtml += `<td></td>`;
+                tableHtml += `<td>${run.poNumber || ''}</td>`;
+                tableHtml += `<td>${run.itemCode || ''}</td>`;
+                tableHtml += `<td>${run.itemDescription || ''}</td>`;
+                tableHtml += `<td class="num">${formatNumber(run.startTime, 2)}</td>`;
+                tableHtml += `<td class="num">${formatNumber(run.qty)}</td>`;
+                tableHtml += `<td class="num">${formatCurrency(run.unitPrice)}</td>`;
+                tableHtml += `<td class="num">${formatCurrency(run.extendedValue)}</td>`;
+                tableHtml += '</tr>';
+            });
+        });
+
+        tableHtml += '</tbody></table></div>';
+        resultsTable.innerHTML = tableHtml;
+    }
+
+    function downloadCsv() {
+        if (!cachedData || !cachedData.runs) return;
+
+        // Sort runs by production line order, then by start time
+        const lineOrder = ['hx', 'dm', 'inline', 'pd line', 'jb line', 'blister', 'oil line', 'kits'];
+        const sortedRuns = cachedData.runs.slice().sort((a, b) => {
+            const aLineLower = (a.prodLine || '').toLowerCase();
+            const bLineLower = (b.prodLine || '').toLowerCase();
+            const aIndex = lineOrder.indexOf(aLineLower);
+            const bIndex = lineOrder.indexOf(bLineLower);
+
+            if (aIndex !== -1 && bIndex !== -1) {
+                if (aIndex !== bIndex) return aIndex - bIndex;
+            } else if (aIndex !== -1) {
+                return -1;
+            } else if (bIndex !== -1) {
+                return 1;
+            } else {
+                const lineCompare = (a.prodLine || '').localeCompare(b.prodLine || '');
+                if (lineCompare !== 0) return lineCompare;
+            }
+
+            return (a.startTime || 0) - (b.startTime || 0);
+        });
+
+        const header = ['ProductionLine', 'PONumber', 'ItemCode', 'Description', 'StartTime', 'Qty', 'UnitPrice', 'ExtendedValue'];
+        const lines = sortedRuns.map(run => {
+            const safeDesc = (run.itemDescription || '').replace(/"/g, '""');
+            return [
+                run.prodLine || '',
+                run.poNumber || '',
+                run.itemCode || '',
+                `"${safeDesc}"`,
+                run.startTime || 0,
+                run.qty || 0,
+                run.unitPrice || 0,
+                run.extendedValue || 0
+            ].join(',');
+        });
+
+        const csv = [header.join(','), ...lines].join('\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'production-value-forecast.csv';
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+    }
+
+    function updateRowVisualState(checkbox) {
+        const row = checkbox.closest('.line-group-row');
+        if (!row) return;
+
+        if (checkbox.checked) {
+            row.style.opacity = '1';
+            row.style.textDecoration = 'none';
+        } else {
+            row.style.opacity = '0.4';
+            row.style.textDecoration = 'line-through';
+        }
+    }
+
+    function updateLineCheckboxState(rowCheckbox) {
+        // Find the line this row belongs to
+        const row = rowCheckbox.closest('.line-group-row');
+        if (!row) return;
+
+        const lineGroup = row.dataset.line;
+        const lineCheckbox = document.querySelector(`.line-checkbox[data-line="${lineGroup}"]`);
+        if (!lineCheckbox) return;
+
+        // Check if all row checkboxes in this line are checked
+        const rowCheckboxes = document.querySelectorAll(`.line-group-row[data-line="${lineGroup}"] input.row-checkbox`);
+        const allChecked = Array.from(rowCheckboxes).every(cb => cb.checked);
+        const someChecked = Array.from(rowCheckboxes).some(cb => cb.checked);
+
+        lineCheckbox.checked = allChecked;
+        lineCheckbox.indeterminate = !allChecked && someChecked;
+    }
+
+    function recalculateTotals() {
+        if (!cachedData) return;
+
+        // Recalculate per-line totals
+        const lines = document.querySelectorAll('.line-total');
+        lines.forEach(lineTotalCell => {
+            const lineGroup = lineTotalCell.dataset.line;
+            const rowCheckboxes = document.querySelectorAll(`.line-group-row[data-line="${lineGroup}"] input.row-checkbox`);
+
+            let lineTotal = 0;
+            let enabledCount = 0;
+            rowCheckboxes.forEach(cb => {
+                if (cb.checked) {
+                    const index = parseInt(cb.dataset.index);
+                    const run = cachedData.runs[index];
+                    if (run) {
+                        lineTotal += run.extendedValue || 0;
+                        enabledCount++;
+                    }
+                }
+            });
+
+            const lineHeader = lineTotalCell.closest('.line-group-header');
+            const lineLabel = lineHeader.querySelector('td:nth-child(2)');
+            const lineNameMatch = lineLabel.textContent.match(/^(.*?)\s*\(/);
+            const lineName = lineNameMatch ? lineNameMatch[1] : lineLabel.textContent;
+
+            lineLabel.innerHTML = `<strong>${lineName}</strong> (${enabledCount} of ${rowCheckboxes.length} runs)`;
+            lineTotalCell.innerHTML = `<strong>${formatCurrency(lineTotal)}</strong>`;
+        });
+
+        // Recalculate overall totals
+        renderSummary(cachedData);
+    }
+
+    function updateEnableAllButton() {
+        const checkboxes = document.querySelectorAll('input.row-checkbox');
+        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+
+        enableAllBtn.disabled = allChecked || !cachedData;
+    }
+
+    function enableAll() {
+        const checkboxes = document.querySelectorAll('input.row-checkbox');
+        checkboxes.forEach(cb => {
+            cb.checked = true;
+            updateRowVisualState(cb);
+        });
+
+        const lineCheckboxes = document.querySelectorAll('.line-checkbox');
+        lineCheckboxes.forEach(lcb => {
+            lcb.checked = true;
+            lcb.indeterminate = false;
+        });
+
+        recalculateTotals();
+        updateEnableAllButton();
+    }
+
+    function formatCurrency(value, minimumFractionDigits = 2, maximumFractionDigits = 2) {
+        const num = Number(value) || 0;
+        return num.toLocaleString(undefined, {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits,
+            maximumFractionDigits,
+        });
+    }
+
+    function formatNumber(value, maximumFractionDigits = 2) {
+        const num = Number(value) || 0;
+        return num.toLocaleString(undefined, { maximumFractionDigits });
+    }
+
+    // Run analysis with default settings on page load
+    runAnalysis();
+})();
+</script>
+{% endblock belowdeckscripts %}
