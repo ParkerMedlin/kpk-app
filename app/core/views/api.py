@@ -18,6 +18,7 @@ from core.models import (
     SoSalesOrderDetail,
     ProductionHoliday,
     DeskLaborRate,
+    ProductionLineRun,
 )
 from prodverse.models import SpecSheetData
 from django.http import JsonResponse, HttpRequest
@@ -26,7 +27,7 @@ from django.core.exceptions import ValidationError
 from django.conf import settings
 import json, math, logging, re
 from decimal import Decimal, InvalidOperation
-from django.db.models import Q, Max, F, DecimalField, ExpressionWrapper
+from django.db.models import Q, Max, Min, F, DecimalField, ExpressionWrapper
 from core.services.production_planning_services import (
     get_component_consumption,
     project_datetime_from_production_hours,
@@ -68,7 +69,7 @@ from core.services.purchasing_cost_service import (
     load_purchasing_costs_from_file,
     load_purchasing_costs_with_both_values,
 )
-from core.services.cost_impact_service import analyze_cost_impacts
+from core.services.cost_impact_service import analyze_cost_impacts, merge_what_if_costs
 import time
 from django.utils.dateparse import parse_datetime
 from typing import Dict
@@ -78,6 +79,11 @@ from core.selectors import (
     get_discharge_test,
     list_discharge_tests,
 )
+
+try:
+    import orjson as _orjson
+except ImportError:  # pragma: no cover - optional acceleration
+    _orjson = None
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -2152,6 +2158,8 @@ def get_json_cost_impact_analysis(request):
     # Load purchasing costs with both est_landed and next_cost
     pricing_label = "Standard costs only"
     uploaded_file = None
+    what_if_costs_raw = data_source.get("what_if_costs")
+    what_if_boms_raw = data_source.get("what_if_boms")
 
     if request.method == "POST" and request.FILES.get("cost_override"):
         uploaded_file = request.FILES["cost_override"]
@@ -2161,7 +2169,38 @@ def get_json_cost_impact_analysis(request):
     except PurchasingCostParseError as exc:
         return JsonResponse({"error": str(exc)}, status=400)
 
-    if workbook_name:
+    # Apply what-if cost overrides if provided
+    if what_if_costs_raw:
+        try:
+            if _orjson is not None:
+                payload = (
+                    what_if_costs_raw
+                    if isinstance(what_if_costs_raw, (bytes, bytearray))
+                    else what_if_costs_raw.encode("utf-8")
+                )
+                what_if_costs = _orjson.loads(payload)
+            else:
+                what_if_costs = json.loads(what_if_costs_raw)
+            purchasing_costs = merge_what_if_costs(purchasing_costs, what_if_costs)
+            pricing_label = "What-If Scenario"
+        except (json.JSONDecodeError, TypeError, ValueError) as exc:
+            return JsonResponse({"error": f"Invalid what_if_costs format: {str(exc)}"}, status=400)
+
+    bom_overrides = None
+    if what_if_boms_raw:
+        try:
+            if _orjson is not None:
+                payload = (
+                    what_if_boms_raw
+                    if isinstance(what_if_boms_raw, (bytes, bytearray))
+                    else what_if_boms_raw.encode("utf-8")
+                )
+                bom_overrides = _orjson.loads(payload)
+            else:
+                bom_overrides = json.loads(what_if_boms_raw)
+        except (json.JSONDecodeError, TypeError, ValueError) as exc:
+            return JsonResponse({"error": f"Invalid what_if_boms format: {str(exc)}"}, status=400)
+    elif workbook_name:
         if uploaded_file:
             pricing_label = f"Uploaded workbook ({workbook_name})"
         else:
@@ -2178,7 +2217,8 @@ def get_json_cost_impact_analysis(request):
     result = analyze_cost_impacts(
         purchasing_costs=purchasing_costs,
         warehouse=warehouse,
-        limit=limit
+        limit=limit,
+        bom_overrides=bom_overrides,
     )
 
     elapsed_ms = round((time.perf_counter() - started) * 1000, 2)
@@ -2207,6 +2247,207 @@ def get_json_cost_impact_analysis(request):
 
     return JsonResponse(payload)
 
+@login_required
+@require_http_methods(["GET"])
+def get_json_cost_workbook_data(request):
+    """Fetch all workbook items with descriptions for what-if cost editing."""
+    try:
+        purchasing_costs, workbook_name = load_purchasing_costs_with_both_values()
+    except Exception as exc:
+        return JsonResponse({"error": f"Unable to load workbook: {str(exc)}"}, status=400)
+
+    if not purchasing_costs:
+        return JsonResponse({
+            "error": "No workbook available. Please configure server workbook path."
+        }, status=400)
+
+    # Build item list with descriptions
+    item_codes = sorted(purchasing_costs.keys())
+    items_with_desc = CiItem.objects.filter(itemcode__in=item_codes).values_list('itemcode', 'itemcodedesc')
+    desc_map = dict(items_with_desc)
+
+    items = []
+    for item_code in item_codes:
+        cost_data = purchasing_costs.get(item_code, {})
+        items.append({
+            'itemCode': item_code,
+            'itemDescription': desc_map.get(item_code, ''),
+            'estLanded': float(cost_data.get('est_landed', 0)),
+            'nextCost': float(cost_data.get('next_cost', 0))
+        })
+
+    return JsonResponse({
+        'workbook_name': workbook_name or 'Unknown',
+        'items': items
+    })
+
+
+@login_required
+@require_http_methods(["GET"])
+def get_json_bom_data(request):
+    """Fetch BOM components for a given item code."""
+    item_code = (request.GET.get("item_code") or "").strip().upper()
+    if not item_code:
+        return JsonResponse({"error": "item_code is required."}, status=400)
+
+    bom_rows = BillOfMaterials.objects.filter(
+        item_code__iexact=item_code
+    ).values(
+        'item_code',
+        'item_description',
+        'component_item_code',
+        'component_item_description',
+        'qtyperbill',
+        'standard_uom',
+    )
+
+    components = []
+    item_description = ''
+    for row in bom_rows:
+        if not item_description:
+            item_description = row.get('item_description') or ''
+        components.append({
+            'component_item_code': row.get('component_item_code') or '',
+            'component_item_description': row.get('component_item_description') or '',
+            'qtyperbill': float(row.get('qtyperbill') or 0),
+            'standard_uom': row.get('standard_uom') or '',
+        })
+
+    if not components:
+        return JsonResponse({"error": f"No BOM found for item_code {item_code}."}, status=404)
+
+    if not item_description:
+        item = CiItem.objects.filter(itemcode__iexact=item_code).values('itemcodedesc').first()
+        if item:
+            item_description = item.get('itemcodedesc') or ''
+
+    return JsonResponse({
+        'item_code': item_code,
+        'item_description': item_description,
+        'is_blend': item_description.upper().startswith('BLEND') if item_description else False,
+        'components': components,
+    })
+
+
+@require_http_methods(["GET"])
+def get_json_production_value_forecast(request):
+    """Return projected revenue from scheduled production runs over a rolling time horizon."""
+    import time
+    from collections import defaultdict
+
+    started = time.perf_counter()
+
+    # Get time horizon parameter (default 40 hours)
+    try:
+        next_hours = Decimal(request.GET.get('next_hours', '40'))
+        if next_hours <= 0:
+            return JsonResponse({'error': 'next_hours must be positive'}, status=400)
+    except (ValueError, InvalidOperation):
+        return JsonResponse({'error': 'next_hours must be a valid number'}, status=400)
+
+    # Query production schedule - filter by start_time within time window
+    # start_time is in hours from some epoch, we want runs starting soon
+    # Get the minimum start_time to establish a baseline
+    min_start_time = ProductionLineRun.objects.aggregate(
+        min_start=Min('start_time')
+    )['min_start'] or Decimal('0')
+
+    # Filter runs within the next_hours window from the minimum start time
+    production_runs = ProductionLineRun.objects.filter(
+        start_time__isnull=False,
+        start_time__lt=min_start_time + next_hours,
+        po_number__isnull=False
+    ).exclude(
+        po_number=''
+    ).order_by('start_time', 'prod_line').values(
+        'po_number',
+        'item_code',
+        'item_description',
+        'item_run_qty',
+        'run_time',
+        'start_time',
+        'prod_line'
+    )
+
+    runs_list = list(production_runs)
+
+    # Collect unique PO numbers to query sales orders (normalize by padding with leading zeros)
+    po_numbers_normalized = set()
+    for run in runs_list:
+        if run['po_number']:
+            # Pad to 7 digits with leading zeros (standard Sage format)
+            normalized = run['po_number'].strip().zfill(7)
+            po_numbers_normalized.add(normalized)
+
+    # Query matching sales orders
+    sales_orders = {}
+    if po_numbers_normalized:
+        so_qs = SoSalesOrderDetail.objects.filter(
+            salesorderno__in=po_numbers_normalized
+        ).values('salesorderno', 'itemcode', 'unitprice')
+
+        for so in so_qs:
+            # Create normalized key with uppercase itemcode for matching
+            key = (so['salesorderno'].strip(), (so['itemcode'] or '').strip().upper())
+            sales_orders[key] = so['unitprice']
+
+    # Calculate revenue projections
+    total_value = Decimal('0')
+    matched_runs = []
+    line_breakdown = defaultdict(lambda: {'value': Decimal('0'), 'count': 0})
+
+    for run in runs_list:
+        po_num = (run['po_number'] or '').strip().zfill(7)  # Normalize to 7 digits
+        item = (run['item_code'] or '').strip().upper()  # Normalize itemcode
+        key = (po_num, item)
+
+        # Match to sales order
+        if key in sales_orders:
+            unit_price = sales_orders[key] or Decimal('0')
+            qty = run['item_run_qty'] or Decimal('0')
+            extended_value = qty * unit_price
+
+            total_value += extended_value
+            prod_line = run['prod_line'] or 'Unknown'
+            line_breakdown[prod_line]['value'] += extended_value
+            line_breakdown[prod_line]['count'] += 1
+
+            matched_runs.append({
+                'poNumber': po_num,
+                'itemCode': item,
+                'itemDescription': run['item_description'] or '',
+                'prodLine': prod_line,
+                'startTime': float(run['start_time'] or 0),
+                'runTime': float(run['run_time'] or 0),
+                'qty': float(qty),
+                'unitPrice': float(unit_price),
+                'extendedValue': float(extended_value),
+            })
+
+    elapsed_ms = round((time.perf_counter() - started) * 1000, 2)
+
+    # Format line breakdown
+    line_summary = [
+        {
+            'prodLine': line,
+            'value': float(data['value']),
+            'count': data['count']
+        }
+        for line, data in sorted(line_breakdown.items())
+    ]
+
+    payload = {
+        'summary': {
+            'totalValue': float(total_value),
+            'runCount': len(matched_runs),
+            'lineBreakdown': line_summary,
+        },
+        'runs': matched_runs,
+        'elapsedMs': elapsed_ms,
+        'nextHours': float(next_hours),
+    }
+
+    return JsonResponse(payload)
 
 def _user_in_group(user, group_name):
     if not user or not getattr(user, 'is_authenticated', False):
