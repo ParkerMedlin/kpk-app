@@ -121,7 +121,7 @@ Implementation tasks for the Uncounted Items Report feature. Work through sequen
   - **Verify**: All interactive elements work
   - **Requirement**: AC (inline editing), US-3
 
-- [ ] **4.3** Add navigation link
+- [x] **4.3** Add navigation link
   - **Do**: Add link to inventory counts navbar section
   - **Deliverable**: Link in appropriate navbar partial
   - **Verify**: Navigation works
@@ -155,7 +155,7 @@ Implementation tasks for the Uncounted Items Report feature. Work through sequen
 | 1. Data Layer | Complete | 5/5 |
 | 2. Business Logic | Complete | 2/2 |
 | 3. API/Views | Complete | 3/3 |
-| 4. Frontend | In Progress | 2/3 |
+| 4. Frontend | Complete | 3/3 |
 | 5. Integration | Not Started | 0/2 |
 
 **Overall**: 12/15 tasks (80%)
