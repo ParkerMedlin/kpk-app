@@ -111,7 +111,7 @@ Implementation tasks for the Uncounted Items Report feature. Work through sequen
   - **Verify**: Page renders with correct layout
   - **Requirement**: AC (display columns)
 
-- [ ] **4.2** Create JavaScript module
+- [x] **4.2** Create JavaScript module
   - **Do**: Create `app/core/static/core/js/pageModules/uncountedItems.js` with:
     - DataTable initialization with export buttons
     - Inline audit group editing (click cell -> dropdown -> AJAX save via existing endpoint)
@@ -155,10 +155,10 @@ Implementation tasks for the Uncounted Items Report feature. Work through sequen
 | 1. Data Layer | Complete | 5/5 |
 | 2. Business Logic | Complete | 2/2 |
 | 3. API/Views | Complete | 3/3 |
-| 4. Frontend | In Progress | 1/3 |
+| 4. Frontend | In Progress | 2/3 |
 | 5. Integration | Not Started | 0/2 |
 
-**Overall**: 11/15 tasks (73%)
+**Overall**: 12/15 tasks (80%)
 
 ---
 
