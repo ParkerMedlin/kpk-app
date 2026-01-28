@@ -181,14 +181,63 @@ def get_relevant_ci_item_itemcodes(filter_string, exclude_audit_group_items=True
 
 ---
 
+## Issue 3: Add Latest Countlist Date Column
+
+**Problem:** The report only shows "Last Counted" which filters by `counted=True`. Users need to see when an item was last included in ANY countlist, regardless of whether it was marked as counted.
+
+**Expected Behavior:**
+- New column "Latest Countlist Date" shows the most recent count record date for each item
+- This date is independent of the `counted` boolean flag
+- "Last Valid Count" (renamed from "Last Counted") continues showing only confirmed counts (`counted=True`)
+
+**Root Cause Analysis:**
+
+The existing `get_last_counted_dates` selector filters by `counted=True`:
+
+```python
+BlendCountRecord.objects
+    .filter(item_code__in=item_codes, counted_date__isnull=False, counted=True)
+```
+
+This means items that were on a countlist but not yet confirmed as counted don't show any date.
+
+**Fix Approach:**
+
+Create a new selector `get_latest_count_dates_any` that queries both `BlendCountRecord` and `BlendComponentCountRecord` without the `counted=True` filter.
+
+**Code Locations:**
+- `inventory_selectors.py` lines 499-529 — New `get_latest_count_dates_any()` function
+- `inventory_services.py` line 36 — Import added
+- `inventory_services.py` line 332 — Call to new function
+- `inventory_services.py` line 350 — Added `latest_count_date` to display dict
+- `uncounted_items.html` lines 55-56 — Column headers renamed/added
+- `uncounted_items.html` lines 77-83 — New column data cell
+
+### Tasks
+
+- [x] 3.1 Create `get_latest_count_dates_any` selector function
+  - **Do**: Add function to `inventory_selectors.py` that queries both count tables without `counted=True` filter
+  - **Deliverable**: New selector returns latest count date regardless of counted flag
+
+- [x] 3.2 Import and call new selector in service
+  - **Do**: Import `get_latest_count_dates_any` in `inventory_services.py`, call it in `build_uncounted_items_display`, add `latest_count_date` to display items
+  - **Deliverable**: Service provides both date fields
+
+- [x] 3.3 Update template with new column
+  - **Do**: Add "Latest Countlist Date" column header and data cell, rename "Last Counted" to "Last Valid Count", update colspan
+  - **Deliverable**: Report displays both date columns
+
+---
+
 ## Progress
 
 | Issue | Status | Tasks Complete |
 |-------|--------|----------------|
 | 1. Item Type Filter Shows Wrong Type | In Progress | 3/8 |
 | 2. Query Excludes Items in Audit Groups | In Progress | 3/7 |
+| 3. Add Latest Countlist Date Column | Complete | 3/3 |
 
-**Overall**: 6/15 tasks (40%)
+**Overall**: 9/18 tasks (50%)
 
 ---
 
