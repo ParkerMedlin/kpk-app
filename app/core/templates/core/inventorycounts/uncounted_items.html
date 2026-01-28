@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}<title>Uncounted Items Report</title>{% endblock %}
+
+{% block scripts %}
+    {% include 'core/partials/datatableprerequisites.html' %}
+{% endblock %}
+
+{% block content %}
+    <div class="text-center">
+        <h1>Uncounted Items Report</h1>
+    </div>
+
+    <form id="uncountedItemsFilterForm" method="get" class="row gy-2 gx-3 align-items-end mb-3">
+        <div class="col-md-2">
+            <label class="form-label" for="id_days">Days</label>
+            <input type="number" name="days" id="id_days" class="form-control" min="0" value="{{ days }}">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label" for="id_item_type">Item Type</label>
+            <select name="itemType" id="id_item_type" class="form-select">
+                <option value="all" {% if item_type == 'all' or not item_type %}selected{% endif %}>All</option>
+                <option value="blend" {% if item_type == 'blend' %}selected{% endif %}>Blends</option>
+                <option value="component" {% if item_type == 'component' %}selected{% endif %}>Components</option>
+                <option value="warehouse" {% if item_type == 'warehouse' %}selected{% endif %}>Warehouse</option>
+            </select>
+        </div>
+        <div class="col-md-5">
+            <label class="form-label" for="id_search">Search</label>
+            <input type="search" name="search" id="id_search" class="form-control" autocomplete="off" value="{{ search_query }}">
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+            <button type="submit" class="btn btn-primary flex-fill">Apply</button>
+            <a class="btn btn-outline-secondary flex-fill" href="{% url 'uncounted_items' %}">Reset</a>
+        </div>
+    </form>
+
+    <div class="d-flex justify-content-end mb-2">
+        <button type="button" class="btn btn-primary" id="createCountlistButton">Create Countlist</button>
+    </div>
+
+    <div class="table-responsive-sm">
+        <table id="uncountedItemsTable" class="table text-left table-bordered table-hover">
+            <thead class="thead-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
+                <tr>
+                    <th scope="col" class="text-center">
+                        <input type="checkbox" id="selectAllUncountedItems">
+                    </th>
+                    <th scope="col" class="text-center">Item Code</th>
+                    <th scope="col" class="text-center">Description</th>
+                    <th scope="col" class="text-center">Item Type</th>
+                    <th scope="col" class="text-center">Audit Group</th>
+                    <th scope="col" class="text-center">Last Counted</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in uncounted_items %}
+                    <tr data-item-code="{{ item.item_code }}" data-item-type="{{ item.item_type|default:'' }}" data-audit-group-id="{{ item.audit_group_id|default:'' }}">
+                        <td class="text-center">
+                            <input type="checkbox" class="uncounted-item-checkbox" value="{{ item.item_code }}">
+                        </td>
+                        <td class="text-nowrap">{{ item.item_code }}</td>
+                        <td class="text-nowrap">{{ item.item_description }}</td>
+                        <td class="text-center">{{ item.item_type|default:''|title }}</td>
+                        <td class="audit-group-cell" data-audit-group="{{ item.audit_group|default:'' }}">
+                            {{ item.audit_group|default:"--" }}
+                        </td>
+                        <td class="text-nowrap" data-order="{% if item.last_counted_date %}{{ item.last_counted_date|date:'Y-m-d' }}{% endif %}">
+                            {% if item.last_counted_date %}
+                                {{ item.last_counted_date|date:"m/d/y" }}
+                            {% else %}
+                                Never
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center">All items have been counted within {{ days }} days.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <select id="auditGroupOptionsTemplate" class="form-select d-none" aria-hidden="true" tabindex="-1">
+        <option value="">No audit group</option>
+        {% for audit_group in audit_group_choices %}
+            <option value="{{ audit_group }}">{{ audit_group }}</option>
+        {% endfor %}
+    </select>
+{% endblock content %}
