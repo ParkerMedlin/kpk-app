@@ -172,7 +172,7 @@ def get_relevant_ci_item_itemcodes(filter_string):
     tables based on the provided filter string. Used to filter items for inventory counts.
 
     Args:
-        filter_string (str): Type of items to retrieve - 'blend_components', 'blends', or 'non_blend'
+        filter_string (str): Type of items to retrieve - 'blends_and_components', 'blends', 'components', 'non_blend', or None for all
 
     Returns:
         list: List of tuples containing (itemcode, itemcodedesc, quantityonhand) for matching items
@@ -199,6 +199,18 @@ def get_relevant_ci_item_itemcodes(filter_string):
             SELECT ci.itemcode, ci.itemcodedesc, iw.QuantityOnHand, ci.standardunitofmeasure FROM ci_item ci
             JOIN im_itemwarehouse iw ON ci.itemcode = iw.itemcode
             WHERE (itemcodedesc like 'BLEND%')
+            AND ci.itemcode NOT IN (SELECT item_code FROM core_auditgroup)
+            AND ci.itemcode NOT IN ('030143', '030182')
+            and ci.itemcode not like '/%'
+            and iw.QuantityOnHand > 0
+            """
+    elif filter_string == 'components':
+        sql_query = """
+            SELECT ci.itemcode, ci.itemcodedesc, iw.QuantityOnHand, ci.standardunitofmeasure FROM ci_item ci
+            JOIN im_itemwarehouse iw ON ci.itemcode = iw.itemcode
+            WHERE (itemcodedesc like 'CHEM%'
+                or itemcodedesc like 'DYE%'
+                or itemcodedesc like 'FRAGRANCE%')
             AND ci.itemcode NOT IN (SELECT item_code FROM core_auditgroup)
             AND ci.itemcode NOT IN ('030143', '030182')
             and ci.itemcode not like '/%'
@@ -443,34 +455,6 @@ def get_recently_counted_item_codes(days=3):
         item_codes.update(code for code in component_codes if code)
 
     return item_codes
-
-
-def get_all_active_item_codes(item_type=None):
-    """Return CiItem queryset filtered by item type."""
-    queryset = CiItem.objects.exclude(itemcode__isnull=True)
-
-    if not item_type or item_type == 'all':
-        return queryset
-
-    if item_type == 'blend':
-        return queryset.filter(itemcode__startswith='BLEND-')
-
-    if item_type == 'component':
-        return queryset.filter(
-            Q(itemcode__startswith='CHEM-') |
-            Q(itemcode__startswith='DYE-') |
-            Q(itemcode__startswith='FRAGRANCE-')
-        )
-
-    if item_type == 'warehouse':
-        return queryset.exclude(
-            Q(itemcode__startswith='BLEND-') |
-            Q(itemcode__startswith='CHEM-') |
-            Q(itemcode__startswith='DYE-') |
-            Q(itemcode__startswith='FRAGRANCE-')
-        )
-
-    return queryset
 
 
 def get_last_counted_dates(item_codes):

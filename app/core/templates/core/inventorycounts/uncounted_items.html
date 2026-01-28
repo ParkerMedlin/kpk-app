@@ -30,11 +30,11 @@
         {% comment %} <div class="col-md-5">
             <label class="form-label" for="id_search">Search</label>
             <input type="search" name="search" id="id_search" class="form-control" autocomplete="off" value="{{ search_query }}">
-        </div>
+        </div> {% endcomment %}
         <div class="col-md-2 d-flex gap-2">
             <button type="submit" class="btn btn-primary flex-fill">Apply</button>
             <a class="btn btn-outline-secondary flex-fill" href="{% url 'uncounted_items' %}">Reset</a>
-        </div> {% endcomment %}
+        </div>
     </form>
 
     <div class="d-flex justify-content-end mb-2">

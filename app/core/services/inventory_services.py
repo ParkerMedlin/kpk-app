@@ -30,7 +30,7 @@ from core.selectors.inventory_selectors import (
     get_latest_count_dates,
     get_latest_transaction_dates,
     get_recently_counted_item_codes,
-    get_all_active_item_codes,
+    get_relevant_ci_item_itemcodes,
     get_last_counted_dates,
 )
 from core.services.purchasing_alias_services import extract_supply_type
@@ -298,41 +298,45 @@ def build_uncounted_items_display(
     counted_codes = get_recently_counted_item_codes(days)
     counted_codes = {code for code in counted_codes if isinstance(code, str) and code.strip()}
 
-    active_items = get_all_active_item_codes(item_type)
-    if counted_codes:
-        active_items = active_items.exclude(itemcode__in=counted_codes)
+    filter_map = {
+        'blend': 'blends',
+        'component': 'components',
+        'warehouse': 'non_blend',
+    }
+    filter_string = filter_map.get(item_type)
+
+    all_items = get_relevant_ci_item_itemcodes(filter_string)
+
+    uncounted_items = [
+        item for item in all_items
+        if item[0] not in counted_codes
+    ]
 
     if search_query:
-        search_value = search_query.strip()
+        search_value = search_query.strip().lower()
         if search_value:
-            active_items = active_items.filter(
-                Q(itemcode__icontains=search_value) |
-                Q(itemcodedesc__icontains=search_value)
-            )
+            uncounted_items = [
+                item for item in uncounted_items
+                if search_value in item[0].lower() or search_value in item[1].lower()
+            ]
 
-    item_values = list(
-        active_items
-        .values('itemcode', 'itemcodedesc')
-        .distinct()
-        .order_by('itemcode')
-    )
+    uncounted_items.sort(key=lambda x: x[0])
 
-    item_codes = [item['itemcode'] for item in item_values if item.get('itemcode')]
+    item_codes = [item[0] for item in uncounted_items]
     audit_groups = get_audit_group_records(item_codes)
     last_counted_dates = get_last_counted_dates(item_codes)
 
     display_items = []
-    for item in item_values:
-        item_code = item.get('itemcode')
-        if not item_code:
-            continue
+    for item in uncounted_items:
+        item_code = item[0]
+        item_desc = item[1]
 
         audit_group_record = audit_groups.get(item_code)
         record_type = _classify_item_code(item_code)
         display_type = 'component' if record_type == 'blendcomponent' else record_type
         display_items.append({
             'item_code': item_code,
-            'item_description': item.get('itemcodedesc') or '',
+            'item_description': item_desc or '',
             'item_type': display_type,
             'audit_group': audit_group_record.audit_group if audit_group_record else None,
             'audit_group_id': audit_group_record.id if audit_group_record else None,
