@@ -499,7 +499,45 @@ function Stop-KPKHostService {
         throw "Unknown service: $Name"
     }
 
-    $cmd = '$procs = wmic process where "name like ''%python%'' and commandline like ''%' + $Name + '%''" get ProcessId /format:csv 2>$null | Select-String ''\d+'' | ForEach-Object { ($_ -split '','')[-1].Trim() }; foreach ($p in $procs) { if ($p) { taskkill /F /T /PID $p 2>$null } }'
+    if ($Name -eq "looper_health") {
+        $cmd = @'
+$raw = wmic process get ProcessId,ParentProcessId,CommandLine /format:csv 2>$null
+$procs = $raw | ConvertFrom-Csv
+$roots = @()
+foreach ($p in $procs) {
+    if ($p.CommandLine -and $p.CommandLine -like "*looper_health.py*") {
+        $pid = 0
+        if ([int]::TryParse($p.ProcessId, [ref]$pid) -and $pid -gt 0) { $roots += $pid }
+    }
+}
+if ($roots.Count -gt 0) {
+    $killSet = New-Object System.Collections.Generic.HashSet[int]
+    foreach ($pid in $roots) { $null = $killSet.Add($pid) }
+    $added = $true
+    while ($added) {
+        $added = $false
+        foreach ($p in $procs) {
+            $pid = 0
+            $ppid = 0
+            if ([int]::TryParse($p.ProcessId, [ref]$pid) -and [int]::TryParse($p.ParentProcessId, [ref]$ppid)) {
+                if ($killSet.Contains($ppid) -and -not $killSet.Contains($pid)) {
+                    $null = $killSet.Add($pid)
+                    $added = $true
+                }
+            }
+        }
+    }
+    foreach ($pid in $killSet) {
+        if ($pid -gt 0) { taskkill /F /T /PID $pid 2>$null }
+    }
+} else {
+    $procs = wmic process where "name like '%python%' and commandline like '%looper_health%'" get ProcessId /format:csv 2>$null | Select-String '\d+' | ForEach-Object { ($_ -split ',')[-1].Trim() }
+    foreach ($p in $procs) { if ($p) { taskkill /F /T /PID $p 2>$null } }
+}
+'@
+    } else {
+        $cmd = '$procs = wmic process where "name like ''%python%'' and commandline like ''%' + $Name + '%''" get ProcessId /format:csv 2>$null | Select-String ''\d+'' | ForEach-Object { ($_ -split '','')[-1].Trim() }; foreach ($p in $procs) { if ($p) { taskkill /F /T /PID $p 2>$null } }'
+    }
     Invoke-KPKCommand -Command $cmd
     Write-Host "Stopped." -ForegroundColor Green
 }
