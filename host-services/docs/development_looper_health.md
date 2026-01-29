@@ -46,6 +46,7 @@ Loads and validates `host-services/config/alert_rules.json`. Provides access to:
 - `critical_containers` - Docker containers to monitor for availability
 - `critical_host_services` - Python processes to monitor for availability
 - `webhook_url` - Teams webhook URL from environment
+- `startup_grace_seconds` - Startup grace window that suppresses Teams alerts while services spin up
 
 ### 2. AlertStateManager
 
@@ -127,6 +128,7 @@ Sends Microsoft Teams Adaptive Cards via Workflow webhooks:
   "scan_interval_seconds": 30,
   "teams_webhook_env_var": "TEAMS_WEBHOOK_URL",
   "default_cooldown_seconds": 300,
+  "startup_grace_seconds": 300,
 
   "critical_containers": ["container_name_1", ...],
   "container_check_cooldown_seconds": 300,
