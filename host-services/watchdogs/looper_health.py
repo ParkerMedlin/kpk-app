@@ -93,6 +93,9 @@ STATUS_CHECK_INTERVAL_SECONDS = 300  # 5 minutes
 # Use KPKAPP_HOST if set, otherwise fall back to default
 ALERT_ORIGIN = os.environ.get("KPKAPP_HOST", DEFAULT_KPKAPP_HOST)
 
+# Suppress Teams alerts until this time (set during startup grace period)
+ALERTS_SUPPRESS_UNTIL = None
+
 # --- SSL Certificate Paths ---
 CERT_BASE_DIR = os.path.join(KPK_APP_ROOT, 'nginx', 'ssl')
 CERT_FILE = os.path.normpath(os.path.join(CERT_BASE_DIR, 'kpkapp.lan.pem'))
@@ -473,6 +476,7 @@ class AlertConfig:
         self.scan_interval = 30
         self.webhook_url = None
         self.default_cooldown = 300
+        self.startup_grace_seconds = 300
         self.critical_containers = []
         self.container_check_cooldown = 300
         self.critical_host_services = []
@@ -487,6 +491,15 @@ class AlertConfig:
 
             self.scan_interval = config.get('scan_interval_seconds', 30)
             self.default_cooldown = config.get('default_cooldown_seconds', 300)
+            raw_grace = config.get('startup_grace_seconds', 300)
+            try:
+                self.startup_grace_seconds = int(raw_grace)
+            except (TypeError, ValueError):
+                log_and_queue(
+                    f"Alert Config: Invalid startup_grace_seconds '{raw_grace}', defaulting to 300",
+                    logging.WARNING
+                )
+                self.startup_grace_seconds = 300
 
             # Load webhook URL from environment
             webhook_env_var = config.get('teams_webhook_env_var', 'TEAMS_WEBHOOK_URL')
@@ -615,7 +628,7 @@ class ContainerHealthChecker:
         self.state_manager = state_manager
         self.notifier = notifier
 
-    def check_containers(self) -> list:
+    def check_containers(self, suppress_alerts: bool = False) -> list:
         """Check all critical containers and return alerts for any not running.
 
         If a container is down, attempts to restart it and reports the outcome.
@@ -643,6 +656,9 @@ class ContainerHealthChecker:
                     severity = 'critical'
                     description = f'Container down, auto-restart FAILED: {container}'
                     log_and_queue(f"Alert Monitor [{ALERT_ORIGIN}]: Failed to restart container '{container}': {restart_msg}", logging.ERROR)
+
+                if suppress_alerts:
+                    continue
 
                 # Check cooldown - only affects whether we send Teams notification
                 in_cooldown = False
@@ -756,7 +772,7 @@ class HostServiceHealthChecker:
         self.state_manager = state_manager
         self.notifier = notifier
 
-    def check_services(self) -> list:
+    def check_services(self, suppress_alerts: bool = False) -> list:
         """Check all critical host services and return alerts for any not running.
 
         First runs "Looper mode" to detect and kill duplicate instances,
@@ -799,6 +815,9 @@ class HostServiceHealthChecker:
                     severity = 'critical'
                     description = f'Host service down, auto-restart FAILED: {display_name}'
                     log_and_queue(f"Alert Monitor [{ALERT_ORIGIN}]: Failed to restart host service '{display_name}': {restart_msg}", logging.ERROR)
+
+                if suppress_alerts:
+                    continue
 
                 # Check cooldown - only affects whether we send Teams notification
                 in_cooldown = False
@@ -1542,6 +1561,12 @@ class TeamsNotifier:
 
     def send_alert(self, alert: Alert) -> bool:
         """Send alert to Teams using Adaptive Card format."""
+        if ALERTS_SUPPRESS_UNTIL and datetime.datetime.now() < ALERTS_SUPPRESS_UNTIL:
+            log_and_queue(
+                f"Alert Notifier: Suppressed '{alert.rule_name}' during startup grace period",
+                logging.INFO
+            )
+            return False
         card = self._build_adaptive_card(alert)
         try:
             response = requests.post(
@@ -1650,6 +1675,11 @@ def alert_monitor_thread():
     try:
         config = AlertConfig(ALERT_CONFIG_PATH)
         state_manager = AlertStateManager(ALERT_STATE_PATH)
+        startup_grace_end = datetime.datetime.now() + datetime.timedelta(seconds=config.startup_grace_seconds)
+        global ALERTS_SUPPRESS_UNTIL
+        ALERTS_SUPPRESS_UNTIL = startup_grace_end
+        grace_started_logged = False
+        grace_ended_logged = False
 
         # Check webhook URL
         if not config.webhook_url:
@@ -1684,30 +1714,46 @@ def alert_monitor_thread():
 
     while True:
         try:
+            now = datetime.datetime.now()
+            in_startup_grace = now < startup_grace_end
+            if in_startup_grace and not grace_started_logged:
+                log_and_queue(
+                    f"Alert Monitor: Startup grace period active for {config.startup_grace_seconds}s. "
+                    "Suppressing Teams alerts while services start.",
+                    logging.INFO
+                )
+                grace_started_logged = True
+            if not in_startup_grace and not grace_ended_logged:
+                log_and_queue("Alert Monitor: Startup grace period ended. Alerts enabled.", logging.INFO)
+                grace_ended_logged = True
+
             # Check critical container health
-            container_alerts = container_checker.check_containers()
-            for alert in container_alerts:
-                if notifier:
-                    notifier.send_alert(alert)
+            container_alerts = container_checker.check_containers(suppress_alerts=in_startup_grace)
+            if not in_startup_grace:
+                for alert in container_alerts:
+                    if notifier:
+                        notifier.send_alert(alert)
 
             # Check critical host service health
-            host_service_alerts = host_service_checker.check_services()
-            for alert in host_service_alerts:
-                if notifier:
-                    notifier.send_alert(alert)
+            host_service_alerts = host_service_checker.check_services(suppress_alerts=in_startup_grace)
+            if not in_startup_grace:
+                for alert in host_service_alerts:
+                    if notifier:
+                        notifier.send_alert(alert)
 
             # Scan log sources for pattern matches
-            for source_name, scanner in scanners.items():
-                try:
-                    new_lines = scanner.get_new_lines()
-                    if new_lines:
-                        alerts = alert_engine.process_lines(source_name, new_lines)
-                        for alert in alerts:
-                            log_and_queue(f"Alert Monitor [{ALERT_ORIGIN}]: Firing alert '{alert.rule_name}' from {alert.source}", logging.WARNING)
-                            if notifier:
-                                notifier.send_alert(alert)
-                except Exception as e:
-                    log_and_queue(f"Alert Monitor: Error scanning {source_name}: {e}", logging.ERROR)
+            if not in_startup_grace:
+                for source_name, scanner in scanners.items():
+                    try:
+                        new_lines = scanner.get_new_lines()
+                        if new_lines:
+                            alerts = alert_engine.process_lines(source_name, new_lines)
+                            for alert in alerts:
+                                log_and_queue(f"Alert Monitor [{ALERT_ORIGIN}]: Firing alert '{alert.rule_name}' from {alert.source}", logging.WARNING)
+                                if notifier:
+                                    notifier.send_alert(alert)
+                    except Exception as e:
+                        log_and_queue(f"Alert Monitor: Error scanning {source_name}: {e}", logging.ERROR)
 
             # Persist state periodically
             state_manager.save()

@@ -3,6 +3,7 @@
   "scan_interval_seconds": 30,
   "teams_webhook_env_var": "TEAMS_WEBHOOK_URL",
   "default_cooldown_seconds": 300,
+  "startup_grace_seconds": 150,
   "critical_containers": [
     "kpk-app_nginx_1",
     "kpk-app_app_blue_1",
