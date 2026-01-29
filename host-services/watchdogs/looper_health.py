@@ -982,7 +982,7 @@ class HostServiceHealthChecker:
                     logging.WARNING
                 )
                 result = subprocess.run(
-                    ['taskkill', '/PID', dup_pid, '/F'],
+                    ['taskkill', '/PID', dup_pid, '/F', '/T'],
                     capture_output=True,
                     text=True,
                     timeout=10,
@@ -1090,6 +1090,7 @@ class Remediator:
 
         # Step 1: Terminate existing process
         try:
+            existing_pids = self._get_process_pids(process_pattern)
             terminate_success = self._terminate_process(process_pattern)
             if terminate_success:
                 log_and_queue(f"Remediator: Terminated existing {display_name} process", logging.INFO)
@@ -1121,45 +1122,54 @@ class Remediator:
             # Wait and verify it started
             time.sleep(3)
 
-            # Check if running using direct wmic call
-            startupinfo2 = subprocess.STARTUPINFO()
-            startupinfo2.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-            startupinfo2.wShowWindow = 0
-
-            result = subprocess.run(
-                ['wmic', 'process', 'where',
-                 f"name like '%python%' and commandline like '%{process_pattern}%'",
-                 'get', 'ProcessId', '/format:csv'],
-                capture_output=True,
-                text=True,
-                timeout=10,
-                startupinfo=startupinfo2,
-                creationflags=subprocess.CREATE_NO_WINDOW
-            )
-
-            # Parse CSV output for PIDs
-            pids = []
-            if result.returncode == 0:
-                for line in result.stdout.strip().split('\n'):
-                    line = line.strip()
-                    if not line or line.startswith('Node'):
-                        continue
-                    parts = line.split(',')
-                    if len(parts) >= 2:
-                        pid = parts[-1].strip()
-                        if pid.isdigit():
-                            pids.append(pid)
+            pids = self._get_process_pids(process_pattern)
 
             if len(pids) > 0:
-                log_and_queue(f"Remediator: Successfully restarted {display_name} (PID: {pids[0]})", logging.INFO)
-                return True, f"Restarted {display_name}"
-            else:
-                return False, f"Process started but not found running after 3s"
+                new_pids = [pid for pid in pids if pid not in existing_pids]
+                if new_pids:
+                    log_and_queue(
+                        f"Remediator: Successfully restarted {display_name} (PID: {new_pids[0]})",
+                        logging.INFO
+                    )
+                    return True, f"Restarted {display_name}"
+                return False, "Process appears unchanged after restart (old PID still running)"
+
+            return False, "Process started but not found running after 3s"
 
         except FileNotFoundError:
             return False, "pythonw not found in PATH"
         except Exception as e:
             return False, f"Error starting service: {str(e)[:100]}"
+
+    def _get_process_pids(self, process_pattern: str) -> list:
+        """Return list of PIDs matching the pattern."""
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        startupinfo.wShowWindow = 0
+
+        result = subprocess.run(
+            ['wmic', 'process', 'where',
+             f"name like '%python%' and commandline like '%{process_pattern}%'",
+             'get', 'ProcessId', '/format:csv'],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            startupinfo=startupinfo,
+            creationflags=subprocess.CREATE_NO_WINDOW
+        )
+
+        pids = []
+        if result.returncode == 0:
+            for line in result.stdout.strip().split('\n'):
+                line = line.strip()
+                if not line or line.startswith('Node'):
+                    continue
+                parts = line.split(',')
+                if len(parts) >= 2:
+                    pid = parts[-1].strip()
+                    if pid.isdigit():
+                        pids.append(pid)
+        return pids
 
     def _terminate_process(self, process_pattern: str) -> bool:
         """Terminate processes matching the pattern. Returns True if any were terminated."""
@@ -1168,30 +1178,7 @@ class Remediator:
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
             startupinfo.wShowWindow = 0
 
-            # Find PIDs using direct wmic call
-            result = subprocess.run(
-                ['wmic', 'process', 'where',
-                 f"name like '%python%' and commandline like '%{process_pattern}%'",
-                 'get', 'ProcessId', '/format:csv'],
-                capture_output=True,
-                text=True,
-                timeout=10,
-                startupinfo=startupinfo,
-                creationflags=subprocess.CREATE_NO_WINDOW
-            )
-
-            # Parse CSV output for PIDs
-            pids = []
-            if result.returncode == 0:
-                for line in result.stdout.strip().split('\n'):
-                    line = line.strip()
-                    if not line or line.startswith('Node'):
-                        continue
-                    parts = line.split(',')
-                    if len(parts) >= 2:
-                        pid = parts[-1].strip()
-                        if pid.isdigit():
-                            pids.append(pid)
+            pids = self._get_process_pids(process_pattern)
 
             if not pids:
                 return False
@@ -1199,7 +1186,7 @@ class Remediator:
             # Terminate each PID
             for pid in pids:
                 subprocess.run(
-                    ['taskkill', '/PID', pid, '/F'],
+                    ['taskkill', '/PID', pid, '/F', '/T'],
                     capture_output=True,
                     timeout=10,
                     startupinfo=startupinfo,
