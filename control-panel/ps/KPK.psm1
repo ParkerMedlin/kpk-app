@@ -501,8 +501,11 @@ function Stop-KPKHostService {
 
     if ($Name -eq "looper_health") {
         $cmd = @'
+$ErrorActionPreference = "SilentlyContinue"
 $raw = wmic process get ProcessId,ParentProcessId,CommandLine /format:csv 2>$null
-$procs = $raw | ConvertFrom-Csv
+$raw = $raw | Where-Object { $_ -and $_ -match "," }
+$procs = @()
+try { $procs = $raw | ConvertFrom-Csv } catch { $procs = @() }
 $roots = @()
 foreach ($p in $procs) {
     if ($p.CommandLine -and $p.CommandLine -like "*looper_health.py*") {
@@ -534,9 +537,10 @@ if ($roots.Count -gt 0) {
     $procs = wmic process where "name like '%python%' and commandline like '%looper_health%'" get ProcessId /format:csv 2>$null | Select-String '\d+' | ForEach-Object { ($_ -split ',')[-1].Trim() }
     foreach ($p in $procs) { if ($p) { taskkill /F /T /PID $p 2>$null } }
 }
+exit 0
 '@
     } else {
-        $cmd = '$procs = wmic process where "name like ''%python%'' and commandline like ''%' + $Name + '%''" get ProcessId /format:csv 2>$null | Select-String ''\d+'' | ForEach-Object { ($_ -split '','')[-1].Trim() }; foreach ($p in $procs) { if ($p) { taskkill /F /T /PID $p 2>$null } }'
+        $cmd = '$ErrorActionPreference = "SilentlyContinue"; $procs = wmic process where "name like ''%python%'' and commandline like ''%' + $Name + '%''" get ProcessId /format:csv 2>$null | Select-String ''\d+'' | ForEach-Object { ($_ -split '','')[-1].Trim() }; foreach ($p in $procs) { if ($p) { taskkill /F /T /PID $p 2>$null } }; exit 0'
     }
     Invoke-KPKCommand -Command $cmd
     Write-Host "Stopped." -ForegroundColor Green
