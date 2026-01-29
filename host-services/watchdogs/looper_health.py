@@ -109,6 +109,9 @@ LOG_QUEUE_MAX = 1000
 MAX_UI_LINES = 500
 UI_LOG_ACTIVE = False
 log_queue = queue.Queue(maxsize=LOG_QUEUE_MAX)
+MAX_LOG_CHUNK_BYTES = 256 * 1024
+MAX_FILE_SCAN_BYTES = 512 * 1024
+MAX_DOCKER_TAIL_LINES = 500
 
 
 def log_and_queue(message, level=logging.INFO):
@@ -188,6 +191,11 @@ class RestartHandler(BaseHTTPRequestHandler):
                 offset = int(params.get('offset', [0])[0])
             except (ValueError, TypeError):
                 offset = 0
+            try:
+                requested_max = int(params.get('max_bytes', [MAX_LOG_CHUNK_BYTES])[0])
+            except (ValueError, TypeError):
+                requested_max = MAX_LOG_CHUNK_BYTES
+            max_bytes = min(max(requested_max, 1), MAX_LOG_CHUNK_BYTES)
 
             log_file_path = os.path.join(LOG_DIR, 'data_sync.log')
             self.send_response(200)
@@ -202,6 +210,8 @@ class RestartHandler(BaseHTTPRequestHandler):
                     response = json.dumps({
                         'logs': '[Log file not found - data_sync may not have started yet]\n',
                         'new_offset': 0,
+                        'truncated': False,
+                        'max_bytes': max_bytes,
                         'error': True,
                         'status': 'not_found'
                     })
@@ -212,11 +222,16 @@ class RestartHandler(BaseHTTPRequestHandler):
                         if offset > file_size:
                             offset = 0
                         f.seek(offset)
-                        new_content = f.read()
+                        new_content = f.read(max_bytes)
+                        truncated = False
+                        if f.tell() < file_size:
+                            truncated = True
                         new_offset = f.tell()
                     response = json.dumps({
                         'logs': new_content,
                         'new_offset': new_offset,
+                        'truncated': truncated,
+                        'max_bytes': max_bytes,
                         'error': False,
                         'status': 'ok'
                     })
@@ -224,6 +239,8 @@ class RestartHandler(BaseHTTPRequestHandler):
                 response = json.dumps({
                     'logs': f'[Error reading log: {str(e)}]\n',
                     'new_offset': offset,
+                    'truncated': False,
+                    'max_bytes': max_bytes,
                     'error': True,
                     'status': 'error'
                 })
@@ -1282,8 +1299,9 @@ class FileLogScanner(LogScanner):
     """Scans file-based logs (host services)."""
 
     def get_new_lines(self) -> list:
-        """Read from saved byte offset to current EOF."""
+        """Read from saved byte offset to current EOF, with a per-scan byte cap."""
         file_path = self.config['path']
+        max_bytes = self.config.get('max_bytes_per_scan', MAX_FILE_SCAN_BYTES)
         results = []
 
         if not os.path.exists(file_path):
@@ -1300,19 +1318,27 @@ class FileLogScanner(LogScanner):
                 log_and_queue(f"Alert Scanner: Log rotation detected for {self.source_name}", logging.DEBUG)
                 saved_offset = 0
 
+            bytes_read = 0
+            new_offset = saved_offset
             with open(file_path, 'r', encoding='utf-8', errors='replace') as f:
                 f.seek(saved_offset)
-                new_content = f.read()
+                while True:
+                    last_good_offset = f.tell()
+                    line = f.readline()
+                    if not line:
+                        break
+                    line_bytes = len(line.encode('utf-8', errors='replace'))
+                    if bytes_read + line_bytes > max_bytes:
+                        f.seek(last_good_offset)
+                        break
+                    bytes_read += line_bytes
+                    line = line.strip()
+                    if line:
+                        timestamp = self._parse_timestamp(line, convert_to_utc=True)
+                        if timestamp is None:
+                            timestamp = datetime.datetime.utcnow()
+                        results.append((timestamp, line))
                 new_offset = f.tell()
-
-            # Parse lines (convert local timestamps to UTC for consistent comparison)
-            for line in new_content.splitlines():
-                line = line.strip()
-                if line:
-                    timestamp = self._parse_timestamp(line, convert_to_utc=True)
-                    if timestamp is None:
-                        timestamp = datetime.datetime.utcnow()
-                    results.append((timestamp, line))
 
             # Update state
             self.state_manager.set_scan_position(self.source_name, {
@@ -1333,15 +1359,19 @@ class DockerLogScanner(LogScanner):
     def get_new_lines(self) -> list:
         """Run docker logs command and return new lines."""
         container = self.config['container']
-        tail_lines = self.config.get('tail_lines', 100)
+        tail_lines = min(self.config.get('tail_lines', 100), MAX_DOCKER_TAIL_LINES)
         results = []
 
         try:
             saved_state = self.state_manager.get_scan_position(self.source_name)
             last_timestamp = saved_state.get('last_log_timestamp')
+            since_arg = self._normalize_since_arg(last_timestamp)
 
             # Build docker command
-            cmd = ['docker', 'logs', '--tail', str(tail_lines), '--timestamps', container]
+            cmd = ['docker', 'logs', '--tail', str(tail_lines), '--timestamps']
+            if since_arg:
+                cmd.extend(['--since', since_arg])
+            cmd.append(container)
 
             # Hide console window on Windows
             startupinfo = subprocess.STARTUPINFO()
@@ -1407,6 +1437,16 @@ class DockerLogScanner(LogScanner):
             log_and_queue(f"Alert Scanner: Error scanning {self.source_name}: {e}", logging.ERROR)
 
         return results
+
+    def _normalize_since_arg(self, timestamp_str: Optional[str]) -> Optional[str]:
+        """Normalize a stored timestamp into a docker --since compatible string."""
+        if not timestamp_str:
+            return None
+        if timestamp_str.endswith('Z'):
+            return timestamp_str
+        if re.search(r'[+-]\d{2}:?\d{2}$', timestamp_str):
+            return timestamp_str
+        return f"{timestamp_str}Z"
 
     def _parse_docker_timestamp(self, line: str) -> Optional[datetime.datetime]:
         """Parse Docker timestamp format."""
