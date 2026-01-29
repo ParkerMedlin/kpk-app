@@ -313,29 +313,29 @@ $procs = $raw | ConvertFrom-Csv
 $roots = @()
 foreach ($p in $procs) {
     if ($p.CommandLine -and $p.CommandLine -like "*looper_health.py*") {
-        $pid = 0
-        if ([int]::TryParse($p.ProcessId, [ref]$pid) -and $pid -gt 0) { $roots += $pid }
+        $procId = 0
+        if ([int]::TryParse($p.ProcessId, [ref]$procId) -and $procId -gt 0) { $roots += $procId }
     }
 }
 if ($roots.Count -gt 0) {
     $killSet = New-Object System.Collections.Generic.HashSet[int]
-    foreach ($pid in $roots) { $null = $killSet.Add($pid) }
+    foreach ($procId in $roots) { $null = $killSet.Add($procId) }
     $added = $true
     while ($added) {
         $added = $false
         foreach ($p in $procs) {
-            $pid = 0
-            $ppid = 0
-            if ([int]::TryParse($p.ProcessId, [ref]$pid) -and [int]::TryParse($p.ParentProcessId, [ref]$ppid)) {
-                if ($killSet.Contains($ppid) -and -not $killSet.Contains($pid)) {
-                    $null = $killSet.Add($pid)
+            $procId = 0
+            $parentId = 0
+            if ([int]::TryParse($p.ProcessId, [ref]$procId) -and [int]::TryParse($p.ParentProcessId, [ref]$parentId)) {
+                if ($killSet.Contains($parentId) -and -not $killSet.Contains($procId)) {
+                    $null = $killSet.Add($procId)
                     $added = $true
                 }
             }
         }
     }
-    foreach ($pid in $killSet) {
-        if ($pid -gt 0) { taskkill /F /T /PID $pid 2>$null }
+    foreach ($procId in $killSet) {
+        if ($procId -gt 0) { taskkill /F /T /PID $procId 2>$null }
     }
 } else {
     $procs = wmic process where "name like '%python%' and commandline like '%looper_health%'" get ProcessId /format:csv 2>$null | Select-String '\d+' | ForEach-Object { ($_ -split ',')[-1].Trim() }
