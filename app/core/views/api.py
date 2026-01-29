@@ -1308,28 +1308,45 @@ def get_json_current_user_initials(request):
 def get_json_refresh_status(request):
     """Get JSON response indicating if loop status needs refresh.
 
-    Checks if any loop status records are older than 5 minutes and returns
-    status indicating if system is up or down. Uses timezone offset to handle
-    timestamp comparison issues.
+    Uses the most recent LoopStatus update to determine if the looper is alive.
+    This avoids legacy stale rows forcing a perpetual "down" state.
 
     Args:
         request: HTTP GET request
 
     Returns:
         JsonResponse containing:
-            status (str): 'up' if all records are current, 'down' if any are stale
+            status (str): 'up' if the latest update is recent, otherwise 'down'
     """
-    # This ridiculous dt.timedelta subtraction is happening because adding a timezone to the five_minutes_ago
-    # variable does not make the comparison work. The code will say that the five_minutes_ago variable is
-    # 5 hours newer than the timestamps in the database if they are nominally the same time.
-    if request.method == "GET":
-        five_minutes_ago = timezone.now() - dt.timedelta(minutes=305)
-        status_queryset = LoopStatus.objects.all().filter(time_stamp__lt=five_minutes_ago)
-        if status_queryset.exists():
-            response_data = {'status' : 'down'}
-        else:
-            response_data = {'status' : 'up'}
-    return JsonResponse(response_data, safe=False)
+    if request.method != "GET":
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=405)
+
+    max_age_minutes = getattr(settings, 'LOOPER_REFRESH_MAX_AGE_MINUTES', 20)
+    now_naive = dt.datetime.now()
+    latest = LoopStatus.objects.aggregate(last=Max('time_stamp')).get('last')
+
+    if latest is None:
+        response_data = {
+            'status': 'down',
+            'reason': 'no_loop_status_records',
+            'max_age_minutes': max_age_minutes,
+            'last_update': None,
+            'minutes_ago': None,
+        }
+        return JsonResponse(response_data)
+
+    latest_naive = latest.replace(tzinfo=None) if getattr(latest, 'tzinfo', None) else latest
+    age_seconds = (now_naive - latest_naive).total_seconds()
+    minutes_ago = int(age_seconds / 60) if age_seconds >= 0 else 0
+    is_recent = age_seconds <= (max_age_minutes * 60)
+
+    response_data = {
+        'status': 'up' if is_recent else 'down',
+        'max_age_minutes': max_age_minutes,
+        'last_update': latest.isoformat(),
+        'minutes_ago': minutes_ago,
+    }
+    return JsonResponse(response_data)
 
 
 @require_GET
