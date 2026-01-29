@@ -308,8 +308,11 @@ func (c *Commands) StopHostService(serviceName string) error {
 	var cmd string
 	if serviceName == "looper_health" {
 		cmd = `
+$ErrorActionPreference = "SilentlyContinue"
 $raw = wmic process get ProcessId,ParentProcessId,CommandLine /format:csv 2>$null
-$procs = $raw | ConvertFrom-Csv
+$raw = $raw | Where-Object { $_ -and $_ -match "," }
+$procs = @()
+try { $procs = $raw | ConvertFrom-Csv } catch { $procs = @() }
 $roots = @()
 foreach ($p in $procs) {
     if ($p.CommandLine -and $p.CommandLine -like "*looper_health.py*") {
@@ -343,9 +346,11 @@ if ($roots.Count -gt 0) {
         if ($procId) { taskkill /F /T /PID $procId 2>$null }
     }
 }
+exit 0
 `
 	} else {
 		cmd = fmt.Sprintf(`
+$ErrorActionPreference = "SilentlyContinue"
 $procs = wmic process where "name like '%%python%%' and commandline like '%%%s%%'" get ProcessId /format:csv 2>$null | Select-String '\d+' | ForEach-Object { ($_ -split ',')[-1].Trim() }
 foreach ($procId in $procs) {
     if ($procId) {
@@ -353,6 +358,7 @@ foreach ($procId in $procs) {
         taskkill /F /T /PID $procId 2>$null
     }
 }
+exit 0
 `, serviceName)
 	}
 	_, err := c.exec.RunCommand(cmd)
