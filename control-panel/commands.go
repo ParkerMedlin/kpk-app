@@ -305,7 +305,47 @@ Write-Output "Started %s (session $sid)"
 func (c *Commands) StopHostService(serviceName string) error {
 	// Find the main process by command line, then kill it and all children using taskkill /T (tree kill)
 	// Note: $pid is a reserved variable in PowerShell, so we use $procId instead
-	cmd := fmt.Sprintf(`
+	var cmd string
+	if serviceName == "looper_health" {
+		cmd = `
+$raw = wmic process get ProcessId,ParentProcessId,CommandLine /format:csv 2>$null
+$procs = $raw | ConvertFrom-Csv
+$roots = @()
+foreach ($p in $procs) {
+    if ($p.CommandLine -and $p.CommandLine -like "*looper_health.py*") {
+        $pid = 0
+        if ([int]::TryParse($p.ProcessId, [ref]$pid) -and $pid -gt 0) { $roots += $pid }
+    }
+}
+if ($roots.Count -gt 0) {
+    $killSet = New-Object System.Collections.Generic.HashSet[int]
+    foreach ($pid in $roots) { $null = $killSet.Add($pid) }
+    $added = $true
+    while ($added) {
+        $added = $false
+        foreach ($p in $procs) {
+            $pid = 0
+            $ppid = 0
+            if ([int]::TryParse($p.ProcessId, [ref]$pid) -and [int]::TryParse($p.ParentProcessId, [ref]$ppid)) {
+                if ($killSet.Contains($ppid) -and -not $killSet.Contains($pid)) {
+                    $null = $killSet.Add($pid)
+                    $added = $true
+                }
+            }
+        }
+    }
+    foreach ($pid in $killSet) {
+        if ($pid -gt 0) { taskkill /F /T /PID $pid 2>$null }
+    }
+} else {
+    $procs = wmic process where "name like '%python%' and commandline like '%looper_health%'" get ProcessId /format:csv 2>$null | Select-String '\d+' | ForEach-Object { ($_ -split ',')[-1].Trim() }
+    foreach ($procId in $procs) {
+        if ($procId) { taskkill /F /T /PID $procId 2>$null }
+    }
+}
+`
+	} else {
+		cmd = fmt.Sprintf(`
 $procs = wmic process where "name like '%%python%%' and commandline like '%%%s%%'" get ProcessId /format:csv 2>$null | Select-String '\d+' | ForEach-Object { ($_ -split ',')[-1].Trim() }
 foreach ($procId in $procs) {
     if ($procId) {
@@ -314,6 +354,7 @@ foreach ($procId in $procs) {
     }
 }
 `, serviceName)
+	}
 	_, err := c.exec.RunCommand(cmd)
 	return err
 }

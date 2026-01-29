@@ -104,8 +104,11 @@ KEY_FILE = os.path.normpath(os.path.join(CERT_BASE_DIR, 'kpkapp.lan.key'))
 # --- Icon Path ---
 ICON_PATH = os.path.join(KPK_APP_ROOT, 'app', 'core', 'static', 'core', 'media', 'icons', 'pystray', 'refresh_icon.png')
 
-# Queue for inter-thread communication with Tkinter
-log_queue = queue.Queue()
+# Queue for inter-thread communication with Tkinter (bounded to prevent unbounded growth)
+LOG_QUEUE_MAX = 1000
+MAX_UI_LINES = 500
+UI_LOG_ACTIVE = False
+log_queue = queue.Queue(maxsize=LOG_QUEUE_MAX)
 
 
 def log_and_queue(message, level=logging.INFO):
@@ -118,8 +121,17 @@ def log_and_queue(message, level=logging.INFO):
         logging.error(message)
     elif level == logging.DEBUG:
         logging.debug(message)
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    log_queue.put(f"[{timestamp}] {message}")
+    if UI_LOG_ACTIVE:
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        formatted = f"[{timestamp}] {message}"
+        try:
+            log_queue.put_nowait(formatted)
+        except queue.Full:
+            try:
+                log_queue.get_nowait()
+                log_queue.put_nowait(formatted)
+            except queue.Empty:
+                pass
 
 
 class RestartHandler(BaseHTTPRequestHandler):
@@ -1797,10 +1809,15 @@ def show_status(icon):
     button_frame = tk.Frame(root, bg='#f0f0f0')
     button_frame.pack(pady=(0, 10), padx=10, fill=tk.X)
 
+    def handle_close():
+        global UI_LOG_ACTIVE
+        UI_LOG_ACTIVE = False
+        root.destroy()
+
     close_button = tk.Button(
         button_frame,
         text="Close Window",
-        command=root.destroy,
+        command=handle_close,
         font=default_font,
         bg='#d9d9d9',
         relief=tk.RAISED,
@@ -1814,6 +1831,13 @@ def show_status(icon):
                 message = log_queue.get_nowait()
                 log_text.configure(state='normal')
                 log_text.insert(tk.END, message + '\n')
+                try:
+                    line_count = int(log_text.index('end-1c').split('.')[0])
+                except (ValueError, IndexError):
+                    line_count = 0
+                if line_count > MAX_UI_LINES:
+                    remove_count = line_count - MAX_UI_LINES
+                    log_text.delete("1.0", f"{remove_count + 1}.0")
                 log_text.configure(state='disabled')
                 log_text.see(tk.END)
                 log_queue.task_done()
@@ -1838,9 +1862,15 @@ def show_status(icon):
     log_text.insert(tk.END, "-------------------------------------\n")
     log_text.configure(state='disabled')
 
+    global UI_LOG_ACTIVE
+    UI_LOG_ACTIVE = True
+    root.protocol("WM_DELETE_WINDOW", handle_close)
     root.after(100, update_log_display)
     root.eval('tk::PlaceWindow . center')
-    root.mainloop()
+    try:
+        root.mainloop()
+    finally:
+        UI_LOG_ACTIVE = False
 
 
 def create_icon():
