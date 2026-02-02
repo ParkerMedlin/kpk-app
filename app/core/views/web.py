@@ -43,6 +43,7 @@ from core.services.inventory_services import (
     build_audit_group_display_items,
     update_audit_group_assignment,
     build_count_list_display_data,
+    build_uncounted_items_display,
 )
 from core.selectors.production_planning_selectors import get_schedulable_blend_shortages
 from core.selectors.inventory_selectors import *
@@ -923,6 +924,38 @@ def display_items_by_audit_group(request):
         'search_query': search_query,
         'selected_audit_group': selected_audit_group,
         'edit_audit_group_form': edit_audit_group_form,
+    })
+
+
+def display_uncounted_items(request):
+    """Display uncounted items report with filters."""
+    days_param = request.GET.get('days', 3)
+    try:
+        days_value = int(days_param)
+    except (TypeError, ValueError):
+        days_value = 3
+    if days_value < 0:
+        days_value = 3
+
+    raw_item_type = (request.GET.get('itemType') or request.GET.get('item_type') or 'all').strip().lower()
+    allowed_types = {'all', 'blend', 'component', 'warehouse'}
+    if raw_item_type not in allowed_types:
+        raw_item_type = 'all'
+
+    search_query = (request.GET.get('search') or '').strip()
+
+    uncounted_items = build_uncounted_items_display(
+        days=days_value,
+        item_type=None if raw_item_type == 'all' else raw_item_type,
+        search_query=search_query,
+    )
+
+    return render(request, 'core/inventorycounts/uncounted_items.html', {
+        'uncounted_items': uncounted_items,
+        'days': days_value,
+        'item_type': raw_item_type,
+        'search_query': search_query,
+        'audit_group_choices': get_distinct_audit_groups(),
     })
 
 def display_list_to_count_list(request):

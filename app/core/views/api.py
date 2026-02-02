@@ -63,6 +63,7 @@ from core.services.bom_costing_service import (
     CircularBomReferenceError,
     ItemNotFoundError,
 )
+from core.services.inventory_services import create_countlist_from_item_codes
 from core.services.purchasing_cost_service import (
     PurchasingCostParseError,
     load_default_purchasing_costs,
@@ -1999,6 +2000,46 @@ def _parse_boolean(value):
     if string_value in {'0', 'false', 'f', 'no', 'n', 'off'}:
         return False
     return None
+
+
+@login_required
+@require_POST
+def api_create_countlist_from_items(request):
+    payload = _parse_json_payload(request) or request.POST
+    item_codes = None
+
+    if isinstance(payload, dict):
+        item_codes = payload.get('item_codes') or payload.get('itemCodes')
+
+    if item_codes is None and hasattr(request.POST, 'getlist'):
+        item_codes = request.POST.getlist('item_codes') or request.POST.getlist('item_codes[]')
+
+    if isinstance(item_codes, str):
+        raw_codes = item_codes.strip()
+        if raw_codes:
+            try:
+                item_codes = json.loads(raw_codes)
+            except json.JSONDecodeError:
+                item_codes = [code.strip() for code in raw_codes.split(',') if code.strip()]
+        else:
+            item_codes = []
+
+    if not isinstance(item_codes, (list, tuple)):
+        return JsonResponse({'error': 'item_codes must be a list'}, status=400)
+
+    try:
+        count_collection = create_countlist_from_item_codes(item_codes)
+    except ValueError as exc:
+        return JsonResponse({'error': str(exc)}, status=400)
+    except Exception:
+        logger.exception('Failed to create countlist from items')
+        return JsonResponse({'error': 'Unable to create countlist'}, status=500)
+
+    return JsonResponse({
+        'collection_id': count_collection.collection_id,
+        'count_list_id': count_collection.id,
+        'record_type': count_collection.record_type,
+    })
 
 
 @login_required

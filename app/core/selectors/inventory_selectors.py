@@ -1,5 +1,8 @@
+from datetime import timedelta
+
 from django.db import connection
-from django.db.models import Q
+from django.db.models import Q, Max
+from django.utils import timezone
 from core.models import (
     ImItemWarehouse,
     BlendCountRecord,
@@ -9,6 +12,7 @@ from core.models import (
     ComponentUsage,
     SubComponentUsage,
     AuditGroup,
+    CountCollectionLink,
 )
 from prodverse.models import WarehouseCountRecord
 import logging
@@ -161,47 +165,65 @@ def get_latest_transaction_dates(item_codes):
     
     return result
 
-def get_relevant_ci_item_itemcodes(filter_string):
+def get_relevant_ci_item_itemcodes(filter_string, exclude_audit_group_items=True):
     """Get itemcodes from CI_Item table based on filter criteria.
     
     Retrieves itemcodes, descriptions and quantities on hand from CI_Item and IM_ItemWarehouse
     tables based on the provided filter string. Used to filter items for inventory counts.
 
     Args:
-        filter_string (str): Type of items to retrieve - 'blend_components', 'blends', or 'non_blend'
+        filter_string (str): Type of items to retrieve - 'blends_and_components', 'blends', 'components', 'non_blend', or None for all
+        exclude_audit_group_items (bool): When True, exclude items assigned to audit groups.
 
     Returns:
         list: List of tuples containing (itemcode, itemcodedesc, quantityonhand) for matching items
         
     Note:
-        Excludes items already in audit groups and specific excluded itemcodes.
+        Optionally excludes items already in audit groups and specific excluded itemcodes.
         Only returns items with positive quantity on hand.
     """
+    audit_group_clause = (
+        "AND ci.itemcode NOT IN (SELECT item_code FROM core_auditgroup)"
+        if exclude_audit_group_items
+        else ""
+    )
     if filter_string == 'blends_and_components':
-        sql_query = """
+        sql_query = f"""
             SELECT ci.itemcode, ci.itemcodedesc, iw.QuantityOnHand, ci.standardunitofmeasure FROM ci_item ci
             JOIN im_itemwarehouse iw ON ci.itemcode = iw.itemcode
             WHERE ( itemcodedesc like 'BLEND%' 
                 or itemcodedesc like 'CHEM%' 
                 or itemcodedesc like 'DYE%' 
                 or itemcodedesc like 'FRAGRANCE%')
-            AND ci.itemcode NOT IN (SELECT item_code FROM core_auditgroup)
+            {audit_group_clause}
             AND ci.itemcode NOT IN ('030143', '030182')
             and ci.itemcode not like '/%'
             and iw.QuantityOnHand > 0
             """
     elif filter_string == 'blends':
-        sql_query = """
+        sql_query = f"""
             SELECT ci.itemcode, ci.itemcodedesc, iw.QuantityOnHand, ci.standardunitofmeasure FROM ci_item ci
             JOIN im_itemwarehouse iw ON ci.itemcode = iw.itemcode
             WHERE (itemcodedesc like 'BLEND%')
-            AND ci.itemcode NOT IN (SELECT item_code FROM core_auditgroup)
+            {audit_group_clause}
+            AND ci.itemcode NOT IN ('030143', '030182')
+            and ci.itemcode not like '/%'
+            and iw.QuantityOnHand > 0
+            """
+    elif filter_string == 'components':
+        sql_query = f"""
+            SELECT ci.itemcode, ci.itemcodedesc, iw.QuantityOnHand, ci.standardunitofmeasure FROM ci_item ci
+            JOIN im_itemwarehouse iw ON ci.itemcode = iw.itemcode
+            WHERE (itemcodedesc like 'CHEM%'
+                or itemcodedesc like 'DYE%'
+                or itemcodedesc like 'FRAGRANCE%')
+            {audit_group_clause}
             AND ci.itemcode NOT IN ('030143', '030182')
             and ci.itemcode not like '/%'
             and iw.QuantityOnHand > 0
             """
     elif filter_string == 'non_blend':
-        sql_query = """
+        sql_query = f"""
             SELECT ci.itemcode, ci.itemcodedesc, iw.QuantityOnHand, ci.standardunitofmeasure FROM ci_item ci
             JOIN im_itemwarehouse iw ON ci.itemcode = iw.itemcode
             WHERE (or itemcodedesc like 'ADAPTER%' 
@@ -254,13 +276,13 @@ def get_relevant_ci_item_itemcodes(filter_string):
                 or itemcodedesc like 'TRAY%' 
                 or itemcodedesc like 'TUB%' 
                 or itemcodedesc like 'TUBE%')
-            AND ci.itemcode NOT IN (SELECT item_code FROM core_auditgroup)
+            {audit_group_clause}
             AND ci.itemcode NOT IN ('030143', '030182')
             and ci.itemcode not like '/%'
             and iw.QuantityOnHand > 0
             """
     else:
-        sql_query = """
+        sql_query = f"""
             SELECT ci.itemcode, ci.itemcodedesc, iw.QuantityOnHand, ci.standardunitofmeasure FROM ci_item ci
             JOIN im_itemwarehouse iw ON ci.itemcode = iw.itemcode
             WHERE (itemcodedesc like 'BLEND%' 
@@ -317,7 +339,7 @@ def get_relevant_ci_item_itemcodes(filter_string):
                 or itemcodedesc like 'TRAY%' 
                 or itemcodedesc like 'TUB%' 
                 or itemcodedesc like 'TUBE%')
-            AND ci.itemcode NOT IN (SELECT item_code FROM core_auditgroup)
+            {audit_group_clause}
             AND ci.itemcode NOT IN ('030143', '030182')
             and ci.itemcode not like '/%'
             and iw.QuantityOnHand > 0
@@ -400,3 +422,108 @@ def get_distinct_audit_groups():
         .distinct()
         .order_by('audit_group')
     )
+
+
+def get_recently_counted_item_codes(days=3):
+    """Return set of item codes included in countlists created within the last X days."""
+    try:
+        days_value = int(days)
+    except (TypeError, ValueError):
+        days_value = 3
+
+    if days_value < 0:
+        days_value = 0
+
+    cutoff = timezone.now() - timedelta(days=days_value)
+    recent_links = CountCollectionLink.objects.filter(created_at__gte=cutoff)
+
+    count_ids = set()
+    item_codes = set()
+    for link in recent_links:
+        for raw_id in link.count_id_list or []:
+            if raw_id is None:
+                continue
+            if isinstance(raw_id, int):
+                count_ids.add(raw_id)
+                continue
+            raw_str = str(raw_id).strip()
+            if not raw_str:
+                continue
+            if raw_str.isdigit():
+                count_ids.add(int(raw_str))
+            else:
+                item_codes.add(raw_str)
+
+    if count_ids:
+        blend_codes = BlendCountRecord.objects.filter(id__in=count_ids).values_list('item_code', flat=True)
+        component_codes = BlendComponentCountRecord.objects.filter(id__in=count_ids).values_list('item_code', flat=True)
+        item_codes.update(code for code in blend_codes if code)
+        item_codes.update(code for code in component_codes if code)
+
+    return item_codes
+
+
+def get_last_counted_dates(item_codes):
+    """Return mapping of item_code -> last counted_date for provided items."""
+    if not item_codes:
+        return {}
+
+    blend_dates = dict(
+        BlendCountRecord.objects
+        .filter(item_code__in=item_codes, counted_date__isnull=False, counted=True)
+        .values('item_code')
+        .annotate(last_date=Max('counted_date'))
+        .values_list('item_code', 'last_date')
+    )
+
+    component_dates = dict(
+        BlendComponentCountRecord.objects
+        .filter(item_code__in=item_codes, counted_date__isnull=False, counted=True)
+        .values('item_code')
+        .annotate(last_date=Max('counted_date'))
+        .values_list('item_code', 'last_date')
+    )
+
+    last_dates = dict(blend_dates)
+    for item_code, date_value in component_dates.items():
+        existing = last_dates.get(item_code)
+        if existing is None or (date_value and date_value > existing):
+            last_dates[item_code] = date_value
+
+    for item_code in item_codes:
+        last_dates.setdefault(item_code, None)
+
+    return last_dates
+
+
+def get_latest_count_dates_any(item_codes):
+    """Return mapping of item_code -> latest counted_date regardless of counted flag."""
+    if not item_codes:
+        return {}
+
+    blend_dates = dict(
+        BlendCountRecord.objects
+        .filter(item_code__in=item_codes, counted_date__isnull=False)
+        .values('item_code')
+        .annotate(last_date=Max('counted_date'))
+        .values_list('item_code', 'last_date')
+    )
+
+    component_dates = dict(
+        BlendComponentCountRecord.objects
+        .filter(item_code__in=item_codes, counted_date__isnull=False)
+        .values('item_code')
+        .annotate(last_date=Max('counted_date'))
+        .values_list('item_code', 'last_date')
+    )
+
+    last_dates = dict(blend_dates)
+    for item_code, date_value in component_dates.items():
+        existing = last_dates.get(item_code)
+        if existing is None or (date_value and date_value > existing):
+            last_dates[item_code] = date_value
+
+    for item_code in item_codes:
+        last_dates.setdefault(item_code, None)
+
+    return last_dates
