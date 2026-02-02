@@ -9,10 +9,3 @@ class Migration(migrations.Migration):
         ('core', '0011_countcollectionlink_created_at'),
     ]
 
-    operations = [
-        migrations.AddField(
-            model_name='dischargetestingrecord',
-            name='discharge_material_code',
-            field=models.CharField(blank=True, max_length=50, null=True),
-        ),
-    ]
