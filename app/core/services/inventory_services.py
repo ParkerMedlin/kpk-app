@@ -29,10 +29,16 @@ from core.selectors.inventory_selectors import (
     get_distinct_audit_groups,
     get_latest_count_dates,
     get_latest_transaction_dates,
+    get_recently_counted_item_codes,
+    get_relevant_ci_item_itemcodes,
+    get_last_counted_dates,
+    get_latest_count_dates_any,
 )
 from core.services.purchasing_alias_services import extract_supply_type
 
 logger = logging.getLogger(__name__)
+
+_COMPONENT_PREFIXES = ('CHEM-', 'DYE-', 'FRAGRANCE-')
 
 def get_item_recency_thresholds(*, today=None, rare_days=146, epic_days=273):
     """Return date thresholds for rare/epic blend designations."""
@@ -281,6 +287,170 @@ def update_audit_group_assignment(item_id, form_data):
             return False, None, str(exc)
 
     return False, audit_group_item, form.errors
+
+
+def build_uncounted_items_display(
+    *,
+    days=3,
+    item_type=None,
+    search_query='',
+):
+    """Build display list of uncounted items with audit group and last-counted data."""
+    counted_codes = get_recently_counted_item_codes(days)
+    counted_codes = {code for code in counted_codes if isinstance(code, str) and code.strip()}
+
+    filter_map = {
+        'blend': 'blends',
+        'component': 'components',
+        'warehouse': 'non_blend',
+    }
+    filter_string = filter_map.get(item_type)
+
+    all_items = get_relevant_ci_item_itemcodes(
+        filter_string,
+        exclude_audit_group_items=False,
+    )
+
+    uncounted_items = [
+        item for item in all_items
+        if item[0] not in counted_codes
+    ]
+
+    if search_query:
+        search_value = search_query.strip().lower()
+        if search_value:
+            uncounted_items = [
+                item for item in uncounted_items
+                if search_value in item[0].lower() or search_value in item[1].lower()
+            ]
+
+    uncounted_items.sort(key=lambda x: x[0])
+
+    item_codes = [item[0] for item in uncounted_items]
+    audit_groups = get_audit_group_records(item_codes)
+    last_counted_dates = get_last_counted_dates(item_codes)
+    latest_count_dates = get_latest_count_dates_any(item_codes)
+
+    display_items = []
+    for item in uncounted_items:
+        item_code = item[0]
+        item_desc = item[1]
+
+        audit_group_record = audit_groups.get(item_code)
+        if filter_string:
+            display_type = item_type
+        else:
+            display_type = _classify_by_description(item_desc)
+        display_items.append({
+            'item_code': item_code,
+            'item_description': item_desc or '',
+            'item_type': display_type,
+            'audit_group': audit_group_record.audit_group if audit_group_record else None,
+            'audit_group_id': audit_group_record.id if audit_group_record else None,
+            'last_counted_date': last_counted_dates.get(item_code),
+            'latest_count_date': latest_count_dates.get(item_code),
+        })
+
+    return display_items
+
+
+def create_countlist_from_item_codes(item_codes):
+    """Create a countlist for a homogeneous set of item codes."""
+    if not item_codes:
+        raise ValueError('item_codes is required')
+
+    normalized_codes = [
+        code.strip()
+        for code in item_codes
+        if isinstance(code, str) and code.strip()
+    ]
+    if not normalized_codes:
+        raise ValueError('item_codes is required')
+
+    record_types = {_classify_item_code(code) for code in normalized_codes}
+    record_types.discard(None)
+    if not record_types:
+        raise ValueError('Unable to determine record_type for item_codes')
+    if len(record_types) > 1:
+        raise ValueError('Item codes must share the same record_type')
+
+    record_type = record_types.pop()
+
+    valid_codes = set(
+        CiItem.objects
+        .filter(itemcode__in=normalized_codes)
+        .values_list('itemcode', flat=True)
+    )
+    warehouse_codes = set(
+        ImItemWarehouse.objects
+        .filter(itemcode__in=normalized_codes, warehousecode__iexact='MTG')
+        .values_list('itemcode', flat=True)
+    )
+    valid_codes = valid_codes & warehouse_codes
+
+    seen_codes = set()
+    filtered_codes = []
+    for code in normalized_codes:
+        if code not in valid_codes or code in seen_codes:
+            continue
+        filtered_codes.append(code)
+        seen_codes.add(code)
+    if not filtered_codes:
+        raise ValueError('No valid item codes provided')
+
+    list_info = add_count_records(filtered_codes, record_type)
+    now_str = dt.datetime.now().strftime('%m-%d-%Y_%H:%M')
+
+    new_count_collection = CountCollectionLink(
+        link_order=CountCollectionLink.objects.aggregate(Max('link_order'))['link_order__max'] + 1
+        if CountCollectionLink.objects.exists()
+        else 1,
+        collection_name=f'{record_type}_count_{now_str}',
+        count_id_list=list(list_info['primary_keys']),
+        collection_id=list_info['collection_id'],
+        record_type=record_type,
+    )
+    new_count_collection.save()
+
+    event_data = {
+        'id': new_count_collection.id,
+        'link_order': new_count_collection.link_order,
+        'collection_name': new_count_collection.collection_name,
+        'collection_id': new_count_collection.collection_id,
+        'record_type': record_type,
+    }
+    append_count_collection_event('collection_added', event_data)
+    broadcast_count_collection_event('collection_added', event_data)
+
+    return new_count_collection
+
+
+def _classify_item_code(item_code):
+    if not item_code:
+        return None
+    code = item_code.strip()
+    if not code:
+        return None
+    upper_code = code.upper()
+    if upper_code.startswith('BLEND-'):
+        return 'blend'
+    if upper_code.startswith(_COMPONENT_PREFIXES):
+        return 'blendcomponent'
+    return 'warehouse'
+
+
+def _classify_by_description(description):
+    if not description:
+        return 'warehouse'
+    text = str(description).strip()
+    if not text:
+        return 'warehouse'
+    upper_desc = text.upper()
+    if upper_desc.startswith('BLEND'):
+        return 'blend'
+    if upper_desc.startswith(('CHEM', 'DYE', 'FRAGRANCE')):
+        return 'component'
+    return 'warehouse'
 
 
 try:

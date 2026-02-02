@@ -8,11 +8,3 @@ class Migration(migrations.Migration):
     dependencies = [
         ('core', '0009_dischargetestingrecord_ph_active_component'),
     ]
-
-    operations = [
-        migrations.AddField(
-            model_name='dischargetestingrecord',
-            name='discharge_material_code',
-            field=models.CharField(blank=True, max_length=50, null=True),
-        ),
-    ]
