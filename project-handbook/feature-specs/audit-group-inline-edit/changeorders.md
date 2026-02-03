@@ -144,7 +144,7 @@ _Move the edit/save/cancel controls into the Audit Group column (eliminating the
 
 ### JavaScript
 
-- [ ] **7.4** Remove all `actionsCell` / `data-field="actions"` references from inline edit logic
+- [x] **7.4** Remove all `actionsCell` / `data-field="actions"` references from inline edit logic
   - **Do**: In `app/core/static/core/js/pageModules/itemsByAuditGroup.js`:
     - **`getRowSnapshot()`**: Remove the `actionsCell` query and `snapshot.actionsHtml` assignment. The snapshot only needs `audit_group`.
     - **`renderEditButton(actionsCell)`**: Change the function signature to `renderEditButton(auditGroupCell, textValue)`. Instead of clearing `innerHTML` and appending just a button, it should:
@@ -159,23 +159,23 @@ _Move the edit/save/cancel controls into the Audit Group column (eliminating the
     - **`exitEditMode(row, snapshot, updatedValues)`**: Remove the `actionsCell` query. Remove the `if (actionsCell) { renderEditButton(actionsCell); }` block. Instead, after setting `auditGroupCell.textContent`, call `renderEditButton(auditGroupCell, updatedValues ? updatedValues.audit_group : snapshot.audit_group)`.
   - **Deliverable**: Edit/save/cancel controls render inside the audit group cell. No references to `data-field="actions"` remain.
 
-- [ ] **7.5** Remove `renderEditButton` and `renderSaveCancelButtons` standalone functions if inlined
+- [x] **7.5** Remove `renderEditButton` and `renderSaveCancelButtons` standalone functions if inlined
   - **Do**: If the refactored `renderEditButton` in 7.4 makes the standalone function unnecessary (all rendering consolidated into `enterEditMode`/`exitEditMode`), remove the standalone functions entirely. Otherwise keep them with the updated signatures from 7.4.
   - **Deliverable**: No dead code
 
 ### Testing
 
-- [ ] **7.6** Test: Edit controls render inside Audit Group column
+- [x] **7.6** Test: Edit controls render inside Audit Group column
   - Navigate to `http://localhost:8000/core/items-by-audit-group/?recordType=blendcomponent` as a staff user
   - Verify pencil icon appears next to each audit group value in a muted blue color
   - Verify there is no separate Actions column
   - Verify every row has a visible horizontal bottom border
-- [ ] **7.7** Test: Inline edit flow works from within the cell
+- [x] **7.7** Test: Inline edit flow works from within the cell
   - Click the pencil icon — audit group cell should show a dropdown + Save/Cancel buttons, row highlights yellow
   - Click Cancel — row restores to text + pencil icon
   - Click pencil again, change audit group, click Save — value updates, pencil icon returns
   - Click pencil on a different row while one is being edited — previous row should cancel
-- [ ] **7.8** Test: Non-staff view
+- [x] **7.8** Test: Non-staff view
   - Log in as a non-staff user
   - Verify no pencil icons appear (or verify they do — depends on whether non-staff should edit)
   - Verify horizontal borders still render

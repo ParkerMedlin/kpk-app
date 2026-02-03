@@ -63,28 +63,31 @@ function buildSelect(choices, selectedValue) {
 function getRowSnapshot(row) {
     const snapshot = {};
     const auditGroupCell = row.querySelector('[data-field="audit_group"]');
-    const actionsCell = row.querySelector('[data-field="actions"]');
 
     snapshot.audit_group = auditGroupCell ? auditGroupCell.textContent.trim() : '';
-    snapshot.actionsHtml = actionsCell ? actionsCell.innerHTML : '';
 
     return snapshot;
 }
 
-function renderEditButton(actionsCell) {
-    actionsCell.innerHTML = '';
+function renderEditButton(auditGroupCell, textValue) {
+    auditGroupCell.innerHTML = '';
+    const valueSpan = document.createElement('span');
+    valueSpan.className = 'audit-group-value';
+    valueSpan.textContent = textValue;
+
+    auditGroupCell.appendChild(valueSpan);
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'btn btn-link editRowButton p-0';
+    button.className = 'btn btn-link editRowButton p-0 ms-1';
     const icon = document.createElement('i');
     icon.className = 'fa fa-pencil';
     icon.setAttribute('aria-hidden', 'true');
     button.appendChild(icon);
-    actionsCell.appendChild(button);
+    auditGroupCell.appendChild(button);
 }
 
-function renderSaveCancelButtons(actionsCell) {
-    actionsCell.innerHTML = '';
+function renderSaveCancelButtons(container) {
+    container.innerHTML = '';
     const saveButton = document.createElement('button');
     saveButton.type = 'button';
     saveButton.className = 'btn btn-sm btn-primary saveRowButton me-2';
@@ -95,8 +98,8 @@ function renderSaveCancelButtons(actionsCell) {
     cancelButton.className = 'btn btn-sm btn-outline-secondary cancelRowButton';
     cancelButton.textContent = 'Cancel';
 
-    actionsCell.appendChild(saveButton);
-    actionsCell.appendChild(cancelButton);
+    container.appendChild(saveButton);
+    container.appendChild(cancelButton);
 }
 
 async function persistRow(row, payload) {
@@ -147,8 +150,8 @@ $(document).ready(function() {
         ? headerCells[0].textContent.trim() === 'Add to Count List'
         : false;
     const nonSortableColumns = hasSelectColumn
-        ? [0, 2, 3, 6, 9]
-        : [1, 2, 5, 8];
+        ? [0, 2, 3, 6]
+        : [1, 2, 5];
     const itemColumnIndex = hasSelectColumn ? 1 : 0;
 
     const dataTable = initDataTableWithExport('#displayTable', {
@@ -167,13 +170,10 @@ $(document).ready(function() {
             return;
         }
         const auditGroupCell = row.querySelector('[data-field="audit_group"]');
-        const actionsCell = row.querySelector('[data-field="actions"]');
 
         if (auditGroupCell) {
-            auditGroupCell.textContent = updatedValues ? updatedValues.audit_group : snapshot.audit_group;
-        }
-        if (actionsCell) {
-            renderEditButton(actionsCell);
+            const displayValue = updatedValues ? updatedValues.audit_group : snapshot.audit_group;
+            renderEditButton(auditGroupCell, displayValue);
         }
         row.classList.remove('table-warning');
         rowSnapshots.delete(row);
@@ -200,8 +200,7 @@ $(document).ready(function() {
         }
 
         const auditGroupCell = row.querySelector('[data-field="audit_group"]');
-        const actionsCell = row.querySelector('[data-field="actions"]');
-        if (!auditGroupCell || !actionsCell) {
+        if (!auditGroupCell) {
             return;
         }
 
@@ -213,7 +212,10 @@ $(document).ready(function() {
 
         auditGroupCell.textContent = '';
         auditGroupCell.appendChild(auditGroupSelect);
-        renderSaveCancelButtons(actionsCell);
+        const actionsWrapper = document.createElement('div');
+        actionsWrapper.className = 'd-flex align-items-center gap-1 mt-1';
+        renderSaveCancelButtons(actionsWrapper);
+        auditGroupCell.appendChild(actionsWrapper);
 
         row.classList.add('table-warning');
     }
