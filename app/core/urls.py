@@ -126,6 +126,7 @@ urlpatterns = [
     path('api/function-toggles/update/', pystray_services.update_function_toggle, name='function-toggle-update'),
     path('api/function-toggles/delete/', pystray_services.delete_function_toggle, name='function-toggle-delete'),
     path('api/countlist/from-items/', api.api_create_countlist_from_items, name='api_create_countlist_from_items'),
+    path('api/count-list-from-group/', inventory_services.create_count_list_from_group, name='create-count-list-from-group'),
     path('api/audit-group/<int:audit_group_id>/', inventory_services.update_audit_group_api, name='update-audit-group-api'),
     path('api/audit-group/create/', inventory_services.create_audit_group_api, name='create-audit-group-api'),
     path('api/discharge-testing/', api.discharge_testing_list_api, name='discharge-testing-list-api'),
