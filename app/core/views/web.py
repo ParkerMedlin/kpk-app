@@ -881,33 +881,12 @@ def display_items_by_audit_group(request):
         search_query=search_query,
         audit_group_filter=selected_audit_group,
     )
-    counting_unit_choices = [
-        'GAL',
-        'LB',
-        'LBS',
-        'FT',
-        'GRAM',
-        'TOTE',
-        'GA',
-        '100G',
-        'DRUM',
-        'FEET',
-        'EA',
-        'EACH',
-        'CASE',
-        'SECH',
-        'PAIL',
-        'CS',
-        '',
-    ]
-
     return render(request, 'core/inventorycounts/itemsbyauditgroup.html', {
         'audit_group_queryset': audit_items,
         'audit_group_list': audit_group_list,
         'record_type': record_type,
         'search_query': search_query,
         'selected_audit_group': selected_audit_group,
-        'counting_unit_choices': counting_unit_choices,
     })
 
 
