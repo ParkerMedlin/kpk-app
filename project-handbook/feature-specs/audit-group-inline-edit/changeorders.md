@@ -101,13 +101,13 @@ _Move the edit/save/cancel controls into the Audit Group column (eliminating the
 
 ### Template
 
-- [ ] **7.1** Remove the Actions column header and cells
+- [x] **7.1** Remove the Actions column header and cells
   - **Do**: In `app/core/templates/core/inventorycounts/itemsbyauditgroup.html`:
     - Remove the empty `<th scope="col" class='text-center'></th>` (currently line 62, the last `<th>`)
     - Remove the entire `<td class="text-center" data-field="actions">...</td>` block (currently lines 84-88)
   - **Deliverable**: Table has no Actions column
 
-- [ ] **7.2** Add edit button inline within the Audit Group cell
+- [x] **7.2** Add edit button inline within the Audit Group cell
   - **Do**: In `app/core/templates/core/inventorycounts/itemsbyauditgroup.html`, change the audit group `<td>` (currently line 83) from:
     ```html
     <td data-field="audit_group">{{ item.audit_group }}</td>
@@ -125,7 +125,7 @@ _Move the edit/save/cancel controls into the Audit Group column (eliminating the
 
 ### CSS
 
-- [ ] **7.3** Add horizontal row borders and style the edit icon
+- [x] **7.3** Add horizontal row borders and style the edit icon
   - **Do**: In `app/core/static/core/css/itemsByAuditGroup.css`, add:
     ```css
     #displayTable td {
