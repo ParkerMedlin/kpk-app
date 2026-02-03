@@ -167,6 +167,60 @@ $(document).ready(function() {
     });
 
     const auditGroupChoices = window.AUDIT_GROUP_CHOICES || [];
+    const $groupSelectModal = $('#groupSelectModal');
+    if ($groupSelectModal.length) {
+        auditGroupChoices.forEach((group) => {
+            $groupSelectModal.append(`<option value="${group}">${group}</option>`);
+        });
+
+        $groupSelectModal.on('change', function () {
+            $('#listNameInput').val($(this).val());
+        });
+
+        $('#submitCreateListFromGroup').on('click', async function() {
+            const selectedGroup = $groupSelectModal.val();
+            const listName = $('#listNameInput').val().trim();
+
+            if (!selectedGroup) {
+                alert('Please select an audit group.');
+                return;
+            }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const recordType = urlParams.get('recordType') || '';
+
+            try {
+                const response = await fetch('/core/api/count-list-from-group/', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken(),
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: JSON.stringify({
+                        audit_group: selectedGroup,
+                        record_type: recordType,
+                        collection_name: listName,
+                    }),
+                });
+
+                const data = await response.json();
+                if (!response.ok || data.status !== 'success') {
+                    alert(data.error || 'Failed to create count list.');
+                    return;
+                }
+
+                alert(`Count list "${data.collection_name}" created with ${data.item_count} items.`);
+                const modal = bootstrap.Modal.getInstance(document.getElementById('createListFromGroupModal'));
+                if (modal) modal.hide();
+                $groupSelectModal.val('');
+                $('#listNameInput').val('');
+            } catch (error) {
+                alert('Unable to create count list. Please try again.');
+            }
+        });
+    }
     const rowSnapshots = new WeakMap();
     let activeRow = null;
 

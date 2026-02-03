@@ -972,6 +972,69 @@ def add_count_list(request):
 
     return JsonResponse(response, safe=False)
 
+@login_required
+@require_POST
+def create_count_list_from_group(request):
+    """Create a count list from all items in an audit group."""
+    try:
+        payload = json.loads(request.body.decode('utf-8')) if request.body else {}
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({'status': 'error', 'error': 'Invalid JSON payload.'}, status=400)
+
+    audit_group_name = payload.get('audit_group', '').strip()
+    record_type = payload.get('record_type', '').strip()
+    collection_name = payload.get('collection_name', '').strip()
+
+    if not audit_group_name or not record_type:
+        return JsonResponse(
+            {'status': 'error', 'error': 'audit_group and record_type are required.'},
+            status=400,
+        )
+
+    item_codes = list(
+        AuditGroup.objects.filter(audit_group__iexact=audit_group_name, item_type=record_type)
+        .values_list('item_code', flat=True)
+    )
+
+    if not item_codes:
+        return JsonResponse(
+            {'status': 'error', 'error': f'No items found in audit group "{audit_group_name}".'},
+            status=400,
+        )
+
+    list_info = add_count_records(item_codes, record_type)
+
+    if not collection_name:
+        now_str = dt.datetime.now().strftime('%m-%d-%Y_%H:%M')
+        collection_name = f'{record_type}_count_{now_str}'
+
+    new_count_collection = CountCollectionLink(
+        link_order=CountCollectionLink.objects.aggregate(Max('link_order'))['link_order__max'] + 1
+        if CountCollectionLink.objects.exists()
+        else 1,
+        collection_name=collection_name,
+        count_id_list=list(list_info['primary_keys']),
+        collection_id=list_info['collection_id'],
+        record_type=record_type,
+    )
+    new_count_collection.save()
+
+    event_data = {
+        'id': new_count_collection.id,
+        'link_order': new_count_collection.link_order,
+        'collection_name': new_count_collection.collection_name,
+        'collection_id': new_count_collection.collection_id,
+        'record_type': record_type,
+    }
+    append_count_collection_event('collection_added', event_data)
+    broadcast_count_collection_event('collection_added', event_data)
+
+    return JsonResponse({
+        'status': 'success',
+        'collection_name': new_count_collection.collection_name,
+        'item_count': len(item_codes),
+    })
+
 def update_count_list(request):
     """Updates a count list by adding or removing count records.
     

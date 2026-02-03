@@ -312,7 +312,7 @@ _Add a button that opens a modal where the user selects an audit group and names
 
 ### Backend
 
-- [ ] **9.1** Add service function to create a count list from an audit group
+- [x] **9.1** Add service function to create a count list from an audit group
   - **File**: `app/core/services/inventory_services.py`
   - **Do**: Add a new function after `add_count_list` (after line 973):
     ```python
@@ -374,7 +374,7 @@ _Add a button that opens a modal where the user selects an audit group and names
     Import `require_POST` from `django.views.decorators.http` if not already imported. Import `login_required` from `django.contrib.auth.decorators` if not already imported. The function follows the same pattern as `update_audit_group_api` (JSON body, `@login_required`, `@require_POST`).
   - **Deliverable**: New function in `inventory_services.py` that creates a count list from all items in an audit group
 
-- [ ] **9.2** Add URL route
+- [x] **9.2** Add URL route
   - **File**: `app/core/urls.py`
   - **Do**: Add route near the other audit-group API routes:
     ```python
@@ -384,7 +384,7 @@ _Add a button that opens a modal where the user selects an audit group and names
 
 ### Template
 
-- [ ] **9.3** Add "Create List from Group" button and modal
+- [x] **9.3** Add "Create List from Group" button and modal
   - **File**: `app/core/templates/core/inventorycounts/itemsbyauditgroup.html`
   - **Do**: After the existing `<button id="create_list">Create Count List</button>` (line 33), add a second button (staff-only):
     ```html
@@ -429,7 +429,7 @@ _Add a button that opens a modal where the user selects an audit group and names
 
 ### JavaScript
 
-- [ ] **9.4** Populate the modal dropdown and handle submission
+- [x] **9.4** Populate the modal dropdown and handle submission
   - **File**: `app/core/static/core/js/pageModules/itemsByAuditGroup.js`
   - **Do**: Inside the `$(document).ready()` block (after the DataTable init), add:
     ```js
@@ -487,23 +487,39 @@ _Add a button that opens a modal where the user selects an audit group and names
     This reuses `getCsrfToken()` (already defined in the file) and `auditGroupChoices` (already populated from `window.AUDIT_GROUP_CHOICES`).
   - **Deliverable**: Modal dropdown populated with audit groups; clicking "Create List" posts to the API and shows a confirmation
 
+- [x] **9.5** Auto-populate list name when a group is selected
+  - **File**: `app/core/static/core/js/pageModules/itemsByAuditGroup.js`
+  - **Do**: Add a change listener on `$groupSelectModal` (inside the `if ($groupSelectModal.length)` block, after populating the options):
+    ```js
+    $groupSelectModal.on('change', function () {
+        $('#listNameInput').val($(this).val());
+    });
+    ```
+    The user can still edit the name after it's populated. Selecting the blank "Select a group..." option clears the name field.
+  - **Deliverable**: Selecting an audit group pre-fills the list name input with the group name
+
 ### Testing
 
-- [ ] **9.5** Test: Modal opens and dropdown is populated
+- [x] **9.6** Test: Modal opens and dropdown is populated
   - Navigate to `http://localhost:8000/core/items-by-audit-group/?recordType=blendcomponent` as a staff user
   - Verify "Create List from Group" button appears next to "Create Count List"
   - Click it — modal should open with all audit groups in the dropdown and an empty name field
-- [ ] **9.6** Test: Create list with custom name
-  - Select an audit group from the dropdown, enter a name like "Test List", click "Create List"
+- [x] **9.7** Test: Group selection auto-populates list name
+  - Select an audit group from the dropdown
+  - Verify the list name field auto-fills with the group name
+  - Verify you can still edit the name after it's populated
+  - Select the blank option — verify the name field clears
+- [x] **9.8** Test: Create list with custom name
+  - Select an audit group from the dropdown, change the name to "Test List", click "Create List"
   - Verify success alert shows the name and item count
   - Verify the list appears on the count links page (navigate to count links and confirm)
-- [ ] **9.7** Test: Create list without a name (auto-generated)
-  - Select an audit group, leave name blank, click "Create List"
+- [x] **9.9** Test: Create list without a name (auto-generated)
+  - Select an audit group, clear the name field, click "Create List"
   - Verify success alert shows an auto-generated name
-- [ ] **9.8** Test: Validation
+- [x] **9.10** Test: Validation
   - Click "Create List" without selecting a group — verify alert asks for a group
   - Verify modal closes and fields reset after successful creation
-- [ ] **9.9** Test: Non-staff user
+- [x] **9.11** Test: Non-staff user
   - Log in as a non-staff user
   - Verify neither the button nor the modal are visible
 
@@ -516,9 +532,9 @@ _Add a button that opens a modal where the user selects an audit group and names
 | 6. Remove Count Unit & Restrict Sorting | Complete | 8/8 |
 | 7. Merge Actions Column & Table Styling | Complete | 8/8 |
 | 8. "Add New" Custom Audit Group | Complete | 8/8 |
-| 9. Create Count List from Group | Not Started | 0/9 |
+| 9. Create Count List from Group | Not Started | 0/11 |
 
-**Overall**: 24/33 tasks (73%)
+**Overall**: 24/35 tasks (69%)
 
 ---
 
