@@ -53,6 +53,11 @@ function buildSelect(choices, selectedValue) {
         select.appendChild(option);
     });
 
+    const addNewOption = document.createElement('option');
+    addNewOption.value = '__add_new__';
+    addNewOption.textContent = 'Add New...';
+    select.appendChild(addNewOption);
+
     if (!selected) {
         select.value = '';
     }
@@ -216,6 +221,21 @@ $(document).ready(function() {
         actionsWrapper.className = 'd-flex align-items-center gap-1 mt-1';
         renderSaveCancelButtons(actionsWrapper);
         auditGroupCell.appendChild(actionsWrapper);
+        auditGroupSelect.addEventListener('change', () => {
+            const existingInput = auditGroupCell.querySelector('.custom-audit-group-input');
+            if (auditGroupSelect.value === '__add_new__') {
+                if (!existingInput) {
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.className = 'form-control form-control-sm custom-audit-group-input mt-1';
+                    input.placeholder = 'New audit group name';
+                    auditGroupCell.insertBefore(input, auditGroupCell.querySelector('.d-flex'));
+                    input.focus();
+                }
+            } else if (existingInput) {
+                existingInput.remove();
+            }
+        });
 
         row.classList.add('table-warning');
     }
@@ -229,11 +249,22 @@ $(document).ready(function() {
         if (!auditGroupSelect) {
             return;
         }
+        let auditGroupValue;
+        const customInput = row.querySelector('[data-field="audit_group"] .custom-audit-group-input');
+        if (auditGroupSelect.value === '__add_new__' && customInput) {
+            auditGroupValue = customInput.value.trim();
+            if (!auditGroupValue) {
+                alert('Please enter a name for the new audit group.');
+                return;
+            }
+        } else {
+            auditGroupValue = auditGroupSelect.value;
+        }
 
         const payload = {
             item_code: row.dataset.itemCode || '',
             item_description: row.dataset.itemDescription || '',
-            audit_group: auditGroupSelect.value,
+            audit_group: auditGroupValue,
             item_type: row.dataset.itemType || '',
         };
 
@@ -249,6 +280,10 @@ $(document).ready(function() {
             exitEditMode(row, snapshot, {
                 audit_group: record.audit_group ?? payload.audit_group,
             });
+            if (customInput && auditGroupValue && !auditGroupChoices.includes(auditGroupValue)) {
+                auditGroupChoices.push(auditGroupValue);
+                auditGroupChoices.sort();
+            }
         } catch (error) {
             alert(error.message || 'Unable to save audit group.');
         }
