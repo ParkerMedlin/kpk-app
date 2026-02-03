@@ -7,10 +7,8 @@
     <link rel="stylesheet" type="text/css" href ="{% static 'core/css/itemsByAuditGroup.css' %}">
     {% include 'core/partials/datatableprerequisites.html' %}
     {{ audit_group_list|json_script:"audit-group-choices" }}
-    {{ counting_unit_choices|json_script:"counting-unit-choices" }}
     <script>
         window.AUDIT_GROUP_CHOICES = JSON.parse(document.getElementById('audit-group-choices').textContent);
-        window.COUNTING_UNIT_CHOICES = JSON.parse(document.getElementById('counting-unit-choices').textContent);
     </script>
     <script type="module" src="{% static './core/js/pageModules/itemsByAuditGroup.js' %}"></script>
 {% endblock scripts %}
@@ -61,7 +59,6 @@
                     <th scope="col" class='text-center'>Code</th>
                     <th scope="col" class='text-center'>Last Count</th>
                     <th scope="col" class='text-center'>Audit Group</th>
-                    <th scope="col" class='text-center'>Count Unit</th>
                     <th scope="col" class='text-center'></th>
                 </tr>
             </thead>
@@ -84,7 +81,6 @@
                     <td class="text-nowrap">{{ item.transaction_info.1 }}</td>
                     <td>{{ item.last_count.0|date:"m/d/y" }} </td>
                     <td data-field="audit_group">{{ item.audit_group }}</td>
-                    <td data-field="counting_unit">{{ item.counting_unit }}</td>
                     <td class="text-center" data-field="actions">
                         <button type="button" class="btn btn-link editRowButton p-0">
                             <i class="fa fa-pencil" aria-hidden="true"></i>
