@@ -177,3 +177,4 @@ control-panel/secrets.go
 
 # host-services alert state
 host-services/config/alert_state.json
+nul
