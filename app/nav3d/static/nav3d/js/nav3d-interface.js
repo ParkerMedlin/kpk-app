@@ -165,6 +165,128 @@ function configureGlowTexture(texture) {
     texture.needsUpdate = true;
 }
 
+function configurePortalTexture(texture) {
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.generateMipmaps = false;
+    texture.anisotropy = 1;
+    texture.wrapS = THREE.ClampToEdgeWrapping;
+    texture.wrapT = THREE.ClampToEdgeWrapping;
+    texture.center.set(0.5, 0.5);
+    texture.needsUpdate = true;
+}
+
+function createPortalVortexTextures(label, color) {
+    const size = 512;
+    const vortexCanvas = document.createElement('canvas');
+    vortexCanvas.width = size;
+    vortexCanvas.height = size;
+    const vctx = vortexCanvas.getContext('2d');
+
+    const colorObj = new THREE.Color(color);
+    const baseR = Math.floor(colorObj.r * 255);
+    const baseG = Math.floor(colorObj.g * 255);
+    const baseB = Math.floor(colorObj.b * 255);
+
+    vctx.clearRect(0, 0, size, size);
+    const gradient = vctx.createRadialGradient(
+        size / 2,
+        size / 2,
+        size * 0.05,
+        size / 2,
+        size / 2,
+        size * 0.5
+    );
+    gradient.addColorStop(0, `rgba(${baseR}, ${baseG}, ${baseB}, 0.95)`);
+    gradient.addColorStop(0.4, `rgba(${baseR}, ${baseG}, ${baseB}, 0.45)`);
+    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    vctx.fillStyle = gradient;
+    vctx.fillRect(0, 0, size, size);
+
+    vctx.save();
+    vctx.translate(size / 2, size / 2);
+    vctx.globalCompositeOperation = 'lighter';
+    vctx.strokeStyle = `rgba(${baseR}, ${baseG}, ${baseB}, 0.35)`;
+    vctx.lineWidth = 2;
+
+    for (let spiral = 0; spiral < 4; spiral += 1) {
+        vctx.beginPath();
+        const turns = 3 + spiral * 0.5;
+        const maxRadius = size * 0.45;
+        for (let t = 0; t <= 1; t += 0.01) {
+            const angle = t * Math.PI * 2 * turns + spiral;
+            const radius = t * maxRadius;
+            const x = Math.cos(angle) * radius;
+            const y = Math.sin(angle) * radius;
+            if (t === 0) {
+                vctx.moveTo(x, y);
+            } else {
+                vctx.lineTo(x, y);
+            }
+        }
+        vctx.stroke();
+    }
+    vctx.restore();
+
+    vctx.globalCompositeOperation = 'source-over';
+    for (let i = 0; i < 200; i += 1) {
+        const angle = Math.random() * Math.PI * 2;
+        const radius = Math.random() * size * 0.45;
+        const x = size / 2 + Math.cos(angle) * radius;
+        const y = size / 2 + Math.sin(angle) * radius;
+        vctx.fillStyle = `rgba(${baseR}, ${baseG}, ${baseB}, ${0.08 + Math.random() * 0.12})`;
+        vctx.beginPath();
+        vctx.arc(x, y, 1 + Math.random() * 2, 0, Math.PI * 2);
+        vctx.fill();
+    }
+
+    const rimCanvas = document.createElement('canvas');
+    rimCanvas.width = size;
+    rimCanvas.height = size;
+    const rctx = rimCanvas.getContext('2d');
+    rctx.clearRect(0, 0, size, size);
+    rctx.save();
+    rctx.translate(size / 2, size / 2);
+
+    const ringRadius = size * 0.42;
+    rctx.strokeStyle = `rgba(${baseR}, ${baseG}, ${baseB}, 0.65)`;
+    rctx.lineWidth = 6;
+    rctx.beginPath();
+    rctx.arc(0, 0, ringRadius, 0, Math.PI * 2);
+    rctx.stroke();
+
+    const text = label.toUpperCase();
+    const fontSize = Math.max(22, Math.min(48, Math.floor(420 / Math.max(6, text.length))));
+    rctx.font = `${fontSize}px "Old English Text MT", "Old English", "Blackletter", "UnifrakturCook", "Times New Roman", serif`;
+    rctx.fillStyle = `rgba(${baseR}, ${baseG}, ${baseB}, 0.9)`;
+    rctx.textAlign = 'center';
+    rctx.textBaseline = 'middle';
+    rctx.shadowColor = `rgba(${baseR}, ${baseG}, ${baseB}, 0.6)`;
+    rctx.shadowBlur = 8;
+
+    const totalAngle = Math.PI * 1.8;
+    const angleStep = totalAngle / Math.max(1, text.length);
+    let angle = -totalAngle / 2 - Math.PI / 2;
+    for (const char of text) {
+        rctx.save();
+        rctx.rotate(angle);
+        rctx.translate(0, -ringRadius);
+        rctx.rotate(Math.PI / 2);
+        rctx.fillText(char, 0, 0);
+        rctx.restore();
+        angle += angleStep;
+    }
+    rctx.restore();
+
+    const vortexTexture = new THREE.CanvasTexture(vortexCanvas);
+    configurePortalTexture(vortexTexture);
+
+    const rimTexture = new THREE.CanvasTexture(rimCanvas);
+    configurePortalTexture(rimTexture);
+
+    return { vortexTexture, rimTexture };
+}
+
 const disposableTextureProps = [
     'map',
     'alphaMap',
@@ -1908,8 +2030,8 @@ function createMainRoom(navigationLinks) {
         // If the link has submenus, create a portal to a submenu room instead of a direct URL
         if (link.submenus && link.submenus.length > 0) {
             const roomId = `room_${link.label.replace(/\s+/g, '_').toLowerCase()}`;
-    createSimplePortal(
-                x, 1, -19.7, // Move portal slightly forward from wall
+        createSimplePortal(
+                x, 2.0, -19.7, // Move portal slightly forward from wall
                 link.label, 
                 null, // No direct URL
                 portalColor, // Yellow for room transitions
@@ -1919,16 +2041,13 @@ function createMainRoom(navigationLinks) {
         } else {
             // Regular portal with direct URL
     createSimplePortal(
-                x, 1, -19.7, // Move portal slightly forward from wall
+                x, 2.0, -19.7, // Move portal slightly forward from wall
                 link.label, 
                 link.url, 
                 portalColor, // Blue for direct links
                 link.groups
             );
         }
-        
-        // Add simple pillars on each side of the portal without arches
-        createPortalPillars(x, 1, -19.7, portalWidth);
     });
     
     // Create a welcome sign using HTML overlay
@@ -2016,7 +2135,7 @@ function addMainRoomGlowEffects() {
 function createWallWithDoorways(navigationLinks, startX, portalWidth, portalSpacing, wallWidth, wallHeight, wallMaterial) {
     const wallZ = -20;
     const wallDepth = 0.4;
-    const doorHeight = 3;
+    const doorHeight = 3.2;
     const doorPadding = 0.1;
     const doorWidth = portalWidth + doorPadding * 2;
     
@@ -2293,21 +2412,18 @@ function createSubmenuRoom(roomId) {
         const x = startX + index * (portalWidth + portalSpacing);
         
         createSimplePortal(
-            x, 1, -19.7, // Move portal slightly forward from wall
+            x, 2.0, -19.7, // Move portal slightly forward from wall
             link.label, 
             link.url, 
             0x33aaff, // Blue for direct links
             ['all'] // All submenu items should be accessible
         );
-        
-        // Add pillars on each side of the portal
-        createPortalPillars(x, 1, -19.7, portalWidth);
     });
     
     // Create a doorway in the side wall for the "Back" portal
     const backPortalX = -wallWidth/2 + 1.5;
     const backPortalZ = -10;
-    const doorHeight = 3;
+    const doorHeight = 3.2;
     const doorWidth = 2.2;
     
     // Create door frame (top part above door)
@@ -2323,15 +2439,13 @@ function createSubmenuRoom(roomId) {
     
     // Create a back portal to return to the main room - yellow for room transition
     createSimplePortal(
-        backPortalX, 1, backPortalZ - 0.2, // Slightly offset from wall
+        backPortalX, 2.0, backPortalZ - 0.2, // Slightly offset from wall
         "Back", 
         null, 
         0xffdd22, // Yellow for room transition
         ['all'],
         'main' // Transition back to main room
     );
-    // Add pillars on each side of the back portal
-    createPortalPillars(backPortalX, 1, backPortalZ - 0.2, portalWidth);
     
     // Create a room title sign using HTML overlay
     const roomTitle = document.createElement('div');
@@ -3710,41 +3824,15 @@ function transitionToRoom(roomId) {
 // Create a simple portal (door) with enhanced glow effects
 function createSimplePortal(x, y, z, label, url, color, requiredGroups, roomId) {
     const doorWidth = 2.2; // Width with padding from createWallWithDoorways
-    const doorHeight = 5.0; // Must match the door opening height
+    const doorHeight = 3.2; // Must match the door opening height
+    const portalCenterY = (typeof y === 'number') ? y : doorHeight / 2 + 0.4;
     
-    // Special case for Misc. Reports portal with swirling effect
+    // Special case for Misc. Reports portal (handled by shared vortex styling now)
     const isMiscReports = (label === "Misc. Reports" && url === "/core/reports");
     
-    // Create noise texture for Misc. Reports swirling effect
-    let noiseTexture = null;
-    if (isMiscReports) {
-        const noiseSize = 64; // Small texture for efficiency
-        const canvas = document.createElement('canvas');
-        canvas.width = noiseSize;
-        canvas.height = noiseSize;
-        const context = canvas.getContext('2d');
-        
-        // Fill with random noise pattern for swirl effect base
-        for (let y = 0; y < noiseSize; y++) {
-            for (let x = 0; x < noiseSize; x++) {
-                const value = Math.floor(Math.random() * 255);
-                context.fillStyle = `rgb(${value},${value},${value})`;
-                context.fillRect(x, y, 1, 1);
-            }
-        }
-        
-        // Create texture from canvas
-        noiseTexture = new THREE.CanvasTexture(canvas);
-        noiseTexture.wrapS = THREE.RepeatWrapping;
-        noiseTexture.wrapT = THREE.RepeatWrapping;
-        
-        // Override color for Misc. Reports - we'll animate between these
-        color = 0xffdd22; // Start with yellow
-    }
-    
     const portalGeometry = new THREE.BoxGeometry(doorWidth, doorHeight, 0.1);
-    const portalMaterial = new THREE.MeshStandardMaterial({ 
-        color: isMiscReports ? 0xffffff : color, // White base for texture if Misc. Reports
+    const portalMaterial = new THREE.MeshStandardMaterial({
+        color: color,
         transparent: true,
         opacity: 0.8,
         emissive: color,
@@ -3752,15 +3840,17 @@ function createSimplePortal(x, y, z, label, url, color, requiredGroups, roomId) 
         metalness: 0.2,
         roughness: 0.3
     });
-    
-    // Apply noise texture to Misc. Reports portal
-    if (isMiscReports && noiseTexture) {
-        portalMaterial.map = noiseTexture;
-        portalMaterial.emissiveMap = noiseTexture;
-    }
+
+    const portalTextures = createPortalVortexTextures(label, color);
+    portalMaterial.map = portalTextures.vortexTexture;
+    portalMaterial.emissiveMap = portalTextures.vortexTexture;
+    portalMaterial.emissive = new THREE.Color(color);
+    portalMaterial.transparent = true;
+    portalMaterial.opacity = 0.85;
+    portalMaterial.needsUpdate = true;
     
     const portal = new THREE.Mesh(portalGeometry, portalMaterial);
-    portal.position.set(x, 0, z);
+    portal.position.set(x, portalCenterY, z);
     portal.userData = {
         isPortal: true,
         label: label,
@@ -3769,17 +3859,8 @@ function createSimplePortal(x, y, z, label, url, color, requiredGroups, roomId) 
         roomId: roomId || null // Store room ID for transition
     };
     
-    // Add special animation data for Misc. Reports
     if (isMiscReports) {
         portal.userData.isSpecialPortal = true;
-        portal.userData.portalAnimation = {
-            time: 0,
-            speed: 0.3,
-            baseColor1: new THREE.Color(0xffdd22), // Yellow
-            baseColor2: new THREE.Color(0x33aaff), // Blue
-            currentColor: new THREE.Color(0xffdd22)
-        };
-        console.log("Created Misc. Reports portal with swirling yellow-blue effect");
     }
     
     scene.add(portal);
@@ -3800,7 +3881,7 @@ function createSimplePortal(x, y, z, label, url, color, requiredGroups, roomId) 
         polygonOffsetUnits: -1
     });
     const glowSprite = new THREE.Mesh(new THREE.PlaneGeometry(2.6, doorHeight + 0.4), spriteMaterial);
-    glowSprite.position.set(x, 0, z - 0.05); // Match portal position
+    glowSprite.position.set(x, portalCenterY, z - 0.05); // Match portal position
     
     // Tag sprite as special if for Misc. Reports
     if (isMiscReports) {
@@ -3813,7 +3894,7 @@ function createSimplePortal(x, y, z, label, url, color, requiredGroups, roomId) 
     const edgeGlowMaterial = spriteMaterial.clone();
     edgeGlowMaterial.opacity = 0.3;
     const edgeGlowSprite = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 4), edgeGlowMaterial);
-    edgeGlowSprite.position.set(x, 1.5, z - 0.1); // Match portal position
+    edgeGlowSprite.position.set(x, portalCenterY + 1.5, z - 0.1); // Match portal position
     
     // Tag edge sprite as special if for Misc. Reports
     if (isMiscReports) {
@@ -3821,6 +3902,29 @@ function createSimplePortal(x, y, z, label, url, color, requiredGroups, roomId) 
     }
     
     scene.add(edgeGlowSprite);
+
+    const rimMaterial = new THREE.MeshBasicMaterial({
+        map: portalTextures.rimTexture,
+        transparent: true,
+        opacity: 0.9,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        depthTest: true,
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+        polygonOffsetUnits: -1
+    });
+    const rimMesh = new THREE.Mesh(new THREE.PlaneGeometry(doorWidth + 0.6, doorHeight + 0.8), rimMaterial);
+    rimMesh.position.set(x, portalCenterY, z + 0.06);
+    scene.add(rimMesh);
+
+    portal.userData.portalVortex = {
+        vortexTexture: portalTextures.vortexTexture,
+        rimTexture: portalTextures.rimTexture,
+        vortexSpeed: 0.15,
+        rimSpeed: 0.08,
+        rimMesh: rimMesh
+    };
     
     // Create a physical sign for the portal (instead of HTML)
     createPortalSign(portal, label, color);
@@ -3837,9 +3941,11 @@ function createPortalSign(portal, label, color) {
     
     // Calculate position (top of door)
     const portalPos = portal.position;
-    const doorHeight = 3;
+    const doorHeight = portal.geometry && portal.geometry.parameters && portal.geometry.parameters.height
+        ? portal.geometry.parameters.height
+        : 5;
     // Position the sign at the top of the door with a small gap
-    const signY =  doorHeight - (signHeight / 2) - 0.5;
+    const signY = portalPos.y + doorHeight / 2 + signHeight / 2 + 0.1;
     
     // Create sign backing with emissive edge for glow effect
     const signGeometry = new THREE.BoxGeometry(signWidth, signHeight, signDepth);
@@ -4088,6 +4194,17 @@ function animate() {
     
     // Check for portal proximity
     checkPortalProximity();
+
+    // Update portal vortex animations
+    navLinks.forEach(portal => {
+        const vortex = portal.userData.portalVortex;
+        if (!vortex) {
+            return;
+        }
+
+        vortex.vortexTexture.rotation += delta * vortex.vortexSpeed;
+        vortex.rimTexture.rotation -= delta * vortex.rimSpeed;
+    });
     
     // Check for terminal screen proximity and handle glow animation
     const screen = terminalScreenMesh && terminalScreenMesh.parent ? terminalScreenMesh : null;
@@ -4140,9 +4257,9 @@ function animate() {
         prompt.style.display = 'none';
     }
     
-    // Update special portal animations (Misc. Reports swirling effect)
+    // Update special portal animations (legacy Misc. Reports effect)
     scene.traverse(object => {
-        if (object.userData.isSpecialPortal) {
+        if (object.userData.isSpecialPortal && !object.userData.portalVortex) {
             // Update animation time
             object.userData.portalAnimation.time += delta * object.userData.portalAnimation.speed;
             
