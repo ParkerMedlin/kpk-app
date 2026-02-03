@@ -7,3 +7,15 @@
     align-items: center;
     justify-content: center;
 }
+
+#displayTable td {
+    border-bottom: 1px solid #dee2e6;
+}
+
+.editRowButton {
+    color: #8cb4d5;
+}
+
+.editRowButton:hover {
+    color: #5a9bd5;
+}
