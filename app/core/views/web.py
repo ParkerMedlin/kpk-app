@@ -41,7 +41,6 @@ from core.services.inventory_services import (
     get_item_recency_thresholds,
     get_tintpaste_needs,
     build_audit_group_display_items,
-    update_audit_group_assignment,
     build_count_list_display_data,
     build_uncounted_items_display,
 )
@@ -869,7 +868,7 @@ def display_items_by_audit_group(request):
     """Display items with option to filter and organize by audit group assignments."""
 
     valid_record_types = {'blend', 'blendcomponent', 'warehouse'}
-    record_type = (request.GET.get('recordType') or request.POST.get('recordType') or 'blendcomponent').lower()
+    record_type = (request.GET.get('recordType') or 'blendcomponent').lower()
     if record_type not in valid_record_types:
         record_type = 'blendcomponent'
 
@@ -877,45 +876,30 @@ def display_items_by_audit_group(request):
     search_query = search_query.strip()
     selected_audit_group = request.GET.get('auditGroupLinks') or request.GET.get('auditGroup') or ''
 
-    if request.method == 'POST' and 'editItemRecord' in request.POST:
-        item_id = request.POST.get('id')
-        form_data = request.POST
-        if item_id:
-            success, audit_group_item, errors = update_audit_group_assignment(item_id, form_data)
-        else:
-            form = AuditGroupForm(form_data)
-            if form.is_valid():
-                audit_group_item = form.save()
-                success, errors = True, None
-            else:
-                audit_group_item = None
-                success = False
-                errors = form.errors
-
-        if success and audit_group_item:
-            messages.success(request, f"Successfully updated audit group for {audit_group_item.item_code}")
-        else:
-            error_details = errors if errors else 'An error occurred'
-            if not isinstance(error_details, str):
-                error_details = str(error_details)
-            messages.error(request, f"Error updating audit group: {error_details}")
-
-        redirect_params = request.GET.copy()
-        redirect_params['recordType'] = record_type
-        if search_query:
-            redirect_params['filter_criteria'] = search_query
-        if selected_audit_group:
-            redirect_params['auditGroupLinks'] = selected_audit_group
-        redirect_url = f"/core/items-by-audit-group?{redirect_params.urlencode()}"
-        return redirect(redirect_url)
-
     audit_items, audit_group_list = build_audit_group_display_items(
         record_type,
         search_query=search_query,
         audit_group_filter=selected_audit_group,
     )
-
-    edit_audit_group_form = AuditGroupForm()
+    counting_unit_choices = [
+        'GAL',
+        'LB',
+        'LBS',
+        'FT',
+        'GRAM',
+        'TOTE',
+        'GA',
+        '100G',
+        'DRUM',
+        'FEET',
+        'EA',
+        'EACH',
+        'CASE',
+        'SECH',
+        'PAIL',
+        'CS',
+        '',
+    ]
 
     return render(request, 'core/inventorycounts/itemsbyauditgroup.html', {
         'audit_group_queryset': audit_items,
@@ -923,7 +907,7 @@ def display_items_by_audit_group(request):
         'record_type': record_type,
         'search_query': search_query,
         'selected_audit_group': selected_audit_group,
-        'edit_audit_group_form': edit_audit_group_form,
+        'counting_unit_choices': counting_unit_choices,
     })
 
 
