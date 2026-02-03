@@ -134,7 +134,8 @@ async function persistRow(row, payload) {
 $(document).ready(function() {
     new CreateCountListButton();
     new ShiftSelectCheckBoxes();
-    new BlendComponentFilterButton(document.getElementById('upcomingRunsFilterCheckbox'));
+    const upcomingRunsFilter = document.getElementById('upcomingRunsFilterCheckbox');
+    if (upcomingRunsFilter) new BlendComponentFilterButton(upcomingRunsFilter);
     new SelectAllCheckBox();
 
     const $auditGroupLinks = $('#auditGroupLinks');
