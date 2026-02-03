@@ -234,7 +234,7 @@ def build_audit_group_display_items(
 
     item_codes = [item['item_code'] for item in audit_items]
     if not item_codes:
-        return audit_items, get_distinct_audit_groups()
+        return audit_items, get_distinct_audit_groups(record_type)
 
     qty_and_units = get_qty_and_units_for_items(item_codes)
     upcoming_runs, count_table = get_upcoming_runs_for_items(item_codes, record_type)
@@ -263,8 +263,60 @@ def build_audit_group_display_items(
             item['id'] = None
             item['item_type'] = record_type
 
-    audit_group_list = get_distinct_audit_groups()
+    audit_group_list = get_distinct_audit_groups(record_type)
     return audit_items, audit_group_list
+
+
+def _serialize_audit_group(record):
+    """Return audit group record payload for JSON responses."""
+    return {
+        'id': record.id,
+        'item_code': record.item_code,
+        'item_description': record.item_description,
+        'audit_group': record.audit_group,
+        'counting_unit': record.counting_unit,
+        'item_type': record.item_type,
+    }
+
+
+@login_required
+@require_POST
+def update_audit_group_api(request, audit_group_id):
+    """Update an existing AuditGroup record and return JSON."""
+    audit_group_item = get_object_or_404(AuditGroup, pk=audit_group_id)
+
+    try:
+        payload = json.loads(request.body.decode('utf-8')) if request.body else {}
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({'status': 'error', 'error': 'Invalid JSON payload.'}, status=400)
+
+    merged = {}
+    for field in AuditGroupForm.Meta.fields:
+        merged[field] = payload.get(field, getattr(audit_group_item, field))
+
+    form = AuditGroupForm(data=merged, instance=audit_group_item)
+    if not form.is_valid():
+        return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+
+    updated = form.save()
+    return JsonResponse({'status': 'success', 'record': _serialize_audit_group(updated)})
+
+
+@login_required
+@require_POST
+def create_audit_group_api(request):
+    """Create a new AuditGroup record and return JSON."""
+    try:
+        payload = json.loads(request.body.decode('utf-8')) if request.body else {}
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({'status': 'error', 'error': 'Invalid JSON payload.'}, status=400)
+
+    form = AuditGroupForm(data=payload)
+    if not form.is_valid():
+        return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+
+    record = form.save()
+    return JsonResponse({'status': 'success', 'record': _serialize_audit_group(record)}, status=201)
 
 
 def update_audit_group_assignment(item_id, form_data):

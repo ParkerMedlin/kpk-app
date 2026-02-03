@@ -414,10 +414,13 @@ def get_audit_group_records(item_codes):
     return {record.item_code: record for record in AuditGroup.objects.filter(item_code__in=item_codes)}
 
 
-def get_distinct_audit_groups():
+def get_distinct_audit_groups(record_type=None):
     """Return ordered list of distinct audit group names."""
+    audit_groups = AuditGroup.objects
+    if record_type:
+        audit_groups = audit_groups.filter(item_type=record_type)
     return list(
-        AuditGroup.objects
+        audit_groups
         .values_list('audit_group', flat=True)
         .distinct()
         .order_by('audit_group')
