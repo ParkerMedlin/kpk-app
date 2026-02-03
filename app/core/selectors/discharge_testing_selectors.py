@@ -36,7 +36,10 @@ def get_sampling_personnel_options() -> List[Tuple[int, str]]:
     Return active users as (id, display_name) tuples, ordered by display name.
     """
     options: List[Tuple[int, str]] = []
-    for user in User.objects.filter(is_active=True).only('id', 'first_name', 'last_name', 'username'):
+    for user in User.objects.filter(
+        is_active=True,
+        groups__name__in=['blend_crew', 'blending_line_service', 'line_leader', 'lab'],
+    ).distinct().only('id', 'first_name', 'last_name', 'username'):
         display_name = user.get_full_name() or user.get_username()
         options.append((user.id, display_name))
 
