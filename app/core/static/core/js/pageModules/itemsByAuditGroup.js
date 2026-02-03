@@ -63,11 +63,9 @@ function buildSelect(choices, selectedValue) {
 function getRowSnapshot(row) {
     const snapshot = {};
     const auditGroupCell = row.querySelector('[data-field="audit_group"]');
-    const countingUnitCell = row.querySelector('[data-field="counting_unit"]');
     const actionsCell = row.querySelector('[data-field="actions"]');
 
     snapshot.audit_group = auditGroupCell ? auditGroupCell.textContent.trim() : '';
-    snapshot.counting_unit = countingUnitCell ? countingUnitCell.textContent.trim() : '';
     snapshot.actionsHtml = actionsCell ? actionsCell.innerHTML : '';
 
     return snapshot;
@@ -148,13 +146,9 @@ $(document).ready(function() {
     const hasSelectColumn = headerCells.length
         ? headerCells[0].textContent.trim() === 'Add to Count List'
         : false;
-    const nonSortableColumns = [];
-    if (hasSelectColumn) {
-        nonSortableColumns.push(0);
-    }
-    if (headerCells.length) {
-        nonSortableColumns.push(headerCells.length - 1);
-    }
+    const nonSortableColumns = hasSelectColumn
+        ? [0, 2, 3, 6, 9]
+        : [1, 2, 5, 8];
     const itemColumnIndex = hasSelectColumn ? 1 : 0;
 
     const dataTable = initDataTableWithExport('#displayTable', {
@@ -165,7 +159,6 @@ $(document).ready(function() {
     });
 
     const auditGroupChoices = window.AUDIT_GROUP_CHOICES || [];
-    const countingUnitChoices = window.COUNTING_UNIT_CHOICES || [];
     const rowSnapshots = new WeakMap();
     let activeRow = null;
 
@@ -174,14 +167,10 @@ $(document).ready(function() {
             return;
         }
         const auditGroupCell = row.querySelector('[data-field="audit_group"]');
-        const countingUnitCell = row.querySelector('[data-field="counting_unit"]');
         const actionsCell = row.querySelector('[data-field="actions"]');
 
         if (auditGroupCell) {
             auditGroupCell.textContent = updatedValues ? updatedValues.audit_group : snapshot.audit_group;
-        }
-        if (countingUnitCell) {
-            countingUnitCell.textContent = updatedValues ? updatedValues.counting_unit : snapshot.counting_unit;
         }
         if (actionsCell) {
             renderEditButton(actionsCell);
@@ -211,9 +200,8 @@ $(document).ready(function() {
         }
 
         const auditGroupCell = row.querySelector('[data-field="audit_group"]');
-        const countingUnitCell = row.querySelector('[data-field="counting_unit"]');
         const actionsCell = row.querySelector('[data-field="actions"]');
-        if (!auditGroupCell || !countingUnitCell || !actionsCell) {
+        if (!auditGroupCell || !actionsCell) {
             return;
         }
 
@@ -222,12 +210,9 @@ $(document).ready(function() {
         activeRow = row;
 
         const auditGroupSelect = buildSelect(auditGroupChoices, snapshot.audit_group);
-        const countingUnitSelect = buildSelect(countingUnitChoices, snapshot.counting_unit);
 
         auditGroupCell.textContent = '';
         auditGroupCell.appendChild(auditGroupSelect);
-        countingUnitCell.textContent = '';
-        countingUnitCell.appendChild(countingUnitSelect);
         renderSaveCancelButtons(actionsCell);
 
         row.classList.add('table-warning');
@@ -239,8 +224,7 @@ $(document).ready(function() {
             return;
         }
         const auditGroupSelect = row.querySelector('[data-field="audit_group"] select');
-        const countingUnitSelect = row.querySelector('[data-field="counting_unit"] select');
-        if (!auditGroupSelect || !countingUnitSelect) {
+        if (!auditGroupSelect) {
             return;
         }
 
@@ -248,7 +232,6 @@ $(document).ready(function() {
             item_code: row.dataset.itemCode || '',
             item_description: row.dataset.itemDescription || '',
             audit_group: auditGroupSelect.value,
-            counting_unit: countingUnitSelect.value,
             item_type: row.dataset.itemType || '',
         };
 
@@ -263,7 +246,6 @@ $(document).ready(function() {
             }
             exitEditMode(row, snapshot, {
                 audit_group: record.audit_group ?? payload.audit_group,
-                counting_unit: record.counting_unit ?? payload.counting_unit,
             });
         } catch (error) {
             alert(error.message || 'Unable to save audit group.');
