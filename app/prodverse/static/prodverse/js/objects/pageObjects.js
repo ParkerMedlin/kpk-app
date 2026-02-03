@@ -905,7 +905,31 @@ export class ProductionSchedulePage {
             return null;
         }
 
+        if (effectiveProdLine === 'Hx') {
+            const runDateText = ($row.find('td:nth-child(11)').text() || '').trim();
+            const normalizedDate = this.normalizeRunDate(runDateText);
+            if (!normalizedDate) {
+                return `${partNumber}_${poNumber}_${qtyText}`;
+            }
+            return `${partNumber}_${poNumber}_${qtyText}_${normalizedDate}`;
+        }
+
         return `${partNumber}_${poNumber}_${qtyText}`;
+    }
+
+    normalizeRunDate(rawDate) {
+        if (!rawDate) {
+            return '';
+        }
+        const cleaned = rawDate.trim();
+        const match = cleaned.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (!match) {
+            return cleaned;
+        }
+        const month = match[1].padStart(2, '0');
+        const day = match[2].padStart(2, '0');
+        const year = match[3];
+        return `${year}-${month}-${day}`;
     }
 
     clearColumnIndexCache() {
