@@ -17,6 +17,9 @@
 
 {% block content %}
     <div class='text-center'>
+        <form style="display:none;" aria-hidden="true">
+            {% csrf_token %}
+        </form>
         <h1>Select Items to Count</h1>
         <br>
         {% if record_type == 'blendcomponent' %}

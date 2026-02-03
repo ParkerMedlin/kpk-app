@@ -104,11 +104,10 @@ The constructor does have a try/catch (lines 320-324) so the error is caught and
 
 After all tasks are complete, verify:
 
-- [ ] Navigate to the audit group page for any record type (e.g., `http://localhost:8000/core/items-by-audit-group/?recordType=blendcomponent`)
-- [ ] Click the edit pencil on any row, change the audit group or counting unit, click Save — row should update without error
-- [ ] Check browser console — no CSRF errors, no `addEventListener` null errors
-- [ ] Test with a non-blendcomponent record type to confirm the BlendComponentFilterButton guard works
-- [ ] Test creating a new audit group record (row with no `data-id`) if that flow exists
+- [x] Navigate to the audit group page for any record type (e.g., `http://localhost:8000/core/items-by-audit-group/?recordType=blendcomponent`)
+- [x] Click the edit pencil on any row, change the audit group or counting unit, click Save — row should update without error
+- [x] Check browser console — no CSRF errors, no `addEventListener` null errors
+- [x] Test with a non-blendcomponent record type to confirm the BlendComponentFilterButton guard works
 
 ---
 
