@@ -367,6 +367,13 @@ def get_ci_items_for_audit_group(record_type=None):
             Q(itemcodedesc__istartswith='DYE') |
             Q(itemcodedesc__istartswith='FRAGRANCE')
         )
+    elif record_type is None:
+        queryset = queryset.filter(
+            Q(itemcodedesc__istartswith='BLEND') |
+            Q(itemcodedesc__istartswith='CHEM') |
+            Q(itemcodedesc__istartswith='DYE') |
+            Q(itemcodedesc__istartswith='FRAGRANCE')
+        )
 
     return queryset.distinct()
 
@@ -389,9 +396,9 @@ def get_upcoming_runs_for_items(item_codes, record_type=None):
     count_table_lookup = {
         'blend': 'core_blendcountrecord',
         'blendcomponent': 'core_blendcomponentcountrecord',
-        'warehouse': 'core_warehousecountrecord',
+        'warehouse': 'prodverse_warehousecountrecord',
     }
-    count_table = count_table_lookup.get(record_type, 'core_warehousecountrecord')
+    count_table = count_table_lookup.get(record_type, 'prodverse_warehousecountrecord')
 
     if not item_codes:
         return {}, count_table
@@ -419,6 +426,8 @@ def get_distinct_audit_groups(record_type=None):
     audit_groups = AuditGroup.objects
     if record_type:
         audit_groups = audit_groups.filter(item_type=record_type)
+    else:
+        audit_groups = audit_groups.filter(item_type__in=['blend', 'blendcomponent'])
     return list(
         audit_groups
         .values_list('audit_group', flat=True)

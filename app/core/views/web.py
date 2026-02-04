@@ -867,7 +867,7 @@ def display_adjustment_statistics(request, filter_option):
 def display_items_by_audit_group(request):
     """Display items with option to filter and organize by audit group assignments."""
 
-    valid_record_types = {'blend', 'blendcomponent', 'warehouse'}
+    valid_record_types = {'blend', 'blendcomponent', 'warehouse', 'all'}
     record_type = (request.GET.get('recordType') or 'blendcomponent').lower()
     if record_type not in valid_record_types:
         record_type = 'blendcomponent'
@@ -876,8 +876,9 @@ def display_items_by_audit_group(request):
     search_query = search_query.strip()
     selected_audit_group = request.GET.get('auditGroupLinks') or request.GET.get('auditGroup') or ''
 
+    service_record_type = None if record_type == 'all' else record_type
     audit_items, audit_group_list = build_audit_group_display_items(
-        record_type,
+        service_record_type,
         search_query=search_query,
         audit_group_filter=selected_audit_group,
     )

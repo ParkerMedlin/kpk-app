@@ -525,6 +525,164 @@ _Add a button that opens a modal where the user selects an audit group and names
 
 ---
 
+## Phase 10: Record Type Switcher Dropdown
+
+_Add a dropdown at the top of the page that shows the current record type (Blend / Blend Component / Warehouse) and allows switching to another, including an "All" option that removes the record type filter._
+
+**Analysis:** The view `display_items_by_audit_group` (web.py line 867) validates `recordType` against `{'blend', 'blendcomponent', 'warehouse'}` and defaults to `blendcomponent`. The downstream selector `get_ci_items_for_audit_group(record_type)` already handles `None` by skipping all item-prefix filters, returning everything. `get_distinct_audit_groups(None)` also returns all groups across types. So the backend mostly works — the view just needs to accept `all` as a valid value and pass `None` to the service layer when it's selected.
+
+The dropdown is a simple navigation element — selecting a value reloads the page with the new `?recordType=` parameter. No AJAX needed.
+
+**Considerations for "All" mode:**
+- `get_upcoming_runs_for_items(item_codes, None)` defaults to `prodverse_warehousecountrecord` for the count table lookup — acceptable for display
+- Items without an `AuditGroup` record will get `item_type = 'all'` as fallback — this only affects `data-item-type` attribute on rows and is harmless for display
+- The "Create Count List" button (checkbox-based) still sends `recordType` from the URL param, which will be `all` — the `add_count_records` function calls `get_count_record_model(record_type)` which won't recognize `all`. This needs a guard or the button should be hidden in "All" mode
+
+**No changes needed in:**
+- `app/core/selectors/inventory_selectors.py` — Already handles `None` for both selectors
+- `app/core/urls.py` — Same route
+- `app/core/static/core/js/pageModules/itemsByAuditGroup.js` — Dropdown uses native form navigation, no JS needed
+
+### View
+
+- [x] **10.1** Accept "all" as a valid record type
+  - **File**: `app/core/views/web.py`
+  - **Function**: `display_items_by_audit_group` (line 867)
+  - **Do**: Change the validation logic (lines 870-873) from:
+    ```python
+    valid_record_types = {'blend', 'blendcomponent', 'warehouse'}
+    record_type = (request.GET.get('recordType') or 'blendcomponent').lower()
+    if record_type not in valid_record_types:
+        record_type = 'blendcomponent'
+    ```
+    to:
+    ```python
+    valid_record_types = {'blend', 'blendcomponent', 'warehouse', 'all'}
+    record_type = (request.GET.get('recordType') or 'blendcomponent').lower()
+    if record_type not in valid_record_types:
+        record_type = 'blendcomponent'
+    ```
+    Then pass `None` to the service when `record_type == 'all'`. Change line 879-882:
+    ```python
+    service_record_type = None if record_type == 'all' else record_type
+    audit_items, audit_group_list = build_audit_group_display_items(
+        service_record_type,
+        search_query=search_query,
+        audit_group_filter=selected_audit_group,
+    )
+    ```
+    Keep passing `record_type` (the string `'all'`) to the template context so the dropdown knows what's selected.
+  - **Deliverable**: Page loads with all items when `?recordType=all` is in the URL
+
+### Template
+
+- [x] **10.2** Add record type switcher dropdown
+  - **File**: `app/core/templates/core/inventorycounts/itemsbyauditgroup.html`
+  - **Do**: After the `<h1>Select Items to Count</h1>` (line 21), add a small inline form:
+    ```html
+    <form method="get" class="d-inline-block mb-2">
+        <label class="form-label me-2 mb-0" for="recordTypeSwitcher">Viewing:</label>
+        <select id="recordTypeSwitcher" name="recordType" class="form-select form-select-sm d-inline-block w-auto" onchange="this.form.submit()">
+            <option value="blendcomponent" {% if record_type == 'blendcomponent' %}selected{% endif %}>Blend Components</option>
+            <option value="blend" {% if record_type == 'blend' %}selected{% endif %}>Blends</option>
+            <option value="warehouse" {% if record_type == 'warehouse' %}selected{% endif %}>Warehouse</option>
+            <option value="all" {% if record_type == 'all' %}selected{% endif %}>All</option>
+        </select>
+    </form>
+    ```
+    The `onchange="this.form.submit()"` makes it navigate immediately on selection. The form uses `method="get"` so it sets `?recordType=` in the URL.
+  - **Deliverable**: Dropdown visible below the page title showing current record type; selecting a different type reloads the page
+
+- [x] **10.3** Hide checkbox-based "Create Count List" button in "All" mode
+  - **File**: `app/core/templates/core/inventorycounts/itemsbyauditgroup.html`
+  - **Do**: Wrap the existing `<button id="create_list">` (line 32) in a record type guard:
+    ```html
+    {% if record_type != 'all' %}
+        <button id="create_list">Create Count List</button>
+    {% endif %}
+    ```
+    The checkbox-based count list creation requires a specific record type to know which count model to use. The "Create List from Group" modal (Phase 9) is also affected — the JS sends `recordType` from the URL. Wrap the "Create List from Group" button similarly:
+    ```html
+    {% if user.is_staff and record_type != 'all' %}
+    ```
+  - **Why**: `add_count_records` calls `get_count_record_model(record_type)` which doesn't handle `'all'` — it would error or create records in the wrong table
+  - **Deliverable**: Count list creation buttons hidden when viewing "All"; visible for specific record types
+
+- [x] **10.4** Hide checkbox column in "All" mode
+  - **File**: `app/core/templates/core/inventorycounts/itemsbyauditgroup.html`
+  - **Do**: Change the checkbox `<th>` guard (line 58) and the checkbox `<td>` guard (line 75) from `{% if user.is_staff %}` to `{% if user.is_staff and record_type != 'all' %}`.
+  - **Why**: Checkboxes feed the "Create Count List" button which is hidden in "All" mode. Showing checkboxes with no action button would be confusing.
+  - **Deliverable**: No checkbox column in "All" mode
+
+### Fix: "All" should mean blend + blendcomponent only
+
+- [x] **10.5** Restrict "All" to blend and blendcomponent in the selector
+  - **File**: `app/core/selectors/inventory_selectors.py`
+  - **Function**: `get_ci_items_for_audit_group` (line 354)
+  - **Do**: Currently when `record_type` is `None`, no filter is applied — this returns everything including warehouse items. Add a filter for the `None` case so "All" means blend + blendcomponent. Change the if/elif block (lines 362-369) to:
+    ```python
+    if record_type == 'blend':
+        queryset = queryset.filter(itemcodedesc__istartswith='BLEND')
+    elif record_type == 'blendcomponent':
+        queryset = queryset.filter(
+            Q(itemcodedesc__istartswith='CHEM') |
+            Q(itemcodedesc__istartswith='DYE') |
+            Q(itemcodedesc__istartswith='FRAGRANCE')
+        )
+    elif record_type is None:
+        queryset = queryset.filter(
+            Q(itemcodedesc__istartswith='BLEND') |
+            Q(itemcodedesc__istartswith='CHEM') |
+            Q(itemcodedesc__istartswith='DYE') |
+            Q(itemcodedesc__istartswith='FRAGRANCE')
+        )
+    ```
+    The `warehouse` case (no explicit branch) continues to return everything, which is the existing behavior.
+  - **Deliverable**: `?recordType=all` shows blends + blend components only, no warehouse items
+
+- [x] **10.6** Restrict "All" audit group choices to blend + blendcomponent
+  - **File**: `app/core/selectors/inventory_selectors.py`
+  - **Function**: `get_distinct_audit_groups` (line 417)
+  - **Do**: Currently when `record_type` is `None`, it returns all audit groups including warehouse groups. Add a filter for the `None` case (after line 421):
+    ```python
+    if record_type:
+        audit_groups = audit_groups.filter(item_type=record_type)
+    else:
+        audit_groups = audit_groups.filter(item_type__in=['blend', 'blendcomponent'])
+    ```
+  - **Deliverable**: "All" mode audit group dropdown/choices only include blend and blendcomponent groups
+
+- [x] **10.7** Rename "All" option label to clarify scope
+  - **File**: `app/core/templates/core/inventorycounts/itemsbyauditgroup.html`
+  - **Do**: In the record type switcher dropdown (added in 10.2), change the "All" option text to make it clear it's blend + components:
+    ```html
+    <option value="all" {% if record_type == 'all' %}selected{% endif %}>All (Blends + Components)</option>
+    ```
+  - **Deliverable**: Dropdown label clearly communicates what "All" includes
+
+### Testing
+
+- [x] **10.8** Test: Dropdown shows current record type
+  - Navigate to `http://localhost:8000/core/items-by-audit-group/?recordType=blendcomponent`
+  - Verify dropdown shows "Blend Components" selected
+  - Navigate to `?recordType=blend` — verify "Blends" selected
+  - Navigate to `?recordType=warehouse` — verify "Warehouse" selected
+- [x] **10.9** Test: Switching record types
+  - Select "Blends" from the dropdown — page reloads with `?recordType=blend` and shows blend items
+  - Select "Warehouse" — page reloads with warehouse items
+  - Select "All (Blends + Components)" — page reloads showing blends AND blend components but NO warehouse items
+- [x] **10.10** Test: "All" mode hides count list creation
+  - In "All" mode, verify "Create Count List" button is hidden
+  - Verify "Create List from Group" button is hidden
+  - Verify no checkbox column
+  - Verify inline edit pencil icons still work (editing audit groups is valid across all types)
+- [x] **10.11** Test: Default behavior preserved
+  - Navigate to `/core/items-by-audit-group/` with no `recordType` param
+  - Verify it defaults to "Blend Components"
+  - Navigate with an invalid `?recordType=bogus` — verify it defaults to "Blend Components"
+
+---
+
 ## Progress
 
 | Phase | Status | Tasks Complete |
@@ -532,9 +690,10 @@ _Add a button that opens a modal where the user selects an audit group and names
 | 6. Remove Count Unit & Restrict Sorting | Complete | 8/8 |
 | 7. Merge Actions Column & Table Styling | Complete | 8/8 |
 | 8. "Add New" Custom Audit Group | Complete | 8/8 |
-| 9. Create Count List from Group | Not Started | 0/11 |
+| 9. Create Count List from Group | Complete | 11/11 |
+| 10. Record Type Switcher | In Progress | 7/11 |
 
-**Overall**: 24/35 tasks (69%)
+**Overall**: 42/46 tasks (91%)
 
 ---
 
