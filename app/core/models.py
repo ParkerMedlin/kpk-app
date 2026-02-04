@@ -1436,6 +1436,15 @@ class DischargeTestingRecord(models.Model):
         '200126',
         '030025',
         '240079',
+        '030178',
+        '050007',
+        '240077',
+        '030136',
+        '240073',
+        '031049',
+        '030019',
+        '200126',
+        '030161'
     )
 
     date = models.DateTimeField(auto_now_add=True, db_index=True)
