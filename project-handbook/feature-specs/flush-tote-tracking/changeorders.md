@@ -790,8 +790,49 @@ _Polish discharge type should hide pH fields, skip pH validation, and bypass act
 | 19. pH Alert Description Enhancement | Complete | 5/5 |
 | 20. Admin Row Deletion | Complete | 14/14 |
 | 21. Polish pH-Exempt | Pending | 4/8 |
+| 22. Hide Entry Fields (Reversible) | Complete | 6/6 |
 
-**Overall**: 153/157 tasks (97%)
+**Overall**: 159/163 tasks (97%)
+
+---
+
+## Phase 22: Hide Entry Fields (Reversible)
+
+_Quick-and-dirty hiding of discharge_material_code, ph_active_component, action_required, and final_disposition from the entry form. Fields kept in code/template for easy reactivation. Null allowed on all four._
+
+**Reason**: Users are indecisive — fields may come back. All hidden with `display: none !important` and validation bypassed rather than removed.
+
+- [x] **22.1** Make final_disposition nullable in model
+  - **Do**: In `app/core/models.py`, change `final_disposition = models.TextField()` to `models.TextField(blank=True, null=True)`. Other three fields already nullable.
+  - **Deliverable**: Migration needed.
+
+- [x] **22.2** Hide fields in entry template
+  - **Do**: In `discharge_testing_entry.html`, add `style="display: none !important;"` to discharge-material-group, ph-alert, action-required-group, and final-disposition wrapper. Remove `required` from final_disposition textarea.
+  - **Deliverable**: Fields invisible on page load and immune to JS show/hide.
+
+- [x] **22.3** Disable JS validation for hidden fields
+  - **Do**: In `DischargeTestingEntry.js`, remove `final_disposition` required error, skip `discharge_material_code` acid/base required error, skip `action_required` out-of-range required error.
+  - **Deliverable**: Form submits without hidden fields populated.
+
+- [x] **22.4** Prevent JS from showing material group
+  - **Do**: In `DischargeTestingEntry.js`, set `shouldShow = false` in `syncMaterialFieldVisibility()` so acid/base selection never reveals the material autocomplete.
+  - **Deliverable**: Material field stays hidden regardless of discharge type.
+
+- [x] **22.5** Remove server-side required checks for hidden fields
+  - **Do**: In `discharge_testing_services.py`, remove `final_disposition` required ValidationError, remove `discharge_material_code` acid/base required ValidationError, remove `action_required` out-of-range required ValidationError. Make `final_disposition` parameter optional.
+  - **Deliverable**: Server accepts submissions with all four fields null/empty.
+
+- [x] **22.6** Create and apply migration for final_disposition
+  - **Do**: Run `makemigrations` and `migrate` to apply nullable change.
+  - **Deliverable**: Database allows null final_disposition.
+
+### Reactivation Guide
+
+To restore any of these fields:
+1. **Template**: Remove `style="display: none !important;"` from the field's wrapper div. Re-add `required` attribute if needed.
+2. **JS**: Restore validation checks in `collectPayload()`. For material field, change `shouldShow = false` back to `shouldShow = ACID_BASE_TYPES.includes(dischargeTypeValue)`.
+3. **Service**: Restore `ValidationError` checks in `create_discharge_test()`. Change `final_disposition` param back to required `str`.
+4. **Model**: If restoring `final_disposition` as required, change back to `models.TextField()` and backfill existing null rows.
 
 ---
 
