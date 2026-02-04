@@ -155,6 +155,138 @@ function loadPersistentTexture(url, setupFn) {
     return persistentTextureCache.get(url);
 }
 
+function configureGlowTexture(texture) {
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.generateMipmaps = false;
+    texture.anisotropy = 1;
+    texture.wrapS = THREE.ClampToEdgeWrapping;
+    texture.wrapT = THREE.ClampToEdgeWrapping;
+    texture.needsUpdate = true;
+}
+
+function configurePortalTexture(texture) {
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.generateMipmaps = false;
+    texture.anisotropy = 1;
+    texture.wrapS = THREE.ClampToEdgeWrapping;
+    texture.wrapT = THREE.ClampToEdgeWrapping;
+    texture.center.set(0.5, 0.5);
+    texture.needsUpdate = true;
+}
+
+function createPortalVortexTextures(label, color) {
+    const size = 512;
+    const vortexCanvas = document.createElement('canvas');
+    vortexCanvas.width = size;
+    vortexCanvas.height = size;
+    const vctx = vortexCanvas.getContext('2d');
+
+    const colorObj = new THREE.Color(color);
+    const baseR = Math.floor(colorObj.r * 255);
+    const baseG = Math.floor(colorObj.g * 255);
+    const baseB = Math.floor(colorObj.b * 255);
+
+    vctx.clearRect(0, 0, size, size);
+    const gradient = vctx.createRadialGradient(
+        size / 2,
+        size / 2,
+        size * 0.05,
+        size / 2,
+        size / 2,
+        size * 0.5
+    );
+    gradient.addColorStop(0, `rgba(${baseR}, ${baseG}, ${baseB}, 0.95)`);
+    gradient.addColorStop(0.4, `rgba(${baseR}, ${baseG}, ${baseB}, 0.45)`);
+    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    vctx.fillStyle = gradient;
+    vctx.fillRect(0, 0, size, size);
+
+    vctx.save();
+    vctx.translate(size / 2, size / 2);
+    vctx.globalCompositeOperation = 'lighter';
+    vctx.strokeStyle = `rgba(${baseR}, ${baseG}, ${baseB}, 0.35)`;
+    vctx.lineWidth = 2;
+
+    for (let spiral = 0; spiral < 4; spiral += 1) {
+        vctx.beginPath();
+        const turns = 3 + spiral * 0.5;
+        const maxRadius = size * 0.45;
+        for (let t = 0; t <= 1; t += 0.01) {
+            const angle = t * Math.PI * 2 * turns + spiral;
+            const radius = t * maxRadius;
+            const x = Math.cos(angle) * radius;
+            const y = Math.sin(angle) * radius;
+            if (t === 0) {
+                vctx.moveTo(x, y);
+            } else {
+                vctx.lineTo(x, y);
+            }
+        }
+        vctx.stroke();
+    }
+    vctx.restore();
+
+    vctx.globalCompositeOperation = 'source-over';
+    for (let i = 0; i < 200; i += 1) {
+        const angle = Math.random() * Math.PI * 2;
+        const radius = Math.random() * size * 0.45;
+        const x = size / 2 + Math.cos(angle) * radius;
+        const y = size / 2 + Math.sin(angle) * radius;
+        vctx.fillStyle = `rgba(${baseR}, ${baseG}, ${baseB}, ${0.08 + Math.random() * 0.12})`;
+        vctx.beginPath();
+        vctx.arc(x, y, 1 + Math.random() * 2, 0, Math.PI * 2);
+        vctx.fill();
+    }
+
+    const rimCanvas = document.createElement('canvas');
+    rimCanvas.width = size;
+    rimCanvas.height = size;
+    const rctx = rimCanvas.getContext('2d');
+    rctx.clearRect(0, 0, size, size);
+    rctx.save();
+    rctx.translate(size / 2, size / 2);
+
+    const ringRadius = size * 0.42;
+    rctx.strokeStyle = `rgba(${baseR}, ${baseG}, ${baseB}, 0.65)`;
+    rctx.lineWidth = 6;
+    rctx.beginPath();
+    rctx.arc(0, 0, ringRadius, 0, Math.PI * 2);
+    rctx.stroke();
+
+    const text = label.toUpperCase();
+    const fontSize = Math.max(22, Math.min(48, Math.floor(420 / Math.max(6, text.length))));
+    rctx.font = `${fontSize}px "Old English Text MT", "Old English", "Blackletter", "UnifrakturCook", "Times New Roman", serif`;
+    rctx.fillStyle = `rgba(${baseR}, ${baseG}, ${baseB}, 0.9)`;
+    rctx.textAlign = 'center';
+    rctx.textBaseline = 'middle';
+    rctx.shadowColor = `rgba(${baseR}, ${baseG}, ${baseB}, 0.6)`;
+    rctx.shadowBlur = 8;
+
+    const totalAngle = Math.PI * 1.8;
+    const angleStep = totalAngle / Math.max(1, text.length);
+    let angle = -totalAngle / 2 - Math.PI / 2;
+    for (const char of text) {
+        rctx.save();
+        rctx.rotate(angle);
+        rctx.translate(0, -ringRadius);
+        rctx.rotate(Math.PI / 2);
+        rctx.fillText(char, 0, 0);
+        rctx.restore();
+        angle += angleStep;
+    }
+    rctx.restore();
+
+    const vortexTexture = new THREE.CanvasTexture(vortexCanvas);
+    configurePortalTexture(vortexTexture);
+
+    const rimTexture = new THREE.CanvasTexture(rimCanvas);
+    configurePortalTexture(rimTexture);
+
+    return { vortexTexture, rimTexture };
+}
+
 const disposableTextureProps = [
     'map',
     'alphaMap',
@@ -447,6 +579,20 @@ let previousRoom = null; // The previous room, for back navigation
 let roomTransitionInProgress = false; // Flag to prevent multiple transitions
 let roomData = {}; // Store data about rooms and their portals
 let transitionTarget = null; // Target room for transition
+
+// Debug overlay state for identifying lights/emitters
+let debugOverlayEnabled = false;
+let debugOverlayDirty = true;
+let debugOverlayRoot = null;
+let debugOverlayList = null;
+let debugOverlayInfo = null;
+let debugOverlayItems = [];
+let debugSelectedObject = null;
+let debugSelectionHelper = null;
+let debugSelectionMaterial = null;
+let debugSelectionTexture = null;
+let debugSelectionOriginalMaterial = new Map();
+const DEBUG_OVERLAY_HOTKEY = 'F9';
 
 // DOM elements
 const loadingScreen = document.getElementById('loading-screen');
@@ -843,6 +989,26 @@ function setupMainSceneLighting() {
 function setupControls() {
     document.addEventListener('keydown', onKeyDown, false);
     document.addEventListener('keyup', onKeyUp, false);
+    document.addEventListener('keydown', onDebugKeyDown, false);
+    document.addEventListener('pointerdown', onDebugPointerDown, true);
+}
+
+function onDebugKeyDown(event) {
+    if (event.code !== DEBUG_OVERLAY_HOTKEY) {
+        return;
+    }
+    if (isTypingTarget(event.target)) {
+        return;
+    }
+    toggleDebugOverlay();
+}
+
+function isTypingTarget(target) {
+    if (!target) {
+        return false;
+    }
+    const tagName = target.tagName ? target.tagName.toUpperCase() : '';
+    return target.isContentEditable || tagName === 'INPUT' || tagName === 'TEXTAREA' || tagName === 'SELECT';
 }
 
 // Handle keyboard input (keydown)
@@ -913,6 +1079,458 @@ function onKeyUp(event) {
     }
 }
 
+function toggleDebugOverlay() {
+    debugOverlayEnabled = !debugOverlayEnabled;
+    if (!debugOverlayEnabled) {
+        removeDebugOverlay();
+        return;
+    }
+    ensureDebugOverlayRoot();
+    debugOverlayDirty = true;
+    refreshDebugOverlayTargets();
+}
+
+function markDebugOverlayDirty() {
+    if (!debugOverlayEnabled) {
+        return;
+    }
+    debugOverlayDirty = true;
+}
+
+function ensureDebugOverlayRoot() {
+    if (debugOverlayRoot) {
+        return;
+    }
+    debugOverlayRoot = document.createElement('div');
+    debugOverlayRoot.id = 'nav3d-debug-overlay';
+    debugOverlayRoot.style.position = 'absolute';
+    debugOverlayRoot.style.top = '0';
+    debugOverlayRoot.style.left = '0';
+    debugOverlayRoot.style.width = '100%';
+    debugOverlayRoot.style.height = '100%';
+    debugOverlayRoot.style.pointerEvents = 'none';
+    debugOverlayRoot.style.zIndex = '20';
+
+    debugOverlayList = document.createElement('div');
+    debugOverlayList.style.position = 'absolute';
+    debugOverlayList.style.top = '10px';
+    debugOverlayList.style.left = '10px';
+    debugOverlayList.style.maxHeight = '45%';
+    debugOverlayList.style.overflow = 'auto';
+    debugOverlayList.style.background = 'rgba(0, 0, 0, 0.6)';
+    debugOverlayList.style.border = '1px solid rgba(102, 255, 170, 0.6)';
+    debugOverlayList.style.color = '#d9ffe6';
+    debugOverlayList.style.fontFamily = 'monospace';
+    debugOverlayList.style.fontSize = '12px';
+    debugOverlayList.style.padding = '8px';
+    debugOverlayList.style.pointerEvents = 'auto';
+    debugOverlayList.style.whiteSpace = 'pre';
+
+    debugOverlayInfo = document.createElement('div');
+    debugOverlayInfo.style.marginBottom = '8px';
+    debugOverlayInfo.style.paddingBottom = '6px';
+    debugOverlayInfo.style.borderBottom = '1px solid rgba(102, 255, 170, 0.4)';
+
+    debugOverlayList.appendChild(debugOverlayInfo);
+    debugOverlayRoot.appendChild(debugOverlayList);
+    sceneContainer.appendChild(debugOverlayRoot);
+}
+
+function removeDebugOverlay() {
+    if (!debugOverlayRoot) {
+        return;
+    }
+    debugOverlayRoot.remove();
+    debugOverlayRoot = null;
+    debugOverlayList = null;
+    debugOverlayInfo = null;
+    debugOverlayItems = [];
+    debugOverlayDirty = true;
+    debugSelectedObject = null;
+    removeDebugSelectionHelper();
+    resetDebugSelectionMaterials();
+}
+
+function refreshDebugOverlayTargets() {
+    if (!debugOverlayEnabled || !debugOverlayRoot || !debugOverlayList) {
+        return;
+    }
+    if (!debugOverlayDirty) {
+        return;
+    }
+    debugOverlayDirty = false;
+
+    debugOverlayItems.forEach(item => {
+        if (item.labelEl && item.labelEl.parentNode) {
+            item.labelEl.parentNode.removeChild(item.labelEl);
+        }
+    });
+    debugOverlayItems = [];
+    debugOverlayList.textContent = '';
+
+    const targets = collectDebugTargets();
+    debugOverlayInfo = document.createElement('div');
+    debugOverlayInfo.style.marginBottom = '8px';
+    debugOverlayInfo.style.paddingBottom = '6px';
+    debugOverlayInfo.style.borderBottom = '1px solid rgba(102, 255, 170, 0.4)';
+    debugOverlayList.appendChild(debugOverlayInfo);
+
+    targets.forEach((target, index) => {
+        const labelEl = document.createElement('div');
+        labelEl.textContent = target.label;
+        labelEl.style.position = 'absolute';
+        labelEl.style.color = '#66ffaa';
+        labelEl.style.fontFamily = 'monospace';
+        labelEl.style.fontSize = '11px';
+        labelEl.style.padding = '2px 4px';
+        labelEl.style.background = 'rgba(0, 0, 0, 0.45)';
+        labelEl.style.border = '1px solid rgba(102, 255, 170, 0.4)';
+        labelEl.style.borderRadius = '2px';
+        labelEl.style.pointerEvents = 'auto';
+        labelEl.style.cursor = 'pointer';
+        labelEl.addEventListener('click', event => {
+            event.stopPropagation();
+            setDebugSelectedObject(target.object);
+        });
+        debugOverlayRoot.appendChild(labelEl);
+
+        const listItem = document.createElement('div');
+        listItem.textContent = `${index + 1}. ${target.label}`;
+        debugOverlayList.appendChild(listItem);
+
+        debugOverlayItems.push({ object: target.object, labelEl, listItem });
+    });
+
+    updateDebugSelectionDisplay();
+}
+
+function updateDebugOverlayPositions() {
+    if (!debugOverlayEnabled || !debugOverlayRoot || !camera) {
+        return;
+    }
+    if (debugOverlayDirty) {
+        refreshDebugOverlayTargets();
+    }
+
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    const position = new THREE.Vector3();
+
+    debugOverlayItems.forEach(item => {
+        if (!item.object || !item.object.parent) {
+            item.labelEl.style.display = 'none';
+            return;
+        }
+        item.object.updateMatrixWorld(true);
+        item.object.getWorldPosition(position);
+        position.project(camera);
+
+        if (position.z < -1 || position.z > 1) {
+            item.labelEl.style.display = 'none';
+            return;
+        }
+
+        const x = (position.x * 0.5 + 0.5) * width;
+        const y = (1 - (position.y * 0.5 + 0.5)) * height;
+        item.labelEl.style.display = 'block';
+        item.labelEl.style.transform = 'translate(-50%, -50%)';
+        item.labelEl.style.left = `${x}px`;
+        item.labelEl.style.top = `${y}px`;
+    });
+
+    updateDebugSelectionVisuals();
+}
+
+function collectDebugTargets() {
+    const targets = [];
+    if (!scene) {
+        return targets;
+    }
+
+    scene.traverse(object => {
+        if (!object || object === scene) {
+            return;
+        }
+        const isEmitter = isEmitterObject(object);
+        if (!isEmitter) {
+            return;
+        }
+        targets.push({
+            object,
+            label: buildDebugLabel(object)
+        });
+    });
+
+    return targets;
+}
+
+function isEmitterObject(object) {
+    if (object.isLight || object.isSprite) {
+        return true;
+    }
+    if (object.material) {
+        return hasEmissiveMaterial(object.material);
+    }
+    return false;
+}
+
+function hasEmissiveMaterial(material) {
+    if (Array.isArray(material)) {
+        return material.some(hasEmissiveMaterial);
+    }
+    if (!material) {
+        return false;
+    }
+    if (material.emissive && material.emissive.getHex && material.emissive.getHex() !== 0x000000) {
+        return true;
+    }
+    if (material.emissiveIntensity && material.emissiveIntensity > 0.05) {
+        return true;
+    }
+    if (material.blending === THREE.AdditiveBlending) {
+        return true;
+    }
+    return false;
+}
+
+function buildDebugLabel(object) {
+    const nameHint = object.name || object.userData.label || object.userData.roomId || object.userData.url || '';
+    const typeLabel = object.type || (object.isLight ? 'Light' : 'Object');
+    const idLabel = typeof object.id === 'number' ? `#${object.id}` : '';
+    const lightDetails = object.isLight
+        ? ` intensity=${formatNumber(object.intensity)}${object.distance ? ` dist=${formatNumber(object.distance)}` : ''}`
+        : '';
+    const pos = new THREE.Vector3();
+    object.getWorldPosition(pos);
+    const posLabel = `pos=(${formatNumber(pos.x)}, ${formatNumber(pos.y)}, ${formatNumber(pos.z)})`;
+    const nameLabel = nameHint ? ` "${nameHint}"` : '';
+    return `${typeLabel}${idLabel}${nameLabel} ${posLabel}${lightDetails}`;
+}
+
+function formatNumber(value) {
+    if (value == null || Number.isNaN(value)) {
+        return 'n/a';
+    }
+    return Number(value).toFixed(2);
+}
+
+function onDebugPointerDown(event) {
+    if (!debugOverlayEnabled || !renderer || !scene || !camera) {
+        return;
+    }
+    if (event.button !== 0) {
+        return;
+    }
+    const rect = renderer.domElement.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    if (x < 0 || y < 0 || x > rect.width || y > rect.height) {
+        return;
+    }
+
+    if (!raycaster) {
+        raycaster = new THREE.Raycaster();
+    }
+    if (!mouse) {
+        mouse = new THREE.Vector2();
+    }
+
+    mouse.x = (x / rect.width) * 2 - 1;
+    mouse.y = -(y / rect.height) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    const intersections = raycaster.intersectObjects(scene.children, true);
+    if (!intersections.length) {
+        setDebugSelectedObject(null);
+        return;
+    }
+
+    setDebugSelectedObject(intersections[0].object);
+}
+
+function setDebugSelectedObject(object) {
+    if (debugSelectedObject === object) {
+        return;
+    }
+    resetDebugSelectionMaterials();
+    removeDebugSelectionHelper();
+    debugSelectedObject = object;
+    if (debugSelectedObject) {
+        applyDebugSelectionMaterials(debugSelectedObject);
+        updateDebugSelectionHelper();
+    }
+    updateDebugSelectionDisplay();
+}
+
+function updateDebugSelectionDisplay() {
+    if (!debugOverlayInfo) {
+        return;
+    }
+
+    if (!debugSelectedObject) {
+        debugOverlayInfo.textContent = `Debug Overlay (${currentRoom}) - click an object to inspect. Toggle ${DEBUG_OVERLAY_HOTKEY}`;
+        return;
+    }
+
+    const details = buildDebugSelectionDetails(debugSelectedObject);
+    debugOverlayInfo.textContent = details;
+}
+
+function updateDebugSelectionVisuals() {
+    if (!debugOverlayItems.length) {
+        return;
+    }
+    debugOverlayItems.forEach(item => {
+        const isSelected = debugSelectedObject && item.object === debugSelectedObject;
+        const color = isSelected ? '#ff66cc' : '#66ffaa';
+        const border = isSelected ? '1px solid rgba(255, 102, 204, 0.8)' : '1px solid rgba(102, 255, 170, 0.4)';
+        item.labelEl.style.color = color;
+        item.labelEl.style.border = border;
+        if (item.listItem) {
+            item.listItem.style.color = color;
+        }
+    });
+}
+
+function updateDebugSelectionHelper() {
+    removeDebugSelectionHelper();
+    if (!debugSelectedObject || !scene) {
+        return;
+    }
+
+    debugSelectionHelper = new THREE.BoxHelper(debugSelectedObject, 0xff66cc);
+    debugSelectionHelper.material.transparent = true;
+    debugSelectionHelper.material.opacity = 0.9;
+    debugSelectionHelper.material.depthTest = false;
+    scene.add(debugSelectionHelper);
+}
+
+function removeDebugSelectionHelper() {
+    if (!debugSelectionHelper || !scene) {
+        debugSelectionHelper = null;
+        return;
+    }
+    scene.remove(debugSelectionHelper);
+    if (debugSelectionHelper.geometry) {
+        debugSelectionHelper.geometry.dispose();
+    }
+    if (debugSelectionHelper.material) {
+        debugSelectionHelper.material.dispose();
+    }
+    debugSelectionHelper = null;
+}
+
+function applyDebugSelectionMaterials(object) {
+    if (!object) {
+        return;
+    }
+    if (!debugSelectionTexture) {
+        debugSelectionTexture = createDebugCheckerTexture();
+    }
+    if (!debugSelectionMaterial) {
+        debugSelectionMaterial = new THREE.MeshBasicMaterial({
+            map: debugSelectionTexture,
+            color: 0xffffff,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.9
+        });
+    }
+    if (object.isSprite) {
+        if (!debugSelectionOriginalMaterial.has(object) && object.material) {
+            debugSelectionOriginalMaterial.set(object, object.material);
+        }
+        object.material = new THREE.SpriteMaterial({
+            map: debugSelectionTexture,
+            color: 0xffffff,
+            transparent: true,
+            opacity: 0.9
+        });
+        return;
+    }
+    if (object.material) {
+        if (!debugSelectionOriginalMaterial.has(object)) {
+            debugSelectionOriginalMaterial.set(object, object.material);
+        }
+        object.material = debugSelectionMaterial;
+    }
+}
+
+function resetDebugSelectionMaterials() {
+    if (!debugSelectionOriginalMaterial.size) {
+        return;
+    }
+    debugSelectionOriginalMaterial.forEach((material, object) => {
+        if (object) {
+            object.material = material;
+        }
+    });
+    debugSelectionOriginalMaterial.clear();
+}
+
+function createDebugCheckerTexture() {
+    const size = 64;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, size, size);
+    const block = size / 8;
+    ctx.fillStyle = '#ff00ff';
+    for (let y = 0; y < 8; y++) {
+        for (let x = 0; x < 8; x++) {
+            if ((x + y) % 2 === 0) {
+                ctx.fillRect(x * block, y * block, block, block);
+            }
+        }
+    }
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(2, 2);
+    return texture;
+}
+
+function buildDebugSelectionDetails(object) {
+    const lines = [];
+    lines.push(`Debug Overlay (${currentRoom}) - Selected`);
+    lines.push(buildDebugLabel(object));
+
+    if (object.isLight) {
+        lines.push(`Light color=${formatColor(object.color)} intensity=${formatNumber(object.intensity)} dist=${formatNumber(object.distance)}`);
+    }
+
+    if (object.material) {
+        const material = Array.isArray(object.material) ? object.material[0] : object.material;
+        if (material) {
+            lines.push(`Material type=${material.type || 'Material'} color=${formatColor(material.color)}`);
+            if (material.emissive) {
+                lines.push(`Emissive=${formatColor(material.emissive)} intensity=${formatNumber(material.emissiveIntensity)}`);
+            }
+            if (material.opacity !== undefined) {
+                lines.push(`Opacity=${formatNumber(material.opacity)} transparent=${!!material.transparent}`);
+            }
+            if (material.blending !== undefined) {
+                lines.push(`Blending=${material.blending === THREE.AdditiveBlending ? 'Additive' : material.blending}`);
+            }
+        }
+    }
+
+    const userDataKeys = object.userData ? Object.keys(object.userData) : [];
+    if (userDataKeys.length) {
+        lines.push(`UserData keys=${userDataKeys.join(', ')}`);
+    }
+
+    return lines.join('\n');
+}
+
+function formatColor(color) {
+    if (!color || !color.getHexString) {
+        return 'n/a';
+    }
+    return `#${color.getHexString()}`;
+}
+
 // Handle window resize
 function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight;
@@ -954,6 +1572,9 @@ function onMouseClick() {
     // Check for nav links first
     const navLinkIntersects = raycaster.intersectObjects(navLinks);
     if (navLinkIntersects.length > 0) {
+        if (debugOverlayEnabled) {
+            return;
+        }
         const link = navLinkIntersects[0].object;
         if (link.userData.url) {
             // Redirect to the target URL
@@ -1409,8 +2030,8 @@ function createMainRoom(navigationLinks) {
         // If the link has submenus, create a portal to a submenu room instead of a direct URL
         if (link.submenus && link.submenus.length > 0) {
             const roomId = `room_${link.label.replace(/\s+/g, '_').toLowerCase()}`;
-    createSimplePortal(
-                x, 1, -19.7, // Move portal slightly forward from wall
+        createSimplePortal(
+                x, 2.0, -19.7, // Move portal slightly forward from wall
                 link.label, 
                 null, // No direct URL
                 portalColor, // Yellow for room transitions
@@ -1420,16 +2041,13 @@ function createMainRoom(navigationLinks) {
         } else {
             // Regular portal with direct URL
     createSimplePortal(
-                x, 1, -19.7, // Move portal slightly forward from wall
+                x, 2.0, -19.7, // Move portal slightly forward from wall
                 link.label, 
                 link.url, 
                 portalColor, // Blue for direct links
                 link.groups
             );
         }
-        
-        // Add simple pillars on each side of the portal without arches
-        createPortalPillars(x, 1, -19.7, portalWidth);
     });
     
     // Create a welcome sign using HTML overlay
@@ -1448,6 +2066,7 @@ function createMainRoom(navigationLinks) {
     sceneContainer.appendChild(welcomeSign);
 
     ensureJumpButtonPresence();
+    markDebugOverlayDirty();
 }
 
 // Add glow effects beneath the main floor
@@ -1502,12 +2121,13 @@ function addMainRoomGlowEffects() {
     const glowSpot4 = new THREE.Mesh(mainGlowGeometry, mainGlowMaterial.clone());
     glowSpot4.rotation.x = -Math.PI / 2;
     glowSpot4.position.set(0, -0.1, -18);
-    glowSpot4.material.color.set(0xffcc33); // Yellow/orange glow
+    glowSpot4.material.color.set(0xffcc33);
     glowSpot4.material.opacity = 0.3;
     scene.add(glowSpot4);
     
-    const glowLight4 = new THREE.PointLight(0xffcc33, 0.7, 7);
-    glowLight4.position.set(0, -0.3, -18);
+    const glowLight4 = new THREE.PointLight(0xffcc33, 0.25, 4);
+    glowLight4.position.set(0, -0.6, -20.5);
+    glowLight4.decay = 2;
     scene.add(glowLight4);
 }
 
@@ -1515,7 +2135,7 @@ function addMainRoomGlowEffects() {
 function createWallWithDoorways(navigationLinks, startX, portalWidth, portalSpacing, wallWidth, wallHeight, wallMaterial) {
     const wallZ = -20;
     const wallDepth = 0.4;
-    const doorHeight = 3;
+    const doorHeight = 3.2;
     const doorPadding = 0.1;
     const doorWidth = portalWidth + doorPadding * 2;
     
@@ -1676,18 +2296,22 @@ function addBlinkingLight(x, y, z, color) {
     bulb.position.set(x, y, z + 0.1); // Position slightly in front of housing
     scene.add(bulb);
     
-    // Add a small glowing halo (sprite) instead of an actual light
-    const spriteMap = loadPersistentTexture(SPRITE_TEXTURE_URL);
-    const spriteMaterial = new THREE.SpriteMaterial({ 
+    // Add a small glowing halo (plane) instead of a sprite (avoid camera-facing tilt)
+    const spriteMap = loadPersistentTexture(SPRITE_TEXTURE_URL, configureGlowTexture);
+    const spriteMaterial = new THREE.MeshBasicMaterial({ 
         map: spriteMap,
         color: color,
         transparent: true,
         opacity: 0.6,
-        blending: THREE.AdditiveBlending
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        depthTest: true,
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+        polygonOffsetUnits: -1
     });
     
-    const sprite = new THREE.Sprite(spriteMaterial);
-    sprite.scale.set(0.5, 0.5, 1);
+    const sprite = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.5), spriteMaterial);
     sprite.position.set(x, y, z + 0.12);
     scene.add(sprite);
     
@@ -1788,21 +2412,18 @@ function createSubmenuRoom(roomId) {
         const x = startX + index * (portalWidth + portalSpacing);
         
         createSimplePortal(
-            x, 1, -19.7, // Move portal slightly forward from wall
+            x, 2.0, -19.7, // Move portal slightly forward from wall
             link.label, 
             link.url, 
             0x33aaff, // Blue for direct links
             ['all'] // All submenu items should be accessible
         );
-        
-        // Add pillars on each side of the portal
-        createPortalPillars(x, 1, -19.7, portalWidth);
     });
     
     // Create a doorway in the side wall for the "Back" portal
     const backPortalX = -wallWidth/2 + 1.5;
     const backPortalZ = -10;
-    const doorHeight = 3;
+    const doorHeight = 3.2;
     const doorWidth = 2.2;
     
     // Create door frame (top part above door)
@@ -1818,15 +2439,13 @@ function createSubmenuRoom(roomId) {
     
     // Create a back portal to return to the main room - yellow for room transition
     createSimplePortal(
-        backPortalX, 1, backPortalZ - 0.2, // Slightly offset from wall
+        backPortalX, 2.0, backPortalZ - 0.2, // Slightly offset from wall
         "Back", 
         null, 
         0xffdd22, // Yellow for room transition
         ['all'],
         'main' // Transition back to main room
     );
-    // Add pillars on each side of the back portal
-    createPortalPillars(backPortalX, 1, backPortalZ - 0.2, portalWidth);
     
     // Create a room title sign using HTML overlay
     const roomTitle = document.createElement('div');
@@ -1987,6 +2606,7 @@ function createSubmenuFloor(wallWidth) {
     scene.add(rightGrateLight);
 
     ensureJumpButtonPresence();
+    markDebugOverlayDirty();
 }
 
 // Add glowing elements beneath the floor
@@ -2610,49 +3230,24 @@ function addReactorLights() {
 
 // New function to add glow effects using emissive materials instead of lights
 function addMakoEmissiveElements() {
-    // Create central Mako pool glow
-    const poolGeometry = new THREE.CircleGeometry(3, 24);
-    const poolMaterial = new THREE.MeshStandardMaterial({
-        color: 0x66ffaa,
-        emissive: 0x66ffaa,
-        emissiveIntensity: 0.8,
-        transparent: true,
-        opacity: 0.7,
-        side: THREE.DoubleSide
-    });
+    const glowMap = loadPersistentTexture(SPRITE_TEXTURE_URL, configureGlowTexture);
     
-    const makoPool = new THREE.Mesh(poolGeometry, poolMaterial);
-    makoPool.rotation.x = -Math.PI / 2; // Lay flat
-    makoPool.position.set(0, 0.01, -20); // Slightly above floor
-    scene.add(makoPool);
-    
-    // Add glow sprite above pool
-    const glowMap = loadPersistentTexture(SPRITE_TEXTURE_URL);
-    const glowMaterial = new THREE.SpriteMaterial({
-        map: glowMap,
-        color: 0x66ffaa,
-        transparent: true,
-        opacity: 0.4,
-        blending: THREE.AdditiveBlending
-    });
-    
-    const poolGlow = new THREE.Sprite(glowMaterial);
-    poolGlow.scale.set(6, 6, 1);
-    poolGlow.position.set(0, 0.5, -20);
-    scene.add(poolGlow);
-    
-    // Add industrial orange glow for contrast (using sprites instead of lights)
-    const orangeGlowMaterial = new THREE.SpriteMaterial({
+    // Add industrial orange glow for contrast
+    const orangeGlowMaterial = new THREE.MeshBasicMaterial({
         map: glowMap,
         color: 0xffaa33,
         transparent: true,
         opacity: 0.3,
-        blending: THREE.AdditiveBlending
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        depthTest: true,
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+        polygonOffsetUnits: -1
     });
     
     // Add a few orange glows to replace the removed industrial light
-    const industrialGlow1 = new THREE.Sprite(orangeGlowMaterial);
-    industrialGlow1.scale.set(5, 5, 1);
+    const industrialGlow1 = new THREE.Mesh(new THREE.PlaneGeometry(5, 5), orangeGlowMaterial);
     industrialGlow1.position.set(0, 6, -5);
     scene.add(industrialGlow1);
 }
@@ -3103,6 +3698,7 @@ function createTerminalRoom() {
     sceneContainer.appendChild(terminalPrompt);
 
     ensureJumpButtonPresence();
+    markDebugOverlayDirty();
 }
 
 // Handle room transitions
@@ -3228,41 +3824,15 @@ function transitionToRoom(roomId) {
 // Create a simple portal (door) with enhanced glow effects
 function createSimplePortal(x, y, z, label, url, color, requiredGroups, roomId) {
     const doorWidth = 2.2; // Width with padding from createWallWithDoorways
-    const doorHeight = 5.0; // Must match the door opening height
+    const doorHeight = 3.2; // Must match the door opening height
+    const portalCenterY = (typeof y === 'number') ? y : doorHeight / 2 + 0.4;
     
-    // Special case for Misc. Reports portal with swirling effect
+    // Special case for Misc. Reports portal (handled by shared vortex styling now)
     const isMiscReports = (label === "Misc. Reports" && url === "/core/reports");
     
-    // Create noise texture for Misc. Reports swirling effect
-    let noiseTexture = null;
-    if (isMiscReports) {
-        const noiseSize = 64; // Small texture for efficiency
-        const canvas = document.createElement('canvas');
-        canvas.width = noiseSize;
-        canvas.height = noiseSize;
-        const context = canvas.getContext('2d');
-        
-        // Fill with random noise pattern for swirl effect base
-        for (let y = 0; y < noiseSize; y++) {
-            for (let x = 0; x < noiseSize; x++) {
-                const value = Math.floor(Math.random() * 255);
-                context.fillStyle = `rgb(${value},${value},${value})`;
-                context.fillRect(x, y, 1, 1);
-            }
-        }
-        
-        // Create texture from canvas
-        noiseTexture = new THREE.CanvasTexture(canvas);
-        noiseTexture.wrapS = THREE.RepeatWrapping;
-        noiseTexture.wrapT = THREE.RepeatWrapping;
-        
-        // Override color for Misc. Reports - we'll animate between these
-        color = 0xffdd22; // Start with yellow
-    }
-    
     const portalGeometry = new THREE.BoxGeometry(doorWidth, doorHeight, 0.1);
-    const portalMaterial = new THREE.MeshStandardMaterial({ 
-        color: isMiscReports ? 0xffffff : color, // White base for texture if Misc. Reports
+    const portalMaterial = new THREE.MeshStandardMaterial({
+        color: color,
         transparent: true,
         opacity: 0.8,
         emissive: color,
@@ -3270,15 +3840,17 @@ function createSimplePortal(x, y, z, label, url, color, requiredGroups, roomId) 
         metalness: 0.2,
         roughness: 0.3
     });
-    
-    // Apply noise texture to Misc. Reports portal
-    if (isMiscReports && noiseTexture) {
-        portalMaterial.map = noiseTexture;
-        portalMaterial.emissiveMap = noiseTexture;
-    }
+
+    const portalTextures = createPortalVortexTextures(label, color);
+    portalMaterial.map = portalTextures.vortexTexture;
+    portalMaterial.emissiveMap = portalTextures.vortexTexture;
+    portalMaterial.emissive = new THREE.Color(color);
+    portalMaterial.transparent = true;
+    portalMaterial.opacity = 0.85;
+    portalMaterial.needsUpdate = true;
     
     const portal = new THREE.Mesh(portalGeometry, portalMaterial);
-    portal.position.set(x, 0, z);
+    portal.position.set(x, portalCenterY, z);
     portal.userData = {
         isPortal: true,
         label: label,
@@ -3287,34 +3859,29 @@ function createSimplePortal(x, y, z, label, url, color, requiredGroups, roomId) 
         roomId: roomId || null // Store room ID for transition
     };
     
-    // Add special animation data for Misc. Reports
     if (isMiscReports) {
         portal.userData.isSpecialPortal = true;
-        portal.userData.portalAnimation = {
-            time: 0,
-            speed: 0.3,
-            baseColor1: new THREE.Color(0xffdd22), // Yellow
-            baseColor2: new THREE.Color(0x33aaff), // Blue
-            currentColor: new THREE.Color(0xffdd22)
-        };
-        console.log("Created Misc. Reports portal with swirling yellow-blue effect");
     }
     
     scene.add(portal);
     navLinks.push(portal);
     
-    // OPTIMIZED: Add a sprite glow effect instead of a point light (much cheaper)
-    const spriteMap = loadPersistentTexture(SPRITE_TEXTURE_URL);
-    const spriteMaterial = new THREE.SpriteMaterial({ 
+    // Add a glow effect aligned to the wall (planes avoid camera-facing tilt)
+    const spriteMap = loadPersistentTexture(SPRITE_TEXTURE_URL, configureGlowTexture);
+    const spriteMaterial = new THREE.MeshBasicMaterial({ 
         map: spriteMap,
         color: color,
         transparent: true,
         opacity: 0.6,
-        blending: THREE.AdditiveBlending
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        depthTest: true,
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+        polygonOffsetUnits: -1
     });
-    const glowSprite = new THREE.Sprite(spriteMaterial);
-    glowSprite.scale.set(2.6, (doorHeight + 0.4), 1); // Slightly larger than the portal
-    glowSprite.position.set(x, 0, z - 0.05); // Match portal position
+    const glowSprite = new THREE.Mesh(new THREE.PlaneGeometry(2.6, doorHeight + 0.4), spriteMaterial);
+    glowSprite.position.set(x, portalCenterY, z - 0.05); // Match portal position
     
     // Tag sprite as special if for Misc. Reports
     if (isMiscReports) {
@@ -3323,11 +3890,11 @@ function createSimplePortal(x, y, z, label, url, color, requiredGroups, roomId) 
     
     scene.add(glowSprite);
     
-    // Add subtle edge glow with a second, larger sprite for depth
-    const edgeGlowSprite = new THREE.Sprite(spriteMaterial);
-    edgeGlowSprite.scale.set(3.2, 4, 1);
-    edgeGlowSprite.position.set(x, 1.5, z - 0.1); // Match portal position
-    edgeGlowSprite.material.opacity = 0.3;
+    // Add subtle edge glow with a second, larger plane for depth
+    const edgeGlowMaterial = spriteMaterial.clone();
+    edgeGlowMaterial.opacity = 0.3;
+    const edgeGlowSprite = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 4), edgeGlowMaterial);
+    edgeGlowSprite.position.set(x, portalCenterY + 1.5, z - 0.1); // Match portal position
     
     // Tag edge sprite as special if for Misc. Reports
     if (isMiscReports) {
@@ -3335,6 +3902,29 @@ function createSimplePortal(x, y, z, label, url, color, requiredGroups, roomId) 
     }
     
     scene.add(edgeGlowSprite);
+
+    const rimMaterial = new THREE.MeshBasicMaterial({
+        map: portalTextures.rimTexture,
+        transparent: true,
+        opacity: 0.9,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        depthTest: true,
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+        polygonOffsetUnits: -1
+    });
+    const rimMesh = new THREE.Mesh(new THREE.PlaneGeometry(doorWidth + 0.6, doorHeight + 0.8), rimMaterial);
+    rimMesh.position.set(x, portalCenterY, z + 0.06);
+    scene.add(rimMesh);
+
+    portal.userData.portalVortex = {
+        vortexTexture: portalTextures.vortexTexture,
+        rimTexture: portalTextures.rimTexture,
+        vortexSpeed: 0.15,
+        rimSpeed: 0.08,
+        rimMesh: rimMesh
+    };
     
     // Create a physical sign for the portal (instead of HTML)
     createPortalSign(portal, label, color);
@@ -3351,9 +3941,11 @@ function createPortalSign(portal, label, color) {
     
     // Calculate position (top of door)
     const portalPos = portal.position;
-    const doorHeight = 3;
+    const doorHeight = portal.geometry && portal.geometry.parameters && portal.geometry.parameters.height
+        ? portal.geometry.parameters.height
+        : 5;
     // Position the sign at the top of the door with a small gap
-    const signY =  doorHeight - (signHeight / 2) - 0.5;
+    const signY = portalPos.y + doorHeight / 2 + signHeight / 2 + 0.1;
     
     // Create sign backing with emissive edge for glow effect
     const signGeometry = new THREE.BoxGeometry(signWidth, signHeight, signDepth);
@@ -3370,18 +3962,22 @@ function createPortalSign(portal, label, color) {
     sign.position.set(portalPos.x, signY, portalPos.z + 0.08); // Slightly in front of portal
     scene.add(sign);
     
-    // OPTIMIZED: Use a sprite for the sign glow instead of a point light
-    const spriteMap = loadPersistentTexture(SPRITE_TEXTURE_URL);
-    const spriteMaterial = new THREE.SpriteMaterial({ 
+    // Use a plane so the glow stays aligned to the wall (sprites always face the camera)
+    const spriteMap = loadPersistentTexture(SPRITE_TEXTURE_URL, configureGlowTexture);
+    const glowMaterial = new THREE.MeshBasicMaterial({
         map: spriteMap,
         color: color,
         transparent: true,
         opacity: 0.4,
-        blending: THREE.AdditiveBlending
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        depthTest: true,
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+        polygonOffsetUnits: -1
     });
-    
-    const signGlow = new THREE.Sprite(spriteMaterial);
-    signGlow.scale.set(2, 0.8, 1);
+
+    const signGlow = new THREE.Mesh(new THREE.PlaneGeometry(2, 0.8), glowMaterial);
     signGlow.position.set(portalPos.x, signY, portalPos.z + 0.15);
     scene.add(signGlow);
     
@@ -3598,6 +4194,17 @@ function animate() {
     
     // Check for portal proximity
     checkPortalProximity();
+
+    // Update portal vortex animations
+    navLinks.forEach(portal => {
+        const vortex = portal.userData.portalVortex;
+        if (!vortex) {
+            return;
+        }
+
+        vortex.vortexTexture.rotation += delta * vortex.vortexSpeed;
+        vortex.rimTexture.rotation -= delta * vortex.rimSpeed;
+    });
     
     // Check for terminal screen proximity and handle glow animation
     const screen = terminalScreenMesh && terminalScreenMesh.parent ? terminalScreenMesh : null;
@@ -3650,9 +4257,9 @@ function animate() {
         prompt.style.display = 'none';
     }
     
-    // Update special portal animations (Misc. Reports swirling effect)
+    // Update special portal animations (legacy Misc. Reports effect)
     scene.traverse(object => {
-        if (object.userData.isSpecialPortal) {
+        if (object.userData.isSpecialPortal && !object.userData.portalVortex) {
             // Update animation time
             object.userData.portalAnimation.time += delta * object.userData.portalAnimation.speed;
             
@@ -3686,9 +4293,14 @@ function animate() {
             });
         }
     });
+
+    updateDebugOverlayPositions();
     
     // Direct rendering without post-processing for better performance
     if (renderer && scene && camera) {
+        if (debugSelectionHelper) {
+            debugSelectionHelper.update();
+        }
         renderer.render(scene, camera);
     }
 }
