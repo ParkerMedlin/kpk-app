@@ -1455,7 +1455,7 @@ class DischargeTestingRecord(models.Model):
     initial_pH = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
     action_required = models.TextField(blank=True, null=True)
     final_pH = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
-    final_disposition = models.TextField()
+    final_disposition = models.TextField(blank=True, null=True)
     lab_technician = models.ForeignKey(
         User,
         related_name='discharge_tests_lab',
