@@ -683,6 +683,129 @@ The dropdown is a simple navigation element — selecting a value reloads the pa
 
 ---
 
+## Phase 11: Prompt for Count List Name on Creation
+
+_When clicking "Create Count List" (the checkbox-based button), prompt the user for a list name before creating it. The default name is pre-filled with the existing auto-generated format (`{recordType}_count_{timestamp}`). Applies everywhere `CreateCountListButton` is used._
+
+**Analysis:** The `CreateCountListButton` class in `buttonObjects.js` (lines 6-46) handles the click for the `#create_list` button across 7 pages. On click, it gathers checked item codes, base64-encodes them, and fires a GET to `/core/count-list/add?itemsToAdd=...&recordType=...`. The backend `add_count_list()` in `inventory_services.py` (line 880) auto-generates the name as `f'{record_type}_count_{MM-DD-YYYY_HH:MM}'` (line 950) — the user never gets a chance to name it.
+
+The fix is two changes:
+1. **JS**: Before sending the AJAX request, show a `prompt()` with the default name pre-filled. If the user confirms, append the name to the request URL. If they cancel, abort.
+2. **Backend**: Read the optional name from the query string. If provided, use it instead of auto-generating.
+
+A `prompt()` dialog is the right UX here — it's a single text field with a default, no need for a modal. The user can accept the default by pressing Enter, type a custom name, or cancel to abort list creation entirely.
+
+**Pages affected (all use `CreateCountListButton`):**
+- `itemsbyauditgroup.html` — has `recordType` in URL
+- `countrecords.html` — has `recordType` in URL
+- `upcomingblends.html` — no `recordType` param (items are all blends)
+- `upcomingcomponents.html` — no `recordType` param (items are all blendcomponents)
+- `blendshortages.html` — no `recordType` param (items are all blends)
+- `lotnumrecords.html` — no `recordType` param, button hidden by default
+- `listtocountlist.html` — no `recordType` param
+
+For pages without `recordType` in the URL, the default name uses the generic format `count_{timestamp}` (dropping the null prefix).
+
+**No changes needed in:**
+- Templates — No HTML changes, the prompt is JS-native
+- `app/core/urls.py` — Same route
+- `app/core/selectors/` — No query changes
+- CSS — No styling changes
+
+### JavaScript
+
+- [x] **11.1** Add name prompt to `CreateCountListButton`
+  - **File**: `app/core/static/core/js/objects/buttonObjects.js`
+  - **Function**: `setUpCountListButton()` (lines 15-44)
+  - **Do**: After getting `recordType` (line 28), generate the default name and prompt the user. Replace lines 29-43 with:
+    ```js
+    let now = new Date();
+    let pad = (n) => String(n).padStart(2, '0');
+    let dateStr = `${pad(now.getMonth()+1)}-${pad(now.getDate())}-${now.getFullYear()}_${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    let defaultName = recordType ? `${recordType}_count_${dateStr}` : `count_${dateStr}`;
+    let collectionName = prompt('Enter a name for the count list:', defaultName);
+    if (collectionName === null) return;
+    collectionName = collectionName.trim() || defaultName;
+    let requestURL = `/core/count-list/add?itemsToAdd=${encodedItemCodes}&recordType=${recordType}&collectionName=${encodeURIComponent(collectionName)}`;
+    $.ajax({
+        url: requestURL,
+        type: 'GET',
+        success: function(response) {
+            console.log("Request successful:", response);
+            alert("Count list generated. Check count links page.");
+        },
+        error: function(xhr, status, error) {
+            console.error("Request failed:", status, error);
+        }
+    });
+    ```
+    Key behavior:
+    - `prompt()` returns `null` on Cancel → aborts, no request sent
+    - Empty string after trim → falls back to the default name
+    - User can accept default by pressing Enter or type a custom name
+    - `encodeURIComponent` handles special characters in the name
+  - **Deliverable**: Clicking "Create Count List" on any page shows a prompt with the default name; user can accept, customize, or cancel
+
+### Backend
+
+- [x] **11.2** Read optional `collectionName` from query string
+  - **File**: `app/core/services/inventory_services.py`
+  - **Function**: `add_count_list()` (line 880)
+  - **Do**: After `list_info = add_count_records(...)` (line 943), change the name generation (lines 945-950) from:
+    ```python
+    now_str = dt.datetime.now().strftime('%m-%d-%Y_%H:%M')
+
+    try:
+        new_count_collection = CountCollectionLink(
+            ...
+            collection_name = f'{record_type}_count_{now_str}',
+            ...
+        )
+    ```
+    to:
+    ```python
+    collection_name = request.GET.get('collectionName', '').strip()
+    if not collection_name:
+        now_str = dt.datetime.now().strftime('%m-%d-%Y_%H:%M')
+        collection_name = f'{record_type}_count_{now_str}'
+
+    try:
+        new_count_collection = CountCollectionLink(
+            ...
+            collection_name=collection_name,
+            ...
+        )
+    ```
+    Read `collectionName` from the GET params. If provided and non-empty, use it. Otherwise fall back to the existing auto-generated format.
+  - **Deliverable**: Backend uses user-provided name when available; existing auto-generated behavior preserved as fallback
+
+### Testing
+
+- [ ] **11.3** Test: Prompt appears with correct default name
+  - Navigate to `http://localhost:8000/core/items-by-audit-group/?recordType=blendcomponent`
+  - Check a few items, click "Create Count List"
+  - Verify a browser prompt appears with default text like `blendcomponent_count_02-04-2026_14:30`
+  - Press Enter to accept — verify count list created with that name
+- [ ] **11.4** Test: Custom name
+  - Check items, click "Create Count List"
+  - Change the name to "My Custom List", press OK
+  - Verify the count list is created with name "My Custom List" (check count links page)
+- [ ] **11.5** Test: Cancel aborts creation
+  - Check items, click "Create Count List"
+  - Click Cancel on the prompt
+  - Verify no count list is created (no success alert, no new list on count links page)
+- [ ] **11.6** Test: Empty name uses default
+  - Check items, click "Create Count List"
+  - Clear the text field completely, press OK
+  - Verify the count list is created with the auto-generated default name
+- [ ] **11.7** Test: Works on other pages
+  - Navigate to `http://localhost:8000/core/upcoming-blends/`
+  - Check items, click "Create Count List"
+  - Verify prompt appears with default name like `count_02-04-2026_14:30` (no recordType prefix since none in URL)
+  - Repeat on `http://localhost:8000/core/upcoming-components/`
+
+---
+
 ## Progress
 
 | Phase | Status | Tasks Complete |
@@ -691,9 +814,10 @@ The dropdown is a simple navigation element — selecting a value reloads the pa
 | 7. Merge Actions Column & Table Styling | Complete | 8/8 |
 | 8. "Add New" Custom Audit Group | Complete | 8/8 |
 | 9. Create Count List from Group | Complete | 11/11 |
-| 10. Record Type Switcher | In Progress | 7/11 |
+| 10. Record Type Switcher | Complete | 11/11 |
+| 11. Prompt for Count List Name | In Progress | 2/7 |
 
-**Overall**: 42/46 tasks (91%)
+**Overall**: 48/53 tasks (91%)
 
 ---
 

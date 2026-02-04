@@ -942,12 +942,15 @@ def add_count_list(request):
         print(f'item_code_list: {item_codes_list}' )
         list_info = add_count_records(item_codes_list, record_type)
 
-        now_str = dt.datetime.now().strftime('%m-%d-%Y_%H:%M')
+        collection_name = request.GET.get('collectionName', '').strip()
+        if not collection_name:
+            now_str = dt.datetime.now().strftime('%m-%d-%Y_%H:%M')
+            collection_name = f'{record_type}_count_{now_str}'
 
         try:
             new_count_collection = CountCollectionLink(
                 link_order = CountCollectionLink.objects.aggregate(Max('link_order'))['link_order__max'] + 1 if CountCollectionLink.objects.exists() else 1,
-                collection_name = f'{record_type}_count_{now_str}',
+                collection_name = collection_name,
                 count_id_list = list(list_info['primary_keys']),
                 collection_id = list_info['collection_id'],
                 record_type = record_type
