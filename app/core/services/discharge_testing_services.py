@@ -63,7 +63,7 @@ def create_discharge_test(
     discharge_source: str,
     discharge_type: str,
     discharge_material_code: Optional[str] = None,
-    final_disposition: str,
+    final_disposition: Optional[str] = None,
     sampling_personnel_id: Optional[Union[int, str]] = None,
     user: Optional[User] = None,
     initial_pH: Any = None,
@@ -77,13 +77,10 @@ def create_discharge_test(
     cleaned_source = (discharge_source or "").strip()
     cleaned_discharge_type = (discharge_type or "").strip()
     cleaned_material_code = (discharge_material_code or "").strip()
-    cleaned_disposition = (final_disposition or "").strip()
+    cleaned_disposition = (final_disposition or "").strip() or None
     is_oil_type = cleaned_discharge_type.lower() in {"oil", "polish"}
-    if not cleaned_disposition:
-        raise ValidationError({"final_disposition": "Final disposition is required."})
 
-    if cleaned_discharge_type.lower() in {"acid", "base"} and not cleaned_material_code:
-        raise ValidationError({"discharge_material_code": "Material is required for Acid or Base discharge."})
+    # discharge_material_code requirement disabled (field hidden)
 
     if is_oil_type:
         initial_value = None
@@ -117,12 +114,6 @@ def create_discharge_test(
         raise ValidationError({"sampling_personnel_id": "Sampling personnel is required."})
 
     if final_value is not None:
-        if (
-            initial_value is not None
-            and not DischargeTestingRecord.is_ph_in_range(initial_value)
-            and not cleaned_action
-        ):
-            raise ValidationError({"action_required": "Action details are required when initial pH is out of range."})
         if not DischargeTestingRecord.is_ph_in_range(final_value):
             raise ValidationError(
                 {"final_pH": f"Final pH must be between {DischargeTestingRecord.PH_MIN} and {DischargeTestingRecord.PH_MAX}."}

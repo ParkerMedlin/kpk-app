@@ -308,8 +308,8 @@ class DischargeTestingEntryPage {
       return;
     }
     const dischargeTypeValue = this.dischargeType ? this.dischargeType.value : '';
-    const shouldShow = ACID_BASE_TYPES.includes(dischargeTypeValue);
-    this.dischargeMaterialGroup.style.display = shouldShow ? '' : 'none';
+    // Material field hidden — kept for potential reactivation
+    const shouldShow = false;
     if (!shouldShow) {
       if (this.dischargeMaterialInput) {
         this.dischargeMaterialInput.value = '';
@@ -615,11 +615,8 @@ class DischargeTestingEntryPage {
     if (!samplingPersonnelId) {
       errors.sampling_personnel_id = 'Sampling personnel is required.';
     }
-    if (!finalDisposition) {
-      errors.final_disposition = 'Final disposition is required.';
-    }
     if (ACID_BASE_TYPES.includes(dischargeType) && !dischargeMaterialCode) {
-      errors.discharge_material_code = 'Discharge material is required for Acid or Base.';
+      // discharge_material_code validation disabled (fields hidden)
     }
 
     if (!isOilType) {
@@ -643,9 +640,7 @@ class DischargeTestingEntryPage {
       const initialOutOfRange =
         initialValue !== null && !isPhInRange(initialValue, this.phMin, this.phMax);
 
-      if (initialOutOfRange && !actionRequired) {
-        errors.action_required = 'Action details are required when initial pH is out of range.';
-      }
+      // action_required validation disabled (field hidden)
 
       if (finalValue !== null && !isPhInRange(finalValue, this.phMin, this.phMax)) {
         errors.final_pH = `Final pH must be between ${this.phMin} and ${this.phMax}.`;
