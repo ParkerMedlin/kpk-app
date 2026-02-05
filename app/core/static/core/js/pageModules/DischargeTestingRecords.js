@@ -156,9 +156,6 @@ class DischargeTestingRecordsPage {
     }
     this.table = document.getElementById('discharge-testing-records-table');
     this.tableBody = this.table ? this.table.querySelector('tbody') : null;
-    this.samplingPersonnelTemplate = document.getElementById('sampling-personnel-options');
-
-    this.canEdit = this.root.dataset.roleLine === 'true' || this.root.dataset.roleLab === 'true';
 
     this.activeRow = null;
     this.filterForm = new FilterForm({
@@ -278,7 +275,7 @@ class DischargeTestingRecordsPage {
     }
     this.tableBody.innerHTML = `
       <tr>
-        <td colspan="13" class="text-center py-4">No discharge tests recorded yet.</td>
+        <td colspan="9" class="text-center py-4">No discharge tests recorded yet.</td>
       </tr>
     `;
   }
@@ -292,11 +289,6 @@ class DischargeTestingRecordsPage {
     row.querySelectorAll('[data-field]').forEach((cell) => {
       const field = cell.dataset.field;
       if (!field || field === 'actions' || field === 'delete') {
-        return;
-      }
-      if (field === 'sampling_personnel_id') {
-        snapshot.sampling_personnel_id = cell.dataset.value ?? '';
-        snapshot.sampling_personnel_name = cell.dataset.label ?? cell.textContent.trim();
         return;
       }
       snapshot[field] = cell.dataset.value ?? cell.textContent.trim();
@@ -360,26 +352,28 @@ class DischargeTestingRecordsPage {
     return textarea;
   }
 
-  createSelectInput(field, value) {
-    const select = document.createElement('select');
-    select.className = 'form-select form-select-sm';
-    select.dataset.field = field;
-    select.dataset.isInput = 'true';
-
-    if (this.samplingPersonnelTemplate) {
-      this.samplingPersonnelTemplate.querySelectorAll('option').forEach((option) => {
-        select.appendChild(option.cloneNode(true));
-      });
+  createDateTimeInput(field, isoValue) {
+    const input = document.createElement('input');
+    input.type = 'datetime-local';
+    input.className = 'form-control form-control-sm';
+    input.dataset.field = field;
+    input.dataset.isInput = 'true';
+    if (isoValue) {
+      const date = new Date(isoValue);
+      if (!Number.isNaN(date.getTime())) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        input.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+      }
     }
-
-    if (value != null && value !== '') {
-      select.value = String(value);
-    }
-    return select;
+    return input;
   }
 
   enterEditMode(row) {
-    if (!this.canEdit || !row) {
+    if (!row) {
       return;
     }
 
@@ -408,22 +402,15 @@ class DischargeTestingRecordsPage {
         this.renderEditButtons(row, cell);
         return;
       }
-      if (
-        !field
-        || field === 'date'
-        || field === 'lab_technician_name'
-        || field === 'discharge_material_code'
-        || field === 'ph_active_component'
-        || field === 'delete'
-      ) {
+      if (!field || field === 'lab_technician_name' || field === 'delete') {
         return;
       }
 
       const currentValue = cell.dataset.value ?? '';
       let input;
-      if (field === 'sampling_personnel_id') {
-        input = this.createSelectInput(field, currentValue);
-      } else if (field === 'action_required' || field === 'final_disposition') {
+      if (field === 'date') {
+        input = this.createDateTimeInput(field, currentValue);
+      } else if (field === 'final_disposition') {
         input = this.createTextarea(field, currentValue);
       } else if (field === 'initial_pH' || field === 'final_pH') {
         input = this.createTextInput(field, currentValue, {
@@ -482,9 +469,6 @@ class DischargeTestingRecordsPage {
     editBtn.className = 'btn btn-sm btn-outline-primary edit-row-btn';
     editBtn.title = 'Edit';
     editBtn.innerHTML = '<i class="fas fa-edit"></i>';
-    if (!this.canEdit) {
-      editBtn.disabled = true;
-    }
     editBtn.addEventListener('click', () => this.enterEditMode(row));
     cell.appendChild(editBtn);
   }
@@ -525,10 +509,25 @@ class DischargeTestingRecordsPage {
     const payload = {};
     const updatedFields = [];
 
+    const dateInput = row.querySelector('[data-field="date"] [data-is-input="true"]');
     const sourceInput = row.querySelector('[data-field="discharge_source"] [data-is-input="true"]');
     const dischargeTypeInput = row.querySelector('[data-field="discharge_type"] [data-is-input="true"]');
-    const samplingPersonnelInput = row.querySelector('[data-field="sampling_personnel_id"] [data-is-input="true"]');
 
+    if (dateInput) {
+      const localValue = dateInput.value;
+      if (localValue) {
+        const newDate = new Date(localValue);
+        if (!Number.isNaN(newDate.getTime())) {
+          const newIso = newDate.toISOString();
+          const oldDate = snapshot.date ? new Date(snapshot.date) : null;
+          const oldIso = oldDate && !Number.isNaN(oldDate.getTime()) ? oldDate.toISOString() : '';
+          if (newIso !== oldIso) {
+            payload.date = newIso;
+            updatedFields.push('date');
+          }
+        }
+      }
+    }
     if (sourceInput) {
       const value = normalizeText(sourceInput.value);
       if (value !== normalizeText(snapshot.discharge_source)) {
@@ -543,24 +542,11 @@ class DischargeTestingRecordsPage {
         updatedFields.push('discharge_type');
       }
     }
-    if (samplingPersonnelInput) {
-      const value = samplingPersonnelInput.value ?? '';
-      if (!value) {
-        samplingPersonnelInput.classList.add('is-invalid');
-        this.applyValidationErrors(row, { sampling_personnel_id: 'Sampling personnel is required.' });
-        return;
-      }
-      if (String(value) !== String(snapshot.sampling_personnel_id ?? '')) {
-        payload.sampling_personnel_id = value;
-        updatedFields.push('sampling_personnel_id');
-      }
-    }
 
     let initialParsed = { value: null };
     let finalParsed = { value: null };
 
     const initialInput = row.querySelector('[data-field="initial_pH"] [data-is-input="true"]');
-    const actionInput = row.querySelector('[data-field="action_required"] [data-is-input="true"]');
     const dispositionInput = row.querySelector('[data-field="final_disposition"] [data-is-input="true"]');
     const finalInput = row.querySelector('[data-field="final_pH"] [data-is-input="true"]');
 
@@ -587,21 +573,8 @@ class DischargeTestingRecordsPage {
       }
     }
 
-    if (actionInput) {
-      const actionValue = actionInput.value || '';
-      if (normalizeText(actionValue) !== normalizeText(snapshot.action_required)) {
-        payload.action_required = actionValue;
-        updatedFields.push('action_required');
-      }
-    }
-
     if (dispositionInput) {
       const dispositionValue = normalizeText(dispositionInput.value);
-      if (!dispositionValue) {
-        dispositionInput.classList.add('is-invalid');
-        this.applyValidationErrors(row, { final_disposition: 'Final disposition is required.' });
-        return;
-      }
       if (dispositionValue !== normalizeText(snapshot.final_disposition)) {
         payload.final_disposition = dispositionValue;
         updatedFields.push('final_disposition');
@@ -647,16 +620,6 @@ class DischargeTestingRecordsPage {
           final_pH: `Final pH must be between ${PH_MIN} and ${PH_MAX}.`,
         });
         return;
-      }
-
-      if (initialValue !== null && !isPhInRange(initialValue)) {
-        const actionValue = normalizeText(payload.action_required ?? snapshot.action_required);
-        if (!actionValue) {
-          this.applyValidationErrors(row, {
-            action_required: 'Action details are required when initial pH is out of range.',
-          });
-          return;
-        }
       }
     }
 
@@ -720,14 +683,9 @@ class DischargeTestingRecordsPage {
       date: tote.date ?? row.querySelector('[data-field="date"]')?.dataset?.value ?? '',
       discharge_source: tote.discharge_source ?? '',
       discharge_type: tote.discharge_type ?? '',
-      discharge_material_code: tote.discharge_material_code ?? '',
-      ph_active_component: tote.ph_active_component ?? '',
       initial_pH: tote.initial_pH ?? '',
-      action_required: tote.action_required ?? '',
       final_disposition: tote.final_disposition ?? '',
       final_pH: tote.final_pH ?? '',
-      sampling_personnel_id: tote.sampling_personnel_id ?? '',
-      sampling_personnel_name: tote.sampling_personnel_name ?? '',
       lab_technician_name: tote.lab_technician_name ?? '',
     };
 
@@ -756,25 +714,18 @@ class DischargeTestingRecordsPage {
     const dateCell = row.querySelector('[data-field="date"]');
     if (dateCell) {
       dateCell.dataset.value = data.date || '';
-      const dateDisplay = dateCell.querySelector('.fw-semibold') || document.createElement('div');
+      dateCell.innerHTML = '';
+      const dateDisplay = document.createElement('div');
       dateDisplay.className = 'fw-semibold';
       dateDisplay.textContent = formatDateTime(data.date);
-      if (!dateCell.contains(dateDisplay)) {
-        dateCell.appendChild(dateDisplay);
-      }
+      dateCell.appendChild(dateDisplay);
     }
 
     this.setTextCell(row, 'discharge_source', data.discharge_source);
     this.setTextCell(row, 'discharge_type', data.discharge_type);
-    this.setTextCell(row, 'discharge_material_code', data.discharge_material_code);
-    this.setTextCell(row, 'ph_active_component', data.ph_active_component);
-
-    this.setPhCell(row, 'initial_pH', data.initial_pH, data.lab_technician_name, initialUpdatedAt, 'initial');
-    this.setTextCell(row, 'action_required', data.action_required, true);
+    this.setPhCell(row, 'initial_pH', data.initial_pH);
     this.setTextCell(row, 'final_disposition', data.final_disposition, true);
-    this.setPhCell(row, 'final_pH', data.final_pH, data.lab_technician_name, finalUpdatedAt, 'final');
-
-    this.setSamplingPersonnelCell(row, data.sampling_personnel_id, data.sampling_personnel_name);
+    this.setPhCell(row, 'final_pH', data.final_pH);
     this.setTextCell(row, 'lab_technician_name', data.lab_technician_name);
 
     const actionsCell = row.querySelector('[data-field="actions"]');
@@ -801,7 +752,7 @@ class DischargeTestingRecordsPage {
     }
   }
 
-  setPhCell(row, field, value, updatedBy, updatedAt, prefix) {
+  setPhCell(row, field, value) {
     const cell = row.querySelector(`[data-field="${field}"]`);
     if (!cell) {
       return;
@@ -809,22 +760,6 @@ class DischargeTestingRecordsPage {
     const displayValue = formatPhDisplay(value);
     cell.dataset.value = value == null ? '' : value;
     cell.innerHTML = `<div class="fw-semibold">${escapeHtml(displayValue)}</div>`;
-  }
-
-  setSamplingPersonnelCell(row, id, name) {
-    const cell = row.querySelector('[data-field="sampling_personnel_id"]');
-    if (!cell) {
-      return;
-    }
-    const idValue = id == null ? '' : String(id);
-    const labelValue = name == null ? '' : String(name);
-    cell.dataset.value = idValue;
-    cell.dataset.label = labelValue;
-    if (!labelValue) {
-      cell.textContent = '--';
-      return;
-    }
-    cell.textContent = labelValue;
   }
 }
 

@@ -2193,13 +2193,7 @@ def discharge_testing_entry_view(request):
 @ensure_csrf_cookie
 def discharge_testing_records_view(request):
     """Render the discharge testing records page with initial options and data."""
-    if not (request.user.is_staff or request.user.is_superuser):
-        return HttpResponseForbidden('Staff access required.')
-
     context = {
-        'production_line_choices': DischargeTestingRecord.DISCHARGE_SOURCE_CHOICES,
-        'discharge_type_options': DischargeTestingRecord.DISCHARGE_TYPE_CHOICES,
-        'sampling_personnel_options': get_sampling_personnel_options(),
         'flush_totes': list_discharge_tests(),
     }
     return render(request, 'core/discharge_testing_records.html', context)
