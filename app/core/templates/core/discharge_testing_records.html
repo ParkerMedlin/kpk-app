@@ -42,8 +42,8 @@
                     <th scope="col">Discharge Source</th>
                     <th scope="col">Discharge Type</th>
                     <th scope="col" style="width: 140px;">Initial pH</th>
-                    <th scope="col" style="min-width: 220px;">Final Disposition</th>
                     <th scope="col" style="width: 140px;">Final pH</th>
+                    <th scope="col" style="width: 160px;">Sampling Personnel</th>
                     <th scope="col" style="width: 160px;">Lab Technician</th>
                     <th scope="col" class="text-center" style="width: 120px;"></th>
                     <th scope="col" class="text-center" style="width: 80px;"></th>
@@ -66,17 +66,21 @@
                                 {% if tote.initial_pH is not None %}{{ tote.initial_pH }}{% else %}--{% endif %}
                             </div>
                         </td>
-                        <td data-field="final_disposition" data-value="{{ tote.final_disposition|default_if_none:'' }}" class="text-break">
-                            {% if tote.final_disposition %}
-                                {{ tote.final_disposition }}
-                            {% else %}
-                                --
-                            {% endif %}
-                        </td>
                         <td data-field="final_pH" data-value="{{ tote.final_pH|default_if_none:'' }}">
                             <div class="fw-semibold">
                                 {% if tote.final_pH is not None %}{{ tote.final_pH }}{% else %}--{% endif %}
                             </div>
+                        </td>
+                        <td
+                            data-field="sampling_personnel_id"
+                            data-value="{{ tote.sampling_personnel_id|default_if_none:'' }}"
+                            data-label="Sampling Personnel"
+                        >
+                            {% if tote.sampling_personnel %}
+                                {{ tote.sampling_personnel.get_full_name|default:'--' }}
+                            {% else %}
+                                --
+                            {% endif %}
                         </td>
                         <td
                             data-field="lab_technician_name"
@@ -117,5 +121,12 @@
             </tbody>
         </table>
     </div>
+
+    <select id="sampling-personnel-options" class="d-none" aria-hidden="true">
+        <option value="">Select sampling personnel...</option>
+        {% for id, name in sampling_personnel_options %}
+            <option value="{{ id }}">{{ name }}</option>
+        {% endfor %}
+    </select>
 </div>
 {% endblock %}
