@@ -793,9 +793,9 @@ _Polish discharge type should hide pH fields, skip pH validation, and bypass act
 | 22. Hide Entry Fields (Reversible) | Complete | 6/6 |
 | 23. Entry Form novalidate Fix | Complete | 1/1 |
 | 24. Records Page Simplification | Complete | 11/11 |
-| 25. Records Column Adjustments | Pending | 0/10 |
+| 25. Records Column Adjustments | Pending | 0/14 |
 
-**Overall**: 171/185 tasks (92%)
+**Overall**: 171/189 tasks (90%)
 
 ---
 
@@ -905,6 +905,76 @@ _Hide columns, make date editable, remove all permission restrictions on records
 - [x] **24.11** Remove permission check from records view
   - **Do**: In `web.py`, remove `is_staff` check from `discharge_testing_records_view`; remove unused context variables (`production_line_choices`, `discharge_type_options`, `sampling_personnel_options`).
   - **Deliverable**: Any logged-in user can access records page.
+
+---
+
+## Phase 25: Records Column Adjustments
+
+_Unhide Sampling Personnel column, hide Final Disposition column on records page._
+
+### Template Changes
+
+- [x] **25.1** Add Sampling Personnel column header
+  - **Do**: In `discharge_testing_records.html`, add `<th scope="col" style="width: 160px;">Sampling Personnel</th>` to table header row (after Final pH, before Lab Technician).
+  - **Deliverable**: Column header visible.
+
+- [x] **25.2** Add Sampling Personnel cell to row template
+  - **Do**: In `discharge_testing_records.html`, add Sampling Personnel `<td>` with `data-field="sampling_personnel_id"`, `data-value`, and `data-label` attributes; display `tote.sampling_personnel.get_full_name` or "--".
+  - **Deliverable**: Sampling personnel displayed in each row.
+
+- [x] **25.3** Remove Final Disposition column header
+  - **Do**: In `discharge_testing_records.html`, remove Final Disposition `<th>` from table header row.
+  - **Deliverable**: Column header removed.
+
+- [x] **25.4** Remove Final Disposition cell from row template
+  - **Do**: In `discharge_testing_records.html`, remove Final Disposition `<td>` from row template.
+  - **Deliverable**: Final disposition not displayed in rows.
+
+- [x] **25.5** Re-add sampling personnel options select
+  - **Do**: In `discharge_testing_records.html`, add hidden `<select id="sampling-personnel-options">` with options from `sampling_personnel_options` context variable (needed for inline edit dropdown).
+  - **Deliverable**: Personnel options available for JS.
+
+### Web View Changes
+
+- [x] **25.6** Add sampling_personnel_options to context
+  - **Do**: In `web.py`, in `discharge_testing_records_view`, add `'sampling_personnel_options': get_sampling_personnel_options()` to context dict.
+  - **Deliverable**: Personnel options passed to template.
+
+### JavaScript Changes
+
+- [x] **25.7** Re-add sampling personnel element reference
+  - **Do**: In `DischargeTestingRecords.js`, re-add `this.samplingPersonnelTemplate = document.getElementById('sampling-personnel-options');` in constructor.
+  - **Deliverable**: JS has reference to options.
+
+- [x] **25.8** Re-add createSelectInput method
+  - **Do**: In `DischargeTestingRecords.js`, re-add `createSelectInput(field, value)` method that creates a `<select>` from `samplingPersonnelTemplate` options.
+  - **Deliverable**: Dropdown creation available.
+
+- [x] **25.9** Update enterEditMode for sampling personnel
+  - **Do**: In `DischargeTestingRecords.js`, in `enterEditMode()`, add case for `sampling_personnel_id` field to create select input; remove `final_disposition` from editable fields.
+  - **Deliverable**: Sampling personnel editable via dropdown; final disposition not editable.
+
+- [x] **25.10** Update handleSave for sampling personnel
+  - **Do**: In `DischargeTestingRecords.js`, in `handleSave()`, add validation and payload building for `sampling_personnel_id`; remove `final_disposition` handling.
+  - **Deliverable**: Sampling personnel changes saved; final disposition ignored.
+
+- [x] **25.11** Update applyRowData for column changes
+  - **Do**: In `DischargeTestingRecords.js`, in `applyRowData()`, re-add `setSamplingPersonnelCell()` call; remove `final_disposition` setTextCell call.
+  - **Deliverable**: Row rendering matches new columns.
+
+- [x] **25.12** Re-add setSamplingPersonnelCell method
+  - **Do**: In `DischargeTestingRecords.js`, re-add `setSamplingPersonnelCell(row, id, name)` method.
+  - **Deliverable**: Sampling personnel cell rendering available.
+
+### API Changes
+
+- [x] **25.13** Update allowed fields in API
+  - **Do**: In `api.py`, in `discharge_testing_detail_api`, add `sampling_personnel_id` to allowed fields; remove `final_disposition` from allowed fields.
+  - **Deliverable**: API accepts sampling personnel updates; rejects final disposition updates.
+
+- [x] **25.14** Re-add sampling personnel update logic
+  - **Do**: In `api.py`, in `discharge_testing_detail_api`, add handler for `sampling_personnel_id`: validate ID, look up User, assign to `tote.sampling_personnel`.
+  - **Deliverable**: Sampling personnel updates work.
 
 ---
 

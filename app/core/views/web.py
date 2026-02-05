@@ -2195,6 +2195,7 @@ def discharge_testing_records_view(request):
     """Render the discharge testing records page with initial options and data."""
     context = {
         'flush_totes': list_discharge_tests(),
+        'sampling_personnel_options': get_sampling_personnel_options(),
     }
     return render(request, 'core/discharge_testing_records.html', context)
 

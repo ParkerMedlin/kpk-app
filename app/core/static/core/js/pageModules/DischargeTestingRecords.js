@@ -156,6 +156,7 @@ class DischargeTestingRecordsPage {
     }
     this.table = document.getElementById('discharge-testing-records-table');
     this.tableBody = this.table ? this.table.querySelector('tbody') : null;
+    this.samplingPersonnelTemplate = document.getElementById('sampling-personnel-options');
 
     this.activeRow = null;
     this.filterForm = new FilterForm({
@@ -291,6 +292,11 @@ class DischargeTestingRecordsPage {
       if (!field || field === 'actions' || field === 'delete') {
         return;
       }
+      if (field === 'sampling_personnel_id') {
+        snapshot[field] = cell.dataset.value ?? '';
+        snapshot.sampling_personnel_name = cell.textContent.trim();
+        return;
+      }
       snapshot[field] = cell.dataset.value ?? cell.textContent.trim();
     });
     return snapshot;
@@ -340,6 +346,23 @@ class DischargeTestingRecordsPage {
       input.inputMode = options.inputMode;
     }
     return input;
+  }
+
+  createSelectInput(field, value) {
+    const select = document.createElement('select');
+    select.className = 'form-select form-select-sm';
+    select.dataset.field = field;
+    select.dataset.isInput = 'true';
+    if (this.samplingPersonnelTemplate) {
+      select.innerHTML = this.samplingPersonnelTemplate.innerHTML;
+    } else {
+      const option = document.createElement('option');
+      option.value = '';
+      option.textContent = 'Select sampling personnel...';
+      select.appendChild(option);
+    }
+    select.value = value == null ? '' : String(value);
+    return select;
   }
 
   createTextarea(field, value) {
@@ -410,8 +433,8 @@ class DischargeTestingRecordsPage {
       let input;
       if (field === 'date') {
         input = this.createDateTimeInput(field, currentValue);
-      } else if (field === 'final_disposition') {
-        input = this.createTextarea(field, currentValue);
+      } else if (field === 'sampling_personnel_id') {
+        input = this.createSelectInput(field, currentValue);
       } else if (field === 'initial_pH' || field === 'final_pH') {
         input = this.createTextInput(field, currentValue, {
           type: 'text',
@@ -512,6 +535,7 @@ class DischargeTestingRecordsPage {
     const dateInput = row.querySelector('[data-field="date"] [data-is-input="true"]');
     const sourceInput = row.querySelector('[data-field="discharge_source"] [data-is-input="true"]');
     const dischargeTypeInput = row.querySelector('[data-field="discharge_type"] [data-is-input="true"]');
+    const samplingInput = row.querySelector('[data-field="sampling_personnel_id"] [data-is-input="true"]');
 
     if (dateInput) {
       const localValue = dateInput.value;
@@ -542,12 +566,24 @@ class DischargeTestingRecordsPage {
         updatedFields.push('discharge_type');
       }
     }
+    if (samplingInput) {
+      const value = normalizeText(samplingInput.value);
+      if (!value) {
+        samplingInput.classList.add('is-invalid');
+        this.applyValidationErrors(row, { sampling_personnel_id: 'Sampling personnel is required.' });
+        return;
+      }
+      const snapshotValue = snapshot.sampling_personnel_id == null ? '' : String(snapshot.sampling_personnel_id);
+      if (value !== snapshotValue) {
+        payload.sampling_personnel_id = value;
+        updatedFields.push('sampling_personnel_id');
+      }
+    }
 
     let initialParsed = { value: null };
     let finalParsed = { value: null };
 
     const initialInput = row.querySelector('[data-field="initial_pH"] [data-is-input="true"]');
-    const dispositionInput = row.querySelector('[data-field="final_disposition"] [data-is-input="true"]');
     const finalInput = row.querySelector('[data-field="final_pH"] [data-is-input="true"]');
 
     if (initialInput) {
@@ -570,14 +606,6 @@ class DischargeTestingRecordsPage {
       } else if (!Number.isFinite(normalizedSnapshot) || initialParsed.value !== normalizedSnapshot) {
         payload.initial_pH = initialParsed.value;
         updatedFields.push('initial_pH');
-      }
-    }
-
-    if (dispositionInput) {
-      const dispositionValue = normalizeText(dispositionInput.value);
-      if (dispositionValue !== normalizeText(snapshot.final_disposition)) {
-        payload.final_disposition = dispositionValue;
-        updatedFields.push('final_disposition');
       }
     }
 
@@ -684,8 +712,9 @@ class DischargeTestingRecordsPage {
       discharge_source: tote.discharge_source ?? '',
       discharge_type: tote.discharge_type ?? '',
       initial_pH: tote.initial_pH ?? '',
-      final_disposition: tote.final_disposition ?? '',
       final_pH: tote.final_pH ?? '',
+      sampling_personnel_id: tote.sampling_personnel_id ?? '',
+      sampling_personnel_name: tote.sampling_personnel_name ?? '',
       lab_technician_name: tote.lab_technician_name ?? '',
     };
 
@@ -724,8 +753,8 @@ class DischargeTestingRecordsPage {
     this.setTextCell(row, 'discharge_source', data.discharge_source);
     this.setTextCell(row, 'discharge_type', data.discharge_type);
     this.setPhCell(row, 'initial_pH', data.initial_pH);
-    this.setTextCell(row, 'final_disposition', data.final_disposition, true);
     this.setPhCell(row, 'final_pH', data.final_pH);
+    this.setSamplingPersonnelCell(row, data.sampling_personnel_id, data.sampling_personnel_name);
     this.setTextCell(row, 'lab_technician_name', data.lab_technician_name);
 
     const actionsCell = row.querySelector('[data-field="actions"]');
@@ -750,6 +779,17 @@ class DischargeTestingRecordsPage {
     } else {
       cell.textContent = textValue;
     }
+  }
+
+  setSamplingPersonnelCell(row, id, name) {
+    const cell = row.querySelector('[data-field="sampling_personnel_id"]');
+    if (!cell) {
+      return;
+    }
+    const idValue = id == null ? '' : String(id);
+    cell.dataset.value = idValue;
+    const displayName = normalizeText(name);
+    cell.textContent = displayName || '--';
   }
 
   setPhCell(row, field, value) {
