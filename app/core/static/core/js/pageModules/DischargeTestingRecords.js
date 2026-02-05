@@ -292,9 +292,9 @@ class DischargeTestingRecordsPage {
       if (!field || field === 'actions' || field === 'delete') {
         return;
       }
-      if (field === 'sampling_personnel_id') {
-        snapshot[field] = cell.dataset.value ?? '';
-        snapshot.sampling_personnel_name = cell.textContent.trim();
+      if (field === 'sampling_personnel_name') {
+        const value = cell.dataset.value ?? '';
+        snapshot.sampling_personnel_name = value || cell.textContent.trim();
         return;
       }
       snapshot[field] = cell.dataset.value ?? cell.textContent.trim();
@@ -316,7 +316,8 @@ class DischargeTestingRecordsPage {
       return;
     }
     Object.entries(errors).forEach(([field, message]) => {
-      const input = row.querySelector(`[data-field="${field}"] [data-is-input="true"]`);
+      const resolvedField = field === 'sampling_personnel_id' ? 'sampling_personnel_name' : field;
+      const input = row.querySelector(`[data-field="${resolvedField}"] [data-is-input="true"]`);
       if (!input) {
         return;
       }
@@ -443,7 +444,7 @@ class DischargeTestingRecordsPage {
       let input;
       if (field === 'date') {
         input = this.createDateTimeInput(field, currentValue);
-      } else if (field === 'sampling_personnel_id') {
+      } else if (field === 'sampling_personnel_name') {
         input = this.createSelectInput(field, currentValue, snapshot.sampling_personnel_name);
       } else if (field === 'initial_pH' || field === 'final_pH') {
         input = this.createTextInput(field, currentValue, {
@@ -545,7 +546,7 @@ class DischargeTestingRecordsPage {
     const dateInput = row.querySelector('[data-field="date"] [data-is-input="true"]');
     const sourceInput = row.querySelector('[data-field="discharge_source"] [data-is-input="true"]');
     const dischargeTypeInput = row.querySelector('[data-field="discharge_type"] [data-is-input="true"]');
-    const samplingInput = row.querySelector('[data-field="sampling_personnel_id"] [data-is-input="true"]');
+    const samplingInput = row.querySelector('[data-field="sampling_personnel_name"] [data-is-input="true"]');
 
     if (dateInput) {
       const localValue = dateInput.value;
@@ -580,13 +581,13 @@ class DischargeTestingRecordsPage {
       const value = normalizeText(samplingInput.value);
       if (!value) {
         samplingInput.classList.add('is-invalid');
-        this.applyValidationErrors(row, { sampling_personnel_id: 'Sampling personnel is required.' });
+        this.applyValidationErrors(row, { sampling_personnel_name: 'Sampling personnel is required.' });
         return;
       }
-      const snapshotValue = snapshot.sampling_personnel_id == null ? '' : String(snapshot.sampling_personnel_id);
+      const snapshotValue = normalizeText(snapshot.sampling_personnel_name);
       if (value !== snapshotValue) {
-        payload.sampling_personnel_id = value;
-        updatedFields.push('sampling_personnel_id');
+        payload.sampling_personnel_name = value;
+        updatedFields.push('sampling_personnel_name');
       }
     }
 
@@ -723,7 +724,6 @@ class DischargeTestingRecordsPage {
       discharge_type: tote.discharge_type ?? '',
       initial_pH: tote.initial_pH ?? '',
       final_pH: tote.final_pH ?? '',
-      sampling_personnel_id: tote.sampling_personnel_id ?? '',
       sampling_personnel_name: tote.sampling_personnel_name ?? '',
       lab_technician_name: tote.lab_technician_name ?? '',
     };
@@ -764,7 +764,7 @@ class DischargeTestingRecordsPage {
     this.setTextCell(row, 'discharge_type', data.discharge_type);
     this.setPhCell(row, 'initial_pH', data.initial_pH);
     this.setPhCell(row, 'final_pH', data.final_pH);
-    this.setSamplingPersonnelCell(row, data.sampling_personnel_id, data.sampling_personnel_name);
+    this.setSamplingPersonnelCell(row, data.sampling_personnel_name);
     this.setTextCell(row, 'lab_technician_name', data.lab_technician_name);
 
     const actionsCell = row.querySelector('[data-field="actions"]');
@@ -791,14 +791,13 @@ class DischargeTestingRecordsPage {
     }
   }
 
-  setSamplingPersonnelCell(row, id, name) {
-    const cell = row.querySelector('[data-field="sampling_personnel_id"]');
+  setSamplingPersonnelCell(row, name) {
+    const cell = row.querySelector('[data-field="sampling_personnel_name"]');
     if (!cell) {
       return;
     }
-    const idValue = id == null ? '' : String(id);
-    cell.dataset.value = idValue;
     const displayName = normalizeText(name);
+    cell.dataset.value = displayName;
     cell.textContent = displayName || '--';
   }
 

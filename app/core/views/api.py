@@ -2527,7 +2527,7 @@ def _user_display(user):
 
 
 def _sampling_personnel_display(tote):
-    return _user_display(tote.sampling_personnel)
+    return (tote.sampling_personnel_name or "").strip() or None
 
 
 def _serialize_flush_tote_reading(tote):
@@ -2545,7 +2545,6 @@ def _serialize_flush_tote_reading(tote):
         'final_disposition': tote.final_disposition,
         'lab_technician_id': tote.lab_technician_id,
         'lab_technician_name': _user_display(tote.lab_technician),
-        'sampling_personnel_id': tote.sampling_personnel_id,
         'sampling_personnel_name': _sampling_personnel_display(tote),
     }
 
@@ -2598,6 +2597,7 @@ def discharge_testing_list_api(request):
     discharge_material_code = (payload.get('discharge_material_code') or '').strip()
     final_disposition = (payload.get('final_disposition') or '').strip()
     sampling_personnel_id = payload.get('sampling_personnel_id')
+    sampling_personnel_name = payload.get('sampling_personnel_name')
     initial_ph = payload.get('initial_pH')
     action_required = payload.get('action_required')
     final_ph = payload.get('final_pH')
@@ -2609,6 +2609,7 @@ def discharge_testing_list_api(request):
             discharge_material_code=discharge_material_code,
             final_disposition=final_disposition,
             sampling_personnel_id=sampling_personnel_id,
+            sampling_personnel_name=sampling_personnel_name,
             user=request.user,
             initial_pH=initial_ph,
             action_required=action_required,
@@ -2681,7 +2682,7 @@ def discharge_testing_detail_api(request, pk):
 
     allowed_fields = {
         'date', 'discharge_source', 'discharge_type',
-        'initial_pH', 'final_pH', 'sampling_personnel_id',
+        'initial_pH', 'final_pH', 'sampling_personnel_name', 'sampling_personnel_id',
     }
     requested_fields = allowed_fields.intersection(payload.keys())
     if not requested_fields:
@@ -2708,7 +2709,13 @@ def discharge_testing_detail_api(request, pk):
             tote.discharge_type = (payload.get('discharge_type') or '').strip()
             updated_fields.append('discharge_type')
 
-        if 'sampling_personnel_id' in requested_fields:
+        if 'sampling_personnel_name' in requested_fields:
+            raw_personnel_name = (payload.get('sampling_personnel_name') or '').strip()
+            if not raw_personnel_name:
+                raise ValidationError({'sampling_personnel_name': 'Sampling personnel is required.'})
+            tote.sampling_personnel_name = raw_personnel_name
+            updated_fields.append('sampling_personnel_name')
+        elif 'sampling_personnel_id' in requested_fields:
             raw_personnel_id = payload.get('sampling_personnel_id')
             if not raw_personnel_id:
                 raise ValidationError({'sampling_personnel_id': 'Sampling personnel is required.'})
@@ -2716,12 +2723,11 @@ def discharge_testing_detail_api(request, pk):
                 personnel_id = int(raw_personnel_id)
             except (TypeError, ValueError):
                 raise ValidationError({'sampling_personnel_id': 'Invalid sampling personnel.'})
-            try:
-                sampling_personnel = User.objects.get(pk=personnel_id)
-            except User.DoesNotExist:
+            sampling_personnel = User.objects.filter(pk=personnel_id, is_active=True).first()
+            if sampling_personnel is None:
                 raise ValidationError({'sampling_personnel_id': 'Sampling personnel not found.'})
-            tote.sampling_personnel = sampling_personnel
-            updated_fields.append('sampling_personnel')
+            tote.sampling_personnel_name = _user_display(sampling_personnel)
+            updated_fields.append('sampling_personnel_name')
 
         if updated_fields:
             tote.full_clean()

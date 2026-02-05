@@ -42,11 +42,11 @@ def _user_display(user: Optional[User]) -> Optional[str]:
     if not user:
         return None
     full_name = user.get_full_name()
-    return full_name or user.username
+    return full_name or user.get_username()
 
 
 def _sampling_personnel_display(tote: DischargeTestingRecord) -> Optional[str]:
-    return _user_display(tote.sampling_personnel)
+    return (tote.sampling_personnel_name or "").strip() or None
 
 
 def _is_lab_user(user: Optional[User]) -> bool:
@@ -65,6 +65,7 @@ def create_discharge_test(
     discharge_material_code: Optional[str] = None,
     final_disposition: Optional[str] = None,
     sampling_personnel_id: Optional[Union[int, str]] = None,
+    sampling_personnel_name: Optional[str] = None,
     user: Optional[User] = None,
     initial_pH: Any = None,
     action_required: Optional[str] = None,
@@ -72,7 +73,7 @@ def create_discharge_test(
 ) -> DischargeTestingRecord:
     """
     Create a new discharge testing record with optional initial/final pH values.
-    Assigns lab_technician to the submitting user and accepts sampling personnel user selection.
+    Assigns lab_technician to the submitting user and stores a sampling personnel name string.
     """
     cleaned_source = (discharge_source or "").strip()
     cleaned_discharge_type = (discharge_type or "").strip()
@@ -97,8 +98,8 @@ def create_discharge_test(
     cleaned_action = (action_required or "").strip() or None
     if is_oil_type:
         cleaned_action = None
-    sampling_personnel_user = None
-    if sampling_personnel_id not in (None, ""):
+    cleaned_sampling_personnel_name = (sampling_personnel_name or "").strip()
+    if not cleaned_sampling_personnel_name and sampling_personnel_id not in (None, ""):
         try:
             sampling_personnel_id_value = int(sampling_personnel_id)
         except (TypeError, ValueError):
@@ -110,7 +111,9 @@ def create_discharge_test(
         ).first()
         if sampling_personnel_user is None:
             raise ValidationError({"sampling_personnel_id": "Sampling personnel not found."})
-    else:
+        cleaned_sampling_personnel_name = _user_display(sampling_personnel_user) or ""
+
+    if not cleaned_sampling_personnel_name:
         raise ValidationError({"sampling_personnel_id": "Sampling personnel is required."})
 
     if final_value is not None:
@@ -127,14 +130,12 @@ def create_discharge_test(
         action_required=cleaned_action,
         final_pH=final_value,
         final_disposition=cleaned_disposition,
+        sampling_personnel_name=cleaned_sampling_personnel_name,
     )
     if cleaned_material_code:
         ph_component = find_ph_active_component(cleaned_material_code)
         if ph_component:
             tote.ph_active_component = ph_component.get("code")
-
-    if sampling_personnel_user is not None:
-        tote.sampling_personnel = sampling_personnel_user
 
     if _is_lab_user(user):
         tote.lab_technician = user
@@ -172,7 +173,6 @@ def record_discharge_initial_ph(
         instance.save(update_fields=[
             "initial_pH",
             "lab_technician",
-            "sampling_personnel",
         ])
     return instance
 
@@ -220,7 +220,6 @@ def record_discharge_action_and_final_ph(
             "action_required",
             "final_pH",
             "lab_technician",
-            "sampling_personnel",
         ])
     return instance
 

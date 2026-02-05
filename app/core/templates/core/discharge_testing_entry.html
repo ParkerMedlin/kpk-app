@@ -61,13 +61,13 @@
                     <label class="form-label" for="discharge-testing-entry-sampling-personnel">Sampling Personnel</label>
                     <select
                         id="discharge-testing-entry-sampling-personnel"
-                        name="sampling_personnel_id"
+                        name="sampling_personnel_name"
                         class="form-select"
                         required
                     >
                         <option value="">Select sampling personnel...</option>
-                        {% for id, name in sampling_personnel_options %}
-                            <option value="{{ id }}">{{ name }}</option>
+                        {% for name, label in sampling_personnel_options %}
+                            <option value="{{ name }}">{{ label }}</option>
                         {% endfor %}
                     </select>
                 </div>
