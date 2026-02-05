@@ -310,8 +310,6 @@ Replace the FK with a string field on `DischargeTestingRecord` (e.g., `sampling_
 - [x] 9.14 Test: Edit a record → sampling personnel dropdown preselects the current name (including names not in eligible groups).
 - [x] 9.15 Test: Save edited record with a historical sampling personnel name → name persists after reload.
 - [x] 9.16 Test: Records table displays sampling personnel name for all rows, including those with deleted users.
-- [ ] 9.17 Test: API GET returns `sampling_personnel_name` and does not include `sampling_personnel_id`.
-- [ ] 9.18 Test: API PATCH accepts `sampling_personnel_name` string and updates record correctly.
 
 ---
 
