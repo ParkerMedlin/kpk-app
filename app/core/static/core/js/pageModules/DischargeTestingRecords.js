@@ -348,7 +348,7 @@ class DischargeTestingRecordsPage {
     return input;
   }
 
-  createSelectInput(field, value) {
+  createSelectInput(field, value, displayName = '') {
     const select = document.createElement('select');
     select.className = 'form-select form-select-sm';
     select.dataset.field = field;
@@ -361,7 +361,17 @@ class DischargeTestingRecordsPage {
       option.textContent = 'Select sampling personnel...';
       select.appendChild(option);
     }
-    select.value = value == null ? '' : String(value);
+    const targetValue = value == null ? '' : String(value);
+    if (targetValue) {
+      const hasOption = Array.from(select.options).some((option) => option.value === targetValue);
+      if (!hasOption && displayName) {
+        const option = document.createElement('option');
+        option.value = targetValue;
+        option.textContent = displayName;
+        select.insertBefore(option, select.firstChild);
+      }
+    }
+    select.value = targetValue;
     return select;
   }
 
@@ -434,7 +444,7 @@ class DischargeTestingRecordsPage {
       if (field === 'date') {
         input = this.createDateTimeInput(field, currentValue);
       } else if (field === 'sampling_personnel_id') {
-        input = this.createSelectInput(field, currentValue);
+        input = this.createSelectInput(field, currentValue, snapshot.sampling_personnel_name);
       } else if (field === 'initial_pH' || field === 'final_pH') {
         input = this.createTextInput(field, currentValue, {
           type: 'text',
