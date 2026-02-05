@@ -204,9 +204,61 @@ John Smith              ← lab technician name (small muted)
 - [x] 7.3 Simplify `setPhCell()` in JS to render only the pH value without updated-by/updated-at lines
 - [x] 7.4 Change pH edit inputs from `type: 'number'` to `type: 'text'` with `inputMode: 'decimal'`
 - [x] 7.5 Remove `step: '0.01'` (only relevant for `type="number"`)
-- [ ] 7.6 Test: pH cells display only the value, no sub-lines
-- [ ] 7.7 Test: pH edit inputs have no spinner arrows
-- [ ] 7.8 Test: pH values still parse and validate correctly after type change
+- [x] 7.6 Test: pH cells display only the value, no sub-lines
+- [x] 7.7 Test: pH edit inputs have no spinner arrows
+- [x] 7.8 Test: pH values still parse and validate correctly after type change
+
+---
+
+## Issue 8: Sampling Personnel Cleared When Entering Edit Mode
+
+**Problem:** When clicking the Edit button on a records row, the Sampling Personnel dropdown shows "Select sampling personnel..." instead of the currently assigned person. This makes it appear as if the value was cleared.
+
+**Root Cause Analysis:**
+
+The `#sampling-personnel-options` hidden select element (used as a template for edit mode dropdowns) is populated by `get_sampling_personnel_options()` in `app/core/selectors/discharge_testing_selectors.py:34-47`. This function only includes users who are:
+- Active (`is_active=True`)
+- In groups: `blend_crew`, `blending_line_service`, `line_leader`, OR `lab`
+
+When `createSelectInput()` (`DischargeTestingRecords.js` lines 351-366) builds the edit dropdown:
+1. It copies options from `#sampling-personnel-options`
+2. It sets `select.value = String(currentSamplingPersonnelId)`
+3. If no `<option>` exists with that value (user no longer in eligible groups or inactive), the browser silently fails
+4. The select displays the first option: "Select sampling personnel..."
+
+The original cell still has the correct `data-value` and displays the correct name, but the edit dropdown cannot represent that user.
+
+**Scenario:**
+1. Record created with `sampling_personnel_id = 42` (user "John Doe" in `blend_crew` group)
+2. John Doe is later removed from `blend_crew` group (or becomes inactive)
+3. Page loads: cell correctly shows "John Doe" (from `tote.sampling_personnel.get_full_name`)
+4. User clicks Edit
+5. Dropdown has no option for ID 42
+6. `select.value = "42"` fails silently
+7. User sees "Select sampling personnel..." instead of "John Doe"
+
+**Affected Code Locations:**
+- `DischargeTestingRecords.js` lines 351-366 — `createSelectInput()` method
+- `discharge_testing_selectors.py` lines 34-47 — `get_sampling_personnel_options()`
+
+**Fix Approach:**
+Modify `createSelectInput()` to check if the desired value exists in the options after populating from the template. If not, dynamically add an option using:
+- The value from `cell.dataset.value` (the user ID)
+- The display name from the snapshot's `sampling_personnel_name` (captured from cell text in `getRowSnapshot()` at line 297)
+
+This preserves historical data without changing the eligibility criteria for new entries.
+
+### Tasks
+
+- [x] 8.1 Update `createSelectInput()` to accept an optional `displayName` parameter
+- [x] 8.2 After setting `select.innerHTML`, check if an option with the target value exists
+- [x] 8.3 If missing, create and prepend a new `<option>` with the value and display name
+- [x] 8.4 Update `enterEditMode()` to pass the snapshot's `sampling_personnel_name` to `createSelectInput()`
+- [x] 8.5 Test: Edit record where sampling_personnel is still in eligible groups → correct selection shown
+- [x] 8.6 Test: Edit record where sampling_personnel is no longer in eligible groups → correct selection shown (dynamically added)
+- [x] 8.7 Test: Edit record where sampling_personnel is inactive → correct selection shown (dynamically added)
+- [x] 8.8 Test: Save after editing a record with historical sampling_personnel → value preserved
+- [x] 8.9 Test: New entries still show only eligible users in dropdown
 
 ---
 
