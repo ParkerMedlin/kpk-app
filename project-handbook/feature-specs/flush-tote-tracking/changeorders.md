@@ -791,8 +791,11 @@ _Polish discharge type should hide pH fields, skip pH validation, and bypass act
 | 20. Admin Row Deletion | Complete | 14/14 |
 | 21. Polish pH-Exempt | Pending | 4/8 |
 | 22. Hide Entry Fields (Reversible) | Complete | 6/6 |
+| 23. Entry Form novalidate Fix | Complete | 1/1 |
+| 24. Records Page Simplification | Complete | 11/11 |
+| 25. Records Column Adjustments | Pending | 0/10 |
 
-**Overall**: 159/163 tasks (97%)
+**Overall**: 171/185 tasks (92%)
 
 ---
 
@@ -833,6 +836,75 @@ To restore any of these fields:
 2. **JS**: Restore validation checks in `collectPayload()`. For material field, change `shouldShow = false` back to `shouldShow = ACID_BASE_TYPES.includes(dischargeTypeValue)`.
 3. **Service**: Restore `ValidationError` checks in `create_discharge_test()`. Change `final_disposition` param back to required `str`.
 4. **Model**: If restoring `final_disposition` as required, change back to `models.TextField()` and backfill existing null rows.
+
+---
+
+## Phase 23: Entry Form novalidate Fix
+
+_Fix browser validation error "An invalid form control with name='action_required' is not focusable" caused by hidden required fields._
+
+- [x] **23.1** Add novalidate to entry form
+  - **Do**: In `discharge_testing_entry.html`, add `novalidate` attribute to the form element.
+  - **Deliverable**: Browser skips native constraint validation; JS handles all validation in `collectPayload()`.
+  - **Reason**: When pH-exempt types (Oil/Polish) hide the `action_required` field but it still has `required=true` from previous state, browser can't focus the hidden field. Form already validates via JS, so native validation is redundant.
+
+---
+
+## Phase 24: Records Page Simplification
+
+_Hide columns, make date editable, remove all permission restrictions on records page._
+
+### Template Changes
+
+- [x] **24.1** Remove permission data attributes
+  - **Do**: In `discharge_testing_records.html`, remove `data-role-line` and `data-role-lab` attributes from app container div.
+  - **Deliverable**: No permission flags passed to JS.
+
+- [x] **24.2** Remove sampling personnel options
+  - **Do**: In `discharge_testing_records.html`, remove hidden `sampling-personnel-options` select element.
+  - **Deliverable**: Template cleaner, unused element gone.
+
+- [x] **24.3** Hide columns from table
+  - **Do**: In `discharge_testing_records.html`, remove table headers and row cells for: Discharge Material, pH Active Component, Action Required, Sampling Personnel. Update colspan from 13 to 9.
+  - **Deliverable**: Table shows only: Date/Time, Discharge Source, Discharge Type, Initial pH, Final Disposition, Final pH, Lab Technician, Edit, Delete.
+
+- [x] **24.4** Remove delete button permission check
+  - **Do**: In `discharge_testing_records.html`, remove `{% if user.is_staff %}` wrapper around delete button.
+  - **Deliverable**: All logged-in users see delete button.
+
+### JavaScript Changes
+
+- [x] **24.5** Remove permission checks from JS
+  - **Do**: In `DischargeTestingRecords.js`, remove `canEdit` property, `samplingPersonnelTemplate` reference, and all `canEdit` conditionals.
+  - **Deliverable**: Edit/delete available to all users.
+
+- [x] **24.6** Add date/time editing
+  - **Do**: In `DischargeTestingRecords.js`, add `createDateTimeInput()` method; update `enterEditMode()` to create datetime-local input for date field; update `handleSave()` to detect and send date changes.
+  - **Deliverable**: Date column editable with datetime picker.
+
+- [x] **24.7** Remove hidden field handling from JS
+  - **Do**: In `DischargeTestingRecords.js`, remove references to `discharge_material_code`, `ph_active_component`, `action_required`, `sampling_personnel_id` from `enterEditMode()`, `handleSave()`, `applyRowData()`. Remove `setSamplingPersonnelCell()` and `createSelectInput()` methods.
+  - **Deliverable**: JS only handles visible fields.
+
+### API Changes
+
+- [x] **24.8** Remove permission checks from detail API
+  - **Do**: In `api.py`, remove staff-only check from DELETE handler; remove role-based field permission checks from PATCH handler.
+  - **Deliverable**: Any logged-in user can edit/delete records.
+
+- [x] **24.9** Add date field to allowed updates
+  - **Do**: In `api.py`, add `date` to allowed fields in PATCH handler; parse ISO date string using `parse_datetime()`.
+  - **Deliverable**: API accepts date updates.
+
+- [x] **24.10** Simplify allowed fields
+  - **Do**: In `api.py`, reduce allowed fields to: `date`, `discharge_source`, `discharge_type`, `initial_pH`, `final_pH`, `final_disposition`. Remove `sampling_personnel_id` and `action_required`.
+  - **Deliverable**: API only accepts updates for visible fields.
+
+### Web View Changes
+
+- [x] **24.11** Remove permission check from records view
+  - **Do**: In `web.py`, remove `is_staff` check from `discharge_testing_records_view`; remove unused context variables (`production_line_choices`, `discharge_type_options`, `sampling_personnel_options`).
+  - **Deliverable**: Any logged-in user can access records page.
 
 ---
 
