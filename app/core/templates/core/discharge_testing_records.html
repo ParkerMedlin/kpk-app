@@ -72,15 +72,11 @@
                             </div>
                         </td>
                         <td
-                            data-field="sampling_personnel_id"
-                            data-value="{{ tote.sampling_personnel_id|default_if_none:'' }}"
+                            data-field="sampling_personnel_name"
+                            data-value="{{ tote.sampling_personnel_name|default_if_none:'' }}"
                             data-label="Sampling Personnel"
                         >
-                            {% if tote.sampling_personnel %}
-                                {{ tote.sampling_personnel.get_full_name|default:'--' }}
-                            {% else %}
-                                --
-                            {% endif %}
+                            {{ tote.sampling_personnel_name|default:'--' }}
                         </td>
                         <td
                             data-field="lab_technician_name"
@@ -124,8 +120,8 @@
 
     <select id="sampling-personnel-options" class="d-none" aria-hidden="true">
         <option value="">Select sampling personnel...</option>
-        {% for id, name in sampling_personnel_options %}
-            <option value="{{ id }}">{{ name }}</option>
+        {% for name, label in sampling_personnel_options %}
+            <option value="{{ name }}">{{ label }}</option>
         {% endfor %}
     </select>
 </div>

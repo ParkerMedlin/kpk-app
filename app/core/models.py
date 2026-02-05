@@ -1463,13 +1463,7 @@ class DischargeTestingRecord(models.Model):
         null=True,
         blank=True,
     )
-    sampling_personnel = models.ForeignKey(
-        User,
-        related_name='discharge_tests_sampling',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-    )
+    sampling_personnel_name = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:
         db_table = 'core_dischargetestingrecord'
