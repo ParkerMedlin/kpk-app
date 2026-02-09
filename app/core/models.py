@@ -1259,11 +1259,21 @@ class TankLevelLog(models.Model):
         return self.timestamp
     
 class BlendContainerClassification(models.Model):
+    WASTE_RAG_CHOICES = [
+        ('', ''),
+        ('Acids', 'Acids'),
+        ('Flammables', 'Flammables'),
+        ('Grease/Oil', 'Grease/Oil'),
+        ('Soaps', 'Soaps'),
+        ('Bleach', 'Bleach'),
+    ]
+
     item_code = models.TextField(blank=False, default='')
     tote_classification = models.TextField(blank=False, default='')
     hose_color = models.TextField(blank=False, default='')
     tank_classification = models.TextField(blank=False, default='')
     flush_tote = models.TextField(blank=True, null=True, default='')
+    waste_rag = models.TextField(blank=True, default='', choices=WASTE_RAG_CHOICES)
 
     def __str__(self):
         return self.item_code

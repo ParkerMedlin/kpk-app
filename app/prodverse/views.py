@@ -222,12 +222,29 @@ def display_specsheet_detail(request, item_code, po_number, juliandate):
         item_code_description = CiItem.objects.only("itemcodedesc").get(itemcode__iexact=item_code).itemcodedesc
 
         flush_tote = None
+        waste_rag = None
         if specsheet.component_item_code:
             container_classification = BlendContainerClassification.objects.filter(
                 item_code__iexact=specsheet.component_item_code
             ).first()
             if container_classification:
                 flush_tote = container_classification.flush_tote
+                waste_rag = container_classification.waste_rag
+        WASTE_RAG_COLORS = {
+            'Acids': ('#000', '#ffc107'),
+            'Flammables': ('#fff', '#dc3545'),
+            'Grease/Oil': ('#000', '#fd7e14'),
+            'Soaps': ('#000', '#f8f9fa'),
+            'Bleach': ('#fff', '#0d6efd'),
+        }
+        waste_rag_text = None
+        waste_rag_bg = None
+        waste_rag_label = None
+        if waste_rag:
+            color_pair = WASTE_RAG_COLORS.get(waste_rag)
+            if color_pair:
+                waste_rag_label, waste_rag_bg = color_pair
+                waste_rag_text = waste_rag
         bom = BillOfMaterials.objects.filter(item_code__iexact=item_code) \
             .exclude(Q(component_item_code__startswith='/') & ~Q(component_item_code__startswith='/C'))
         label_component_item_codes = list(SpecSheetLabels.objects.values_list('item_code', flat=True))
@@ -287,6 +304,9 @@ def display_specsheet_detail(request, item_code, po_number, juliandate):
             'bill_of_materials': bom,
             'state_json': context_state_json,
             'flush_tote': flush_tote,
+            'waste_rag_text': waste_rag_text,
+            'waste_rag_bg': waste_rag_bg,
+            'waste_rag_label': waste_rag_label,
         }
     except SpecSheetData.DoesNotExist:
         return redirect('/prodverse/specsheet/specsheet-lookup/?redirect=true')
