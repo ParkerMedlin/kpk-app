@@ -319,6 +319,7 @@ def display_specsheet_detail(request, item_code, po_number, juliandate):
             'bill_of_materials': bom,
             'state_json': context_state_json,
             'flush_tote': flush_tote,
+            'show_waste_rag': False,
             'waste_rag_text': waste_rag_text,
             'waste_rag_bg': waste_rag_bg,
             'waste_rag_label': waste_rag_label,

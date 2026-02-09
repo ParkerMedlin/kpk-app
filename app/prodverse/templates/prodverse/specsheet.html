@@ -183,6 +183,8 @@
                 </td>
                 {% comment %} colspan="4" {% endcomment %}
             </tr>
+            {% comment %} Hidden until backend waste_rag data is sorted {% endcomment %}
+            {% if show_waste_rag %}
             <tr class="align-middle">
                 <td></td>
                 <td></td>
@@ -197,6 +199,7 @@
                 </td>
                 {% comment %} colspan="4" {% endcomment %}
             </tr>
+            {% endif %}
 
             <tr>
                 <td class="align-middle"><input type="checkbox" class="larger-checkbox" id="cb05"></td>
