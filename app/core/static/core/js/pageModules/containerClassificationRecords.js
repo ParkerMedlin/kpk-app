@@ -9,11 +9,11 @@ const itemValidationCache = new Map();
 
 const WASTE_RAG_CHOICES = [
   { value: '', label: '' },
-  { value: 'Acids', label: 'Acids' },
-  { value: 'Flammables', label: 'Flammables' },
+  { value: 'Acid', label: 'Acid' },
+  { value: 'Flammable', label: 'Flammable' },
   { value: 'Grease/Oil', label: 'Grease/Oil' },
-  { value: 'Soaps', label: 'Soaps' },
-  { value: 'Bleach', label: 'Bleach' },
+  { value: 'Soap', label: 'Soap' },
+  { value: 'Base', label: 'Base' },
 ];
 
 const htmlEscapeMap = {

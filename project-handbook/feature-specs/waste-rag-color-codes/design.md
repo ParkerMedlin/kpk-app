@@ -27,11 +27,11 @@ None.
 # In BlendContainerClassification (app/core/models.py:1261):
 WASTE_RAG_CHOICES = [
     ('', ''),
-    ('Acids', 'Acids'),
-    ('Flammables', 'Flammables'),
+    ('Acid', 'Acid'),
+    ('Flammable', 'Flammable'),
     ('Grease/Oil', 'Grease/Oil'),
-    ('Soaps', 'Soaps'),
-    ('Bleach', 'Bleach'),
+    ('Soap', 'Soap'),
+    ('Base', 'Base'),
 ]
 
 waste_rag = models.TextField(blank=True, default='', choices=WASTE_RAG_CHOICES)
@@ -40,11 +40,11 @@ waste_rag = models.TextField(blank=True, default='', choices=WASTE_RAG_CHOICES)
 ### Color Mapping (hardcoded in view)
 ```python
 WASTE_RAG_COLORS = {
-    'Acids': ('#000', '#ffc107'),        # black text on yellow
-    'Flammables': ('#fff', '#dc3545'),   # white text on red
+    'Acid': ('#000', '#ffc107'),        # black text on yellow
+    'Flammable': ('#fff', '#dc3545'),   # white text on red
     'Grease/Oil': ('#000', '#fd7e14'),   # black text on orange
-    'Soaps': ('#000', '#f8f9fa'),        # black text on white
-    'Bleach': ('#fff', '#0d6efd'),       # white text on blue
+    'Soap': ('#000', '#f8f9fa'),        # black text on white
+    'Base': ('#fff', '#0d6efd'),       # white text on blue
 }
 ```
 

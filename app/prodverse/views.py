@@ -24,6 +24,18 @@ logger = logging.getLogger(__name__)
 # Initialize Redis connection
 redis_client = redis.StrictRedis(host='kpk-app_redis_1', port=6379, db=0)
 
+def _get_blend_component_item_code(item_code):
+    if not item_code:
+        return None
+    return (
+        BillOfMaterials.objects.filter(
+            item_code__iexact=item_code,
+            component_item_description__istartswith='BLEND',
+        )
+        .values_list('component_item_code', flat=True)
+        .first()
+    )
+
 @csrf_exempt
 def update_schedule_files(request):
     """Updates production schedule files and notifies connected WebSocket clients.
@@ -223,27 +235,30 @@ def display_specsheet_detail(request, item_code, po_number, juliandate):
 
         flush_tote = None
         waste_rag = None
-        if specsheet.component_item_code:
+        blend_component_item_code = _get_blend_component_item_code(item_code)
+        print(blend_component_item_code)
+        if blend_component_item_code:
             container_classification = BlendContainerClassification.objects.filter(
-                item_code__iexact=specsheet.component_item_code
+                item_code__iexact=blend_component_item_code
             ).first()
             if container_classification:
                 flush_tote = container_classification.flush_tote
                 waste_rag = container_classification.waste_rag
         WASTE_RAG_COLORS = {
-            'Acids': ('#000', '#ffc107'),
-            'Flammables': ('#fff', '#dc3545'),
-            'Grease/Oil': ('#000', '#fd7e14'),
-            'Soaps': ('#000', '#f8f9fa'),
-            'Bleach': ('#fff', '#0d6efd'),
+            'Acid': ('#000', '#ffc107', None),
+            'Flammable': ('#fff', '#dc3545', None),
+            'Grease/Oil': ('#000', '#fd7e14', None),
+            'Soap': ('#000', '#f8f9fa', '2px solid #333'),
+            'Base': ('#fff', '#0d6efd', None),
         }
         waste_rag_text = None
         waste_rag_bg = None
         waste_rag_label = None
+        waste_rag_border = None
         if waste_rag:
-            color_pair = WASTE_RAG_COLORS.get(waste_rag)
-            if color_pair:
-                waste_rag_label, waste_rag_bg = color_pair
+            color_tuple = WASTE_RAG_COLORS.get(waste_rag)
+            if color_tuple:
+                waste_rag_label, waste_rag_bg, waste_rag_border = color_tuple
                 waste_rag_text = waste_rag
         bom = BillOfMaterials.objects.filter(item_code__iexact=item_code) \
             .exclude(Q(component_item_code__startswith='/') & ~Q(component_item_code__startswith='/C'))
@@ -307,6 +322,7 @@ def display_specsheet_detail(request, item_code, po_number, juliandate):
             'waste_rag_text': waste_rag_text,
             'waste_rag_bg': waste_rag_bg,
             'waste_rag_label': waste_rag_label,
+            'waste_rag_border': waste_rag_border,
         }
     except SpecSheetData.DoesNotExist:
         return redirect('/prodverse/specsheet/specsheet-lookup/?redirect=true')
