@@ -1261,11 +1261,11 @@ class TankLevelLog(models.Model):
 class BlendContainerClassification(models.Model):
     WASTE_RAG_CHOICES = [
         ('', ''),
-        ('Acids', 'Acids'),
-        ('Flammables', 'Flammables'),
+        ('Acid', 'Acid'),
+        ('Flammable', 'Flammable'),
         ('Grease/Oil', 'Grease/Oil'),
-        ('Soaps', 'Soaps'),
-        ('Bleach', 'Bleach'),
+        ('Soap', 'Soap'),
+        ('Base', 'Base'),
     ]
 
     item_code = models.TextField(blank=False, default='')

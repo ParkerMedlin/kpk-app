@@ -189,7 +189,7 @@
                 <td class="align-middle"><div class="align-middle" style="padding-top: 10px; padding-bottom: 10px;"><strong>Waste Rag:</strong></div></td>
                 <td class="align-middle"><div class="align-middle" style="padding-top: 10px; padding-bottom: 10px; ">
                     {% if waste_rag_text %}
-                        <span class="badge" style="font-size: 16px; background-color: {{ waste_rag_bg }}; color: {{ waste_rag_label }};">{{ waste_rag_text }}</span>
+                        <span class="badge" style="font-size: 16px; background-color: {{ waste_rag_bg }}; color: {{ waste_rag_label }};{% if waste_rag_border %} border: {{ waste_rag_border }};{% endif %}">{{ waste_rag_text }}</span>
                     {% else %}
                         <span class="badge bg-primary" style="font-size: 16px;">N/A</span>
                     {% endif %}
