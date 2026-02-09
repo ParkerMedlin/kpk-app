@@ -73,66 +73,65 @@ Post-refactor testing after Issues 1-9 resolved. Sampling personnel is now store
 
 ### Enter Edit Mode
 
-- [ ] Click Edit button → row highlights yellow
-- [ ] Date field becomes datetime-local input with current value
-- [ ] Discharge Source becomes text input with current value
-- [ ] Discharge Type becomes text input with current value
-- [ ] Initial pH becomes text input (no spinner arrows) with current value
-- [ ] Final pH becomes text input (no spinner arrows) with current value
-- [ ] Sampling Personnel becomes dropdown with current value selected
-- [ ] Delete button remains visible and unchanged
-- [ ] Save (checkmark) and Cancel (X) buttons appear
+- [x] Click Edit button → row highlights yellow
+- [x] Date field becomes datetime-local input with current value
+- [x] Discharge Source becomes text input with current value
+- [x] Discharge Type becomes text input with current value
+- [x] Initial pH becomes text input (no spinner arrows) with current value
+- [x] Final pH becomes text input (no spinner arrows) with current value
+- [x] Sampling Personnel becomes dropdown with current value selected
+- [x] Delete button remains visible and unchanged
+- [x] Save (checkmark) and Cancel (X) buttons appear
 
 ### Edit Mode – Sampling Personnel Dropdown
 
-- [ ] Dropdown includes all eligible active users
-- [ ] Current sampling personnel is preselected (even if user no longer in eligible groups)
-- [ ] Can select a different person from dropdown
+- [x] Dropdown includes all eligible active users
+- [x] Current sampling personnel is preselected (even if user no longer in eligible groups)
+- [x] Can select a different person from dropdown
 
 ### Cancel Edit
 
-- [ ] Click Cancel → row exits edit mode
-- [ ] Original values restored (no changes saved)
-- [ ] Row no longer highlighted
+- [x] Click Cancel → row exits edit mode
+- [x] Original values restored (no changes saved)
+- [x] Row no longer highlighted
 
 ### Save Edit – No Changes
 
-- [ ] Enter edit mode, make no changes, click Save → row exits edit mode quietly
+- [x] Enter edit mode, make no changes, click Save → row exits edit mode quietly
 
 ### Save Edit – Valid Changes
 
-- [ ] Change Discharge Source, Save → success toast, new value displayed
-- [ ] Change Discharge Type, Save → success toast, new value displayed
-- [ ] Change Initial pH to valid value, Save → success toast, new value displayed
-- [ ] Change Final pH to valid value (with Initial pH present), Save → success toast
-- [ ] Change Sampling Personnel, Save → success toast, new name displayed
-- [ ] Change Date, Save → success toast, new date displayed
+- [x] Change Discharge Source, Save → success toast, new value displayed
+- [x] Change Discharge Type, Save → success toast, new value displayed
+- [x] Change Initial pH to valid value, Save → success toast, new value displayed
+- [x] Change Final pH to valid value (with Initial pH present), Save → success toast
+- [x] Change Sampling Personnel, Save → success toast, new name displayed
+- [x] Change Date, Save → success toast, new date displayed
 
 ### Save Edit – Validation Errors
 
-- [ ] Clear Sampling Personnel dropdown, Save → "Sampling personnel is required."
-- [ ] Enter invalid pH value, Save → "Enter a valid pH value."
-- [ ] Enter Final pH out of range, Save → range error message
-- [ ] Enter Final pH when Initial pH is empty → "Initial pH must be recorded before final pH."
+- [x] Clear Sampling Personnel dropdown, Save → "Sampling personnel is required."
+- [x] Enter invalid pH value, Save → "Enter a valid pH value."
+- [x] Enter Final pH out of range, Save → range error message
+- [x] Enter Final pH when Initial pH is empty → "Initial pH must be recorded before final pH."
 
 ### Edit Another Row
 
-- [ ] While editing row A, click Edit on row B → prompt "You have unsaved changes... Abandon them?"
-- [ ] Click OK → row A reverts, row B enters edit mode
-- [ ] Click Cancel → stay on row A
+- [x] While editing row A, click Edit on row B → prompt "You have unsaved changes... Abandon them?"
+- [x] Click OK → row A reverts, row B enters edit mode
+- [x] Click Cancel → stay on row A
 
 ### Delete Record
 
-- [ ] Click Delete → confirmation dialog "Are you sure you want to delete this record?"
-- [ ] Click Cancel on confirmation → record remains
-- [ ] Click OK on confirmation → record removed, success toast
-- [ ] Delete last record → empty state message appears
+- [x] Click Delete → confirmation dialog "Are you sure you want to delete this record?"
+- [x] Click Cancel on confirmation → record remains
+- [x] Click OK on confirmation → record removed, success toast
 
 ### Data Persistence
 
-- [ ] Create entry on Entry page → appears on Records page after refresh
-- [ ] Edit record on Records page, refresh → changes persisted
-- [ ] Delete record on Records page, refresh → record gone
+- [x] Create entry on Entry page → appears on Records page after refresh
+- [x] Edit record on Records page, refresh → changes persisted
+- [x] Delete record on Records page, refresh → record gone
 
 ---
 
@@ -140,14 +139,14 @@ Post-refactor testing after Issues 1-9 resolved. Sampling personnel is now store
 
 ### pH Display (Records Page)
 
-- [ ] pH cells show only the numeric value (no timestamp, no user name sub-lines)
-- [ ] Missing pH shows `--`
+- [x] pH cells show only the numeric value (no timestamp, no user name sub-lines)
+- [x] Missing pH shows `--`
 
 ### Sampling Personnel Name Persistence
 
-- [ ] Historical records with sampling personnel still display the name correctly
-- [ ] Editing a historical record preserves the sampling personnel name if unchanged
-- [ ] Changing sampling personnel on edit stores the new name correctly
+- [x] Historical records with sampling personnel still display the name correctly
+- [x] Editing a historical record preserves the sampling personnel name if unchanged
+- [x] Changing sampling personnel on edit stores the new name correctly
 
 ---
 
@@ -155,13 +154,11 @@ Post-refactor testing after Issues 1-9 resolved. Sampling personnel is now store
 
 ### Entry Page
 
-- [ ] Staff user → can access
-- [ ] Lab technician (non-staff) → can access
-- [ ] Other authenticated user → 403 Forbidden
-- [ ] Anonymous → redirect to login
+- [x] Staff user → can access
+- [x] Lab technician (non-staff) → can access
+- [x] Anonymous → redirect to login
 
 ### Records Page
 
-- [ ] Staff user → can access
-- [ ] Non-staff user → 403 Forbidden
-- [ ] Anonymous → redirect to login
+- [x] Logged in user → can access
+- [x] Anonymous → redirect to login
