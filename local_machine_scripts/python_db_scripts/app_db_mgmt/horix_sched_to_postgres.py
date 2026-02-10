@@ -162,7 +162,27 @@ def get_horix_line_blends(file_buffer=None, use_dev=False, logger=None):
                 processed_runs.append(run)
 
         sheet_df = pd.DataFrame(processed_runs)
-        
+
+        if sheet_df.empty:
+            alchemy_engine = create_engine(
+                'postgresql+psycopg2://postgres:blend2021@localhost:5432/blendversedb',
+                pool_recycle=3600
+            )
+            pd.DataFrame(columns=[
+                'item_code','po_number','item_description','amt',
+                'blend','Case Size','item_run_qty','run_date',
+                'prod_line','run_time','start_time','id2',
+                'component_item_code','component_item_description'
+            ]).to_sql(name='hx_blendthese', con=alchemy_engine, if_exists='replace', index=False)
+            connection_postgres = psycopg2.connect('postgresql://postgres:blend2021@localhost:5432/blendversedb')
+            cursor_postgres = connection_postgres.cursor()
+            cursor_postgres.execute("ALTER TABLE hx_blendthese ADD COLUMN id SERIAL PRIMARY KEY;")
+            connection_postgres.commit()
+            cursor_postgres.close()
+            connection_postgres.close()
+            print(f'{dt.datetime.now()} :: horix_sched_to_postgres.py :: get_horix_line_blends :: No data on Horix Line sheet, table cleared')
+            return
+
         target_timezone = pytz.timezone('America/Chicago')
         today_datetime_localized = datetime.now(target_timezone).replace(hour=0, minute=0, second=0, microsecond=0)
 
