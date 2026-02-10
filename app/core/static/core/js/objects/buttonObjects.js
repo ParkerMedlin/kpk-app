@@ -28,7 +28,16 @@ export class CreateCountListButton {
             let recordType = urlParameters.get('recordType');
             let requestType = 'create'
             // console.log(`/core/count-list/add?itemsToAdd=${encodedItemCodes}&encodedPkList=${encodedDummyList}&recordType=${recordType}`)
-            let requestURL = (`/core/count-list/add?itemsToAdd=${encodedItemCodes}&recordType=${recordType}`);
+            let now = new Date();
+            let pad = (n) => String(n).padStart(2, '0');
+            let dateStr = `${pad(now.getMonth() + 1)}-${pad(now.getDate())}-${now.getFullYear()}_${pad(now.getHours())}:${pad(now.getMinutes())}`;
+            let defaultName = recordType ? `${recordType}_count_${dateStr}` : `count_${dateStr}`;
+            let collectionName = prompt('Enter a name for the count list:', defaultName);
+            if (collectionName === null) {
+                return;
+            }
+            collectionName = collectionName.trim() || defaultName;
+            let requestURL = (`/core/count-list/add?itemsToAdd=${encodedItemCodes}&recordType=${recordType}&collectionName=${encodeURIComponent(collectionName)}`);
             $.ajax({
                 url: requestURL,
                 type: 'GET',

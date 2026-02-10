@@ -234,7 +234,7 @@ def build_audit_group_display_items(
 
     item_codes = [item['item_code'] for item in audit_items]
     if not item_codes:
-        return audit_items, get_distinct_audit_groups()
+        return audit_items, get_distinct_audit_groups(record_type)
 
     qty_and_units = get_qty_and_units_for_items(item_codes)
     upcoming_runs, count_table = get_upcoming_runs_for_items(item_codes, record_type)
@@ -263,8 +263,60 @@ def build_audit_group_display_items(
             item['id'] = None
             item['item_type'] = record_type
 
-    audit_group_list = get_distinct_audit_groups()
+    audit_group_list = get_distinct_audit_groups(record_type)
     return audit_items, audit_group_list
+
+
+def _serialize_audit_group(record):
+    """Return audit group record payload for JSON responses."""
+    return {
+        'id': record.id,
+        'item_code': record.item_code,
+        'item_description': record.item_description,
+        'audit_group': record.audit_group,
+        'counting_unit': record.counting_unit,
+        'item_type': record.item_type,
+    }
+
+
+@login_required
+@require_POST
+def update_audit_group_api(request, audit_group_id):
+    """Update an existing AuditGroup record and return JSON."""
+    audit_group_item = get_object_or_404(AuditGroup, pk=audit_group_id)
+
+    try:
+        payload = json.loads(request.body.decode('utf-8')) if request.body else {}
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({'status': 'error', 'error': 'Invalid JSON payload.'}, status=400)
+
+    merged = {}
+    for field in AuditGroupForm.Meta.fields:
+        merged[field] = payload.get(field, getattr(audit_group_item, field))
+
+    form = AuditGroupForm(data=merged, instance=audit_group_item)
+    if not form.is_valid():
+        return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+
+    updated = form.save()
+    return JsonResponse({'status': 'success', 'record': _serialize_audit_group(updated)})
+
+
+@login_required
+@require_POST
+def create_audit_group_api(request):
+    """Create a new AuditGroup record and return JSON."""
+    try:
+        payload = json.loads(request.body.decode('utf-8')) if request.body else {}
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({'status': 'error', 'error': 'Invalid JSON payload.'}, status=400)
+
+    form = AuditGroupForm(data=payload)
+    if not form.is_valid():
+        return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+
+    record = form.save()
+    return JsonResponse({'status': 'success', 'record': _serialize_audit_group(record)}, status=201)
 
 
 def update_audit_group_assignment(item_id, form_data):
@@ -890,12 +942,15 @@ def add_count_list(request):
         print(f'item_code_list: {item_codes_list}' )
         list_info = add_count_records(item_codes_list, record_type)
 
-        now_str = dt.datetime.now().strftime('%m-%d-%Y_%H:%M')
+        collection_name = request.GET.get('collectionName', '').strip()
+        if not collection_name:
+            now_str = dt.datetime.now().strftime('%m-%d-%Y_%H:%M')
+            collection_name = f'{record_type}_count_{now_str}'
 
         try:
             new_count_collection = CountCollectionLink(
                 link_order = CountCollectionLink.objects.aggregate(Max('link_order'))['link_order__max'] + 1 if CountCollectionLink.objects.exists() else 1,
-                collection_name = f'{record_type}_count_{now_str}',
+                collection_name = collection_name,
                 count_id_list = list(list_info['primary_keys']),
                 collection_id = list_info['collection_id'],
                 record_type = record_type
@@ -919,6 +974,69 @@ def add_count_list(request):
         response = {'result' : 'failure'}
 
     return JsonResponse(response, safe=False)
+
+@login_required
+@require_POST
+def create_count_list_from_group(request):
+    """Create a count list from all items in an audit group."""
+    try:
+        payload = json.loads(request.body.decode('utf-8')) if request.body else {}
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({'status': 'error', 'error': 'Invalid JSON payload.'}, status=400)
+
+    audit_group_name = payload.get('audit_group', '').strip()
+    record_type = payload.get('record_type', '').strip()
+    collection_name = payload.get('collection_name', '').strip()
+
+    if not audit_group_name or not record_type:
+        return JsonResponse(
+            {'status': 'error', 'error': 'audit_group and record_type are required.'},
+            status=400,
+        )
+
+    item_codes = list(
+        AuditGroup.objects.filter(audit_group__iexact=audit_group_name, item_type=record_type)
+        .values_list('item_code', flat=True)
+    )
+
+    if not item_codes:
+        return JsonResponse(
+            {'status': 'error', 'error': f'No items found in audit group "{audit_group_name}".'},
+            status=400,
+        )
+
+    list_info = add_count_records(item_codes, record_type)
+
+    if not collection_name:
+        now_str = dt.datetime.now().strftime('%m-%d-%Y_%H:%M')
+        collection_name = f'{record_type}_count_{now_str}'
+
+    new_count_collection = CountCollectionLink(
+        link_order=CountCollectionLink.objects.aggregate(Max('link_order'))['link_order__max'] + 1
+        if CountCollectionLink.objects.exists()
+        else 1,
+        collection_name=collection_name,
+        count_id_list=list(list_info['primary_keys']),
+        collection_id=list_info['collection_id'],
+        record_type=record_type,
+    )
+    new_count_collection.save()
+
+    event_data = {
+        'id': new_count_collection.id,
+        'link_order': new_count_collection.link_order,
+        'collection_name': new_count_collection.collection_name,
+        'collection_id': new_count_collection.collection_id,
+        'record_type': record_type,
+    }
+    append_count_collection_event('collection_added', event_data)
+    broadcast_count_collection_event('collection_added', event_data)
+
+    return JsonResponse({
+        'status': 'success',
+        'collection_name': new_count_collection.collection_name,
+        'item_count': len(item_codes),
+    })
 
 def update_count_list(request):
     """Updates a count list by adding or removing count records.
