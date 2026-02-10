@@ -1259,11 +1259,21 @@ class TankLevelLog(models.Model):
         return self.timestamp
     
 class BlendContainerClassification(models.Model):
+    WASTE_RAG_CHOICES = [
+        ('', ''),
+        ('Acid', 'Acid'),
+        ('Flammable', 'Flammable'),
+        ('Grease/Oil', 'Grease/Oil'),
+        ('Soap', 'Soap'),
+        ('Base', 'Base'),
+    ]
+
     item_code = models.TextField(blank=False, default='')
     tote_classification = models.TextField(blank=False, default='')
     hose_color = models.TextField(blank=False, default='')
     tank_classification = models.TextField(blank=False, default='')
     flush_tote = models.TextField(blank=True, null=True, default='')
+    waste_rag = models.TextField(blank=True, default='', choices=WASTE_RAG_CHOICES)
 
     def __str__(self):
         return self.item_code
@@ -1436,6 +1446,15 @@ class DischargeTestingRecord(models.Model):
         '200126',
         '030025',
         '240079',
+        '030178',
+        '050007',
+        '240077',
+        '030136',
+        '240073',
+        '031049',
+        '030019',
+        '200126',
+        '030161'
     )
 
     date = models.DateTimeField(auto_now_add=True, db_index=True)
@@ -1446,7 +1465,7 @@ class DischargeTestingRecord(models.Model):
     initial_pH = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
     action_required = models.TextField(blank=True, null=True)
     final_pH = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
-    final_disposition = models.TextField()
+    final_disposition = models.TextField(blank=True, null=True)
     lab_technician = models.ForeignKey(
         User,
         related_name='discharge_tests_lab',
@@ -1454,13 +1473,7 @@ class DischargeTestingRecord(models.Model):
         null=True,
         blank=True,
     )
-    sampling_personnel = models.ForeignKey(
-        User,
-        related_name='discharge_tests_sampling',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-    )
+    sampling_personnel_name = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:
         db_table = 'core_dischargetestingrecord'
