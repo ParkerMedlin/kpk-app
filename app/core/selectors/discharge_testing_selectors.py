@@ -11,10 +11,10 @@ User = get_user_model()
 def list_discharge_tests(limit: Optional[int] = 200) -> QuerySet:
     """
     Return recent discharge testing records ordered newest-first.
-    Includes related lab_technician and sampling_personnel for display.
+    Includes related lab_technician for display.
     """
     queryset = (
-        DischargeTestingRecord.objects.select_related('lab_technician', 'sampling_personnel')
+        DischargeTestingRecord.objects.select_related('lab_technician')
         .order_by('-date', '-id')
     )
 
@@ -26,22 +26,22 @@ def list_discharge_tests(limit: Optional[int] = 200) -> QuerySet:
 def get_discharge_test(pk: int) -> DischargeTestingRecord:
     """Fetch a single discharge testing record by primary key."""
     return (
-        DischargeTestingRecord.objects.select_related('lab_technician', 'sampling_personnel')
+        DischargeTestingRecord.objects.select_related('lab_technician')
         .get(pk=pk)
     )
 
 
-def get_sampling_personnel_options() -> List[Tuple[int, str]]:
+def get_sampling_personnel_options() -> List[Tuple[str, str]]:
     """
-    Return active users as (id, display_name) tuples, ordered by display name.
+    Return active users as (display_name, display_name) tuples, ordered by display name.
     """
-    options: List[Tuple[int, str]] = []
+    options: List[Tuple[str, str]] = []
     for user in User.objects.filter(
         is_active=True,
         groups__name__in=['blend_crew', 'blending_line_service', 'line_leader', 'lab'],
-    ).distinct().only('id', 'first_name', 'last_name', 'username'):
+    ).distinct().only('first_name', 'last_name', 'username'):
         display_name = user.get_full_name() or user.get_username()
-        options.append((user.id, display_name))
+        options.append((display_name, display_name))
 
     options.sort(key=lambda option: option[1].lower())
     return options
