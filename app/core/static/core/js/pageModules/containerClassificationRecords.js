@@ -7,6 +7,15 @@ const VALIDATE_ENDPOINT = '/core/api/validate-blend-item/';
 
 const itemValidationCache = new Map();
 
+const WASTE_RAG_CHOICES = [
+  { value: '', label: '' },
+  { value: 'Acid', label: 'Acid' },
+  { value: 'Flammable', label: 'Flammable' },
+  { value: 'Grease/Oil', label: 'Grease/Oil' },
+  { value: 'Soap', label: 'Soap' },
+  { value: 'Base', label: 'Base' },
+];
+
 const htmlEscapeMap = {
   '&': '&amp;',
   '<': '&lt;',
@@ -38,6 +47,21 @@ function getCsrfToken() {
 }
 
 function buildInput(field, value) {
+  if (field === 'waste_rag') {
+    const select = document.createElement('select');
+    select.className = 'form-select form-select-sm';
+    WASTE_RAG_CHOICES.forEach((choice) => {
+      const option = document.createElement('option');
+      option.value = choice.value;
+      option.textContent = choice.label;
+      select.appendChild(option);
+    });
+    select.value = value ?? '';
+    select.dataset.field = field;
+    select.dataset.isInput = 'true';
+    return select;
+  }
+
   const inputType = field === 'tank_classification' ? 'textarea' : 'input';
   const input = document.createElement(inputType);
   input.className = 'form-control form-control-sm';
@@ -688,6 +712,7 @@ class ContainerClassificationTable {
         );
         const toteValue = (row.querySelector('[data-field="tote_classification"] [data-is-input="true"]')?.value || '').trim();
         const flushToteValue = (row.querySelector('[data-field="flush_tote"] [data-is-input="true"]')?.value || '').trim();
+        const wasteRagValue = (row.querySelector('[data-field="waste_rag"] [data-is-input="true"]')?.value || '').trim();
         const hoseValue = (row.querySelector('[data-field="hose_color"] [data-is-input="true"]')?.value || '').trim();
         const containerValue = (row.querySelector('[data-field="tank_classification"] [data-is-input="true"]')?.value || '').trim();
 
@@ -695,6 +720,7 @@ class ContainerClassificationTable {
           item_code: itemCodeValue,
           tote_classification: toteValue,
           flush_tote: flushToteValue,
+          waste_rag: wasteRagValue,
           hose_color: hoseValue,
           tank_classification: containerValue,
         });
@@ -707,6 +733,7 @@ class ContainerClassificationTable {
         item_code: normalizeItemCode(classification.item_code || ''),
         tote_classification: classification.tote_classification || '',
         flush_tote: classification.flush_tote || '',
+        waste_rag: classification.waste_rag || '',
         hose_color: classification.hose_color || '',
         tank_classification: classification.tank_classification || '',
       };
@@ -776,6 +803,7 @@ class ContainerClassificationTable {
         item_code: '',
         tote_classification: '',
         flush_tote: '',
+        waste_rag: '',
         hose_color: '',
         tank_classification: '',
         isNew: true,
@@ -881,6 +909,7 @@ class ContainerClassificationTable {
       <td data-field="item_code" class="text-break"></td>
       <td data-field="tote_classification" class="text-break"></td>
       <td data-field="flush_tote" class="text-break"></td>
+      <td data-field="waste_rag" class="text-break"></td>
       <td data-field="hose_color" class="text-break"></td>
       <td data-field="tank_classification" class="text-break"></td>
       <td data-field="actions" class="text-center">
@@ -894,6 +923,7 @@ class ContainerClassificationTable {
       item_code: normalizeItemCode(classification.item_code || ''),
       tote_classification: classification.tote_classification || '',
       flush_tote: classification.flush_tote || '',
+      waste_rag: classification.waste_rag || '',
       hose_color: classification.hose_color || '',
       tank_classification: classification.tank_classification || '',
     };

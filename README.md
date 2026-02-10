@@ -176,6 +176,15 @@ kpk-app/
 
 ---
 
+## Nav3D Rendering Notes
+
+These guardrails keep glow effects stable and readable in `app/nav3d/static/nav3d/js/nav3d-interface.js`.
+
+- Use planes for wall-aligned glow elements instead of sprites to avoid camera-facing tilt.
+- For glow textures, prefer stable sampling: `LinearFilter` for min/mag, `generateMipmaps = false`, and `ClampToEdge` wrapping.
+- Avoid z-fighting shimmer on glow planes with `polygonOffset` (or a small positional offset when needed).
+- Keep glow materials additive, transparent, and non-shadowing so they read as light, not geometry.
+
 ## Django Apps
 
 ### Core (`app/core/`)
