@@ -155,7 +155,7 @@ $(document).ready(function() {
         ? headerCells[0].textContent.trim() === 'Add to Count List'
         : false;
     const nonSortableColumns = hasSelectColumn
-        ? [0, 2, 3, 6]
+        ? [0, 2, 6]
         : [1, 2, 5];
     const itemColumnIndex = hasSelectColumn ? 1 : 0;
 
