@@ -463,6 +463,7 @@ class BlendContainerClassificationForm(forms.ModelForm):
             'item_code',
             'tote_classification',
             'flush_tote',
+            'waste_rag',
             'hose_color',
             'tank_classification',
         )
@@ -470,6 +471,7 @@ class BlendContainerClassificationForm(forms.ModelForm):
             'item_code': forms.TextInput(),
             'tote_classification': forms.TextInput(),
             'flush_tote': forms.TextInput(),
+            'waste_rag': forms.Select(choices=BlendContainerClassification.WASTE_RAG_CHOICES),
             'hose_color': forms.TextInput(),
             'tank_classification': forms.TextInput(),
         }
@@ -477,13 +479,14 @@ class BlendContainerClassificationForm(forms.ModelForm):
             'item_code': 'Item Code:',
             'tote_classification': 'Tote Classification:',
             'flush_tote': 'Flush Tote:',
+            'waste_rag': 'Waste Rag:',
             'hose_color': 'Hose Class:',
             'tank_classification': 'Container Guidance:',
         }
 
     def clean(self):
         cleaned = super().clean()
-        for field in ('item_code', 'tote_classification', 'flush_tote', 'hose_color', 'tank_classification'):
+        for field in ('item_code', 'tote_classification', 'flush_tote', 'waste_rag', 'hose_color', 'tank_classification'):
             value = cleaned.get(field)
             if isinstance(value, str):
                 cleaned[field] = value.strip()

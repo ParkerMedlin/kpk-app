@@ -790,8 +790,191 @@ _Polish discharge type should hide pH fields, skip pH validation, and bypass act
 | 19. pH Alert Description Enhancement | Complete | 5/5 |
 | 20. Admin Row Deletion | Complete | 14/14 |
 | 21. Polish pH-Exempt | Pending | 4/8 |
+| 22. Hide Entry Fields (Reversible) | Complete | 6/6 |
+| 23. Entry Form novalidate Fix | Complete | 1/1 |
+| 24. Records Page Simplification | Complete | 11/11 |
+| 25. Records Column Adjustments | Pending | 0/14 |
 
-**Overall**: 153/157 tasks (97%)
+**Overall**: 171/189 tasks (90%)
+
+---
+
+## Phase 22: Hide Entry Fields (Reversible)
+
+_Quick-and-dirty hiding of discharge_material_code, ph_active_component, action_required, and final_disposition from the entry form. Fields kept in code/template for easy reactivation. Null allowed on all four._
+
+**Reason**: Users are indecisive — fields may come back. All hidden with `display: none !important` and validation bypassed rather than removed.
+
+- [x] **22.1** Make final_disposition nullable in model
+  - **Do**: In `app/core/models.py`, change `final_disposition = models.TextField()` to `models.TextField(blank=True, null=True)`. Other three fields already nullable.
+  - **Deliverable**: Migration needed.
+
+- [x] **22.2** Hide fields in entry template
+  - **Do**: In `discharge_testing_entry.html`, add `style="display: none !important;"` to discharge-material-group, ph-alert, action-required-group, and final-disposition wrapper. Remove `required` from final_disposition textarea.
+  - **Deliverable**: Fields invisible on page load and immune to JS show/hide.
+
+- [x] **22.3** Disable JS validation for hidden fields
+  - **Do**: In `DischargeTestingEntry.js`, remove `final_disposition` required error, skip `discharge_material_code` acid/base required error, skip `action_required` out-of-range required error.
+  - **Deliverable**: Form submits without hidden fields populated.
+
+- [x] **22.4** Prevent JS from showing material group
+  - **Do**: In `DischargeTestingEntry.js`, set `shouldShow = false` in `syncMaterialFieldVisibility()` so acid/base selection never reveals the material autocomplete.
+  - **Deliverable**: Material field stays hidden regardless of discharge type.
+
+- [x] **22.5** Remove server-side required checks for hidden fields
+  - **Do**: In `discharge_testing_services.py`, remove `final_disposition` required ValidationError, remove `discharge_material_code` acid/base required ValidationError, remove `action_required` out-of-range required ValidationError. Make `final_disposition` parameter optional.
+  - **Deliverable**: Server accepts submissions with all four fields null/empty.
+
+- [x] **22.6** Create and apply migration for final_disposition
+  - **Do**: Run `makemigrations` and `migrate` to apply nullable change.
+  - **Deliverable**: Database allows null final_disposition.
+
+### Reactivation Guide
+
+To restore any of these fields:
+1. **Template**: Remove `style="display: none !important;"` from the field's wrapper div. Re-add `required` attribute if needed.
+2. **JS**: Restore validation checks in `collectPayload()`. For material field, change `shouldShow = false` back to `shouldShow = ACID_BASE_TYPES.includes(dischargeTypeValue)`.
+3. **Service**: Restore `ValidationError` checks in `create_discharge_test()`. Change `final_disposition` param back to required `str`.
+4. **Model**: If restoring `final_disposition` as required, change back to `models.TextField()` and backfill existing null rows.
+
+---
+
+## Phase 23: Entry Form novalidate Fix
+
+_Fix browser validation error "An invalid form control with name='action_required' is not focusable" caused by hidden required fields._
+
+- [x] **23.1** Add novalidate to entry form
+  - **Do**: In `discharge_testing_entry.html`, add `novalidate` attribute to the form element.
+  - **Deliverable**: Browser skips native constraint validation; JS handles all validation in `collectPayload()`.
+  - **Reason**: When pH-exempt types (Oil/Polish) hide the `action_required` field but it still has `required=true` from previous state, browser can't focus the hidden field. Form already validates via JS, so native validation is redundant.
+
+---
+
+## Phase 24: Records Page Simplification
+
+_Hide columns, make date editable, remove all permission restrictions on records page._
+
+### Template Changes
+
+- [x] **24.1** Remove permission data attributes
+  - **Do**: In `discharge_testing_records.html`, remove `data-role-line` and `data-role-lab` attributes from app container div.
+  - **Deliverable**: No permission flags passed to JS.
+
+- [x] **24.2** Remove sampling personnel options
+  - **Do**: In `discharge_testing_records.html`, remove hidden `sampling-personnel-options` select element.
+  - **Deliverable**: Template cleaner, unused element gone.
+
+- [x] **24.3** Hide columns from table
+  - **Do**: In `discharge_testing_records.html`, remove table headers and row cells for: Discharge Material, pH Active Component, Action Required, Sampling Personnel. Update colspan from 13 to 9.
+  - **Deliverable**: Table shows only: Date/Time, Discharge Source, Discharge Type, Initial pH, Final Disposition, Final pH, Lab Technician, Edit, Delete.
+
+- [x] **24.4** Remove delete button permission check
+  - **Do**: In `discharge_testing_records.html`, remove `{% if user.is_staff %}` wrapper around delete button.
+  - **Deliverable**: All logged-in users see delete button.
+
+### JavaScript Changes
+
+- [x] **24.5** Remove permission checks from JS
+  - **Do**: In `DischargeTestingRecords.js`, remove `canEdit` property, `samplingPersonnelTemplate` reference, and all `canEdit` conditionals.
+  - **Deliverable**: Edit/delete available to all users.
+
+- [x] **24.6** Add date/time editing
+  - **Do**: In `DischargeTestingRecords.js`, add `createDateTimeInput()` method; update `enterEditMode()` to create datetime-local input for date field; update `handleSave()` to detect and send date changes.
+  - **Deliverable**: Date column editable with datetime picker.
+
+- [x] **24.7** Remove hidden field handling from JS
+  - **Do**: In `DischargeTestingRecords.js`, remove references to `discharge_material_code`, `ph_active_component`, `action_required`, `sampling_personnel_id` from `enterEditMode()`, `handleSave()`, `applyRowData()`. Remove `setSamplingPersonnelCell()` and `createSelectInput()` methods.
+  - **Deliverable**: JS only handles visible fields.
+
+### API Changes
+
+- [x] **24.8** Remove permission checks from detail API
+  - **Do**: In `api.py`, remove staff-only check from DELETE handler; remove role-based field permission checks from PATCH handler.
+  - **Deliverable**: Any logged-in user can edit/delete records.
+
+- [x] **24.9** Add date field to allowed updates
+  - **Do**: In `api.py`, add `date` to allowed fields in PATCH handler; parse ISO date string using `parse_datetime()`.
+  - **Deliverable**: API accepts date updates.
+
+- [x] **24.10** Simplify allowed fields
+  - **Do**: In `api.py`, reduce allowed fields to: `date`, `discharge_source`, `discharge_type`, `initial_pH`, `final_pH`, `final_disposition`. Remove `sampling_personnel_id` and `action_required`.
+  - **Deliverable**: API only accepts updates for visible fields.
+
+### Web View Changes
+
+- [x] **24.11** Remove permission check from records view
+  - **Do**: In `web.py`, remove `is_staff` check from `discharge_testing_records_view`; remove unused context variables (`production_line_choices`, `discharge_type_options`, `sampling_personnel_options`).
+  - **Deliverable**: Any logged-in user can access records page.
+
+---
+
+## Phase 25: Records Column Adjustments
+
+_Unhide Sampling Personnel column, hide Final Disposition column on records page._
+
+### Template Changes
+
+- [x] **25.1** Add Sampling Personnel column header
+  - **Do**: In `discharge_testing_records.html`, add `<th scope="col" style="width: 160px;">Sampling Personnel</th>` to table header row (after Final pH, before Lab Technician).
+  - **Deliverable**: Column header visible.
+
+- [x] **25.2** Add Sampling Personnel cell to row template
+  - **Do**: In `discharge_testing_records.html`, add Sampling Personnel `<td>` with `data-field="sampling_personnel_id"`, `data-value`, and `data-label` attributes; display `tote.sampling_personnel.get_full_name` or "--".
+  - **Deliverable**: Sampling personnel displayed in each row.
+
+- [x] **25.3** Remove Final Disposition column header
+  - **Do**: In `discharge_testing_records.html`, remove Final Disposition `<th>` from table header row.
+  - **Deliverable**: Column header removed.
+
+- [x] **25.4** Remove Final Disposition cell from row template
+  - **Do**: In `discharge_testing_records.html`, remove Final Disposition `<td>` from row template.
+  - **Deliverable**: Final disposition not displayed in rows.
+
+- [x] **25.5** Re-add sampling personnel options select
+  - **Do**: In `discharge_testing_records.html`, add hidden `<select id="sampling-personnel-options">` with options from `sampling_personnel_options` context variable (needed for inline edit dropdown).
+  - **Deliverable**: Personnel options available for JS.
+
+### Web View Changes
+
+- [x] **25.6** Add sampling_personnel_options to context
+  - **Do**: In `web.py`, in `discharge_testing_records_view`, add `'sampling_personnel_options': get_sampling_personnel_options()` to context dict.
+  - **Deliverable**: Personnel options passed to template.
+
+### JavaScript Changes
+
+- [x] **25.7** Re-add sampling personnel element reference
+  - **Do**: In `DischargeTestingRecords.js`, re-add `this.samplingPersonnelTemplate = document.getElementById('sampling-personnel-options');` in constructor.
+  - **Deliverable**: JS has reference to options.
+
+- [x] **25.8** Re-add createSelectInput method
+  - **Do**: In `DischargeTestingRecords.js`, re-add `createSelectInput(field, value)` method that creates a `<select>` from `samplingPersonnelTemplate` options.
+  - **Deliverable**: Dropdown creation available.
+
+- [x] **25.9** Update enterEditMode for sampling personnel
+  - **Do**: In `DischargeTestingRecords.js`, in `enterEditMode()`, add case for `sampling_personnel_id` field to create select input; remove `final_disposition` from editable fields.
+  - **Deliverable**: Sampling personnel editable via dropdown; final disposition not editable.
+
+- [x] **25.10** Update handleSave for sampling personnel
+  - **Do**: In `DischargeTestingRecords.js`, in `handleSave()`, add validation and payload building for `sampling_personnel_id`; remove `final_disposition` handling.
+  - **Deliverable**: Sampling personnel changes saved; final disposition ignored.
+
+- [x] **25.11** Update applyRowData for column changes
+  - **Do**: In `DischargeTestingRecords.js`, in `applyRowData()`, re-add `setSamplingPersonnelCell()` call; remove `final_disposition` setTextCell call.
+  - **Deliverable**: Row rendering matches new columns.
+
+- [x] **25.12** Re-add setSamplingPersonnelCell method
+  - **Do**: In `DischargeTestingRecords.js`, re-add `setSamplingPersonnelCell(row, id, name)` method.
+  - **Deliverable**: Sampling personnel cell rendering available.
+
+### API Changes
+
+- [x] **25.13** Update allowed fields in API
+  - **Do**: In `api.py`, in `discharge_testing_detail_api`, add `sampling_personnel_id` to allowed fields; remove `final_disposition` from allowed fields.
+  - **Deliverable**: API accepts sampling personnel updates; rejects final disposition updates.
+
+- [x] **25.14** Re-add sampling personnel update logic
+  - **Do**: In `api.py`, in `discharge_testing_detail_api`, add handler for `sampling_personnel_id`: validate ID, look up User, assign to `tote.sampling_personnel`.
+  - **Deliverable**: Sampling personnel updates work.
 
 ---
 

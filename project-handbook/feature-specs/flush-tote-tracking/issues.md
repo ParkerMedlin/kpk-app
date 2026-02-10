@@ -204,9 +204,112 @@ John Smith              ← lab technician name (small muted)
 - [x] 7.3 Simplify `setPhCell()` in JS to render only the pH value without updated-by/updated-at lines
 - [x] 7.4 Change pH edit inputs from `type: 'number'` to `type: 'text'` with `inputMode: 'decimal'`
 - [x] 7.5 Remove `step: '0.01'` (only relevant for `type="number"`)
-- [ ] 7.6 Test: pH cells display only the value, no sub-lines
-- [ ] 7.7 Test: pH edit inputs have no spinner arrows
-- [ ] 7.8 Test: pH values still parse and validate correctly after type change
+- [x] 7.6 Test: pH cells display only the value, no sub-lines
+- [x] 7.7 Test: pH edit inputs have no spinner arrows
+- [x] 7.8 Test: pH values still parse and validate correctly after type change
+
+---
+
+## Issue 8: Sampling Personnel Cleared When Entering Edit Mode
+
+**Problem:** When clicking the Edit button on a records row, the Sampling Personnel dropdown shows "Select sampling personnel..." instead of the currently assigned person. This makes it appear as if the value was cleared.
+
+**Root Cause Analysis:**
+
+The `#sampling-personnel-options` hidden select element (used as a template for edit mode dropdowns) is populated by `get_sampling_personnel_options()` in `app/core/selectors/discharge_testing_selectors.py:34-47`. This function only includes users who are:
+- Active (`is_active=True`)
+- In groups: `blend_crew`, `blending_line_service`, `line_leader`, OR `lab`
+
+When `createSelectInput()` (`DischargeTestingRecords.js` lines 351-366) builds the edit dropdown:
+1. It copies options from `#sampling-personnel-options`
+2. It sets `select.value = String(currentSamplingPersonnelId)`
+3. If no `<option>` exists with that value (user no longer in eligible groups or inactive), the browser silently fails
+4. The select displays the first option: "Select sampling personnel..."
+
+The original cell still has the correct `data-value` and displays the correct name, but the edit dropdown cannot represent that user.
+
+**Scenario:**
+1. Record created with `sampling_personnel_id = 42` (user "John Doe" in `blend_crew` group)
+2. John Doe is later removed from `blend_crew` group (or becomes inactive)
+3. Page loads: cell correctly shows "John Doe" (from `tote.sampling_personnel.get_full_name`)
+4. User clicks Edit
+5. Dropdown has no option for ID 42
+6. `select.value = "42"` fails silently
+7. User sees "Select sampling personnel..." instead of "John Doe"
+
+**Affected Code Locations:**
+- `DischargeTestingRecords.js` lines 351-366 — `createSelectInput()` method
+- `discharge_testing_selectors.py` lines 34-47 — `get_sampling_personnel_options()`
+
+**Fix Approach:**
+Modify `createSelectInput()` to check if the desired value exists in the options after populating from the template. If not, dynamically add an option using:
+- The value from `cell.dataset.value` (the user ID)
+- The display name from the snapshot's `sampling_personnel_name` (captured from cell text in `getRowSnapshot()` at line 297)
+
+This preserves historical data without changing the eligibility criteria for new entries.
+
+### Tasks
+
+- [x] 8.1 Update `createSelectInput()` to accept an optional `displayName` parameter
+- [x] 8.2 After setting `select.innerHTML`, check if an option with the target value exists
+- [x] 8.3 If missing, create and prepend a new `<option>` with the value and display name
+- [x] 8.4 Update `enterEditMode()` to pass the snapshot's `sampling_personnel_name` to `createSelectInput()`
+- [x] 8.5 Test: Edit record where sampling_personnel is still in eligible groups → correct selection shown
+- [x] 8.6 Test: Edit record where sampling_personnel is no longer in eligible groups → correct selection shown (dynamically added)
+- [x] 8.7 Test: Edit record where sampling_personnel is inactive → correct selection shown (dynamically added)
+- [x] 8.8 Test: Save after editing a record with historical sampling_personnel → value preserved
+- [x] 8.9 Test: New entries still show only eligible users in dropdown
+
+---
+
+## Issue 9: Sampling Personnel FK Prevents Historical Name Retention
+
+**Problem:** `DischargeTestingRecord.sampling_personnel` is a ForeignKey to `User`. When a user is deleted, the FK is set to NULL (`on_delete=SET_NULL`), which erases the sampling personnel name from historical records. The request is to remove the FK entirely and store the selected user's display name as plain text, while keeping the dropdown options on the form.
+
+**Expected Behavior:**
+- Sampling personnel is stored as a string snapshot of the user's display name at the time of entry/edit.
+- Deleting a user does not change existing discharge testing records.
+- Entry and records pages still show the same dropdown options (active users in the configured groups).
+- API payloads/responses no longer depend on `sampling_personnel_id` or a User FK.
+
+**Root Cause Analysis:**
+- The model field is a ForeignKey (`sampling_personnel`) which depends on the user row.
+- Templates and JS store `sampling_personnel_id` in `data-value` and derive the display name from the FK at render time.
+- Services and API endpoints validate and persist `sampling_personnel_id` by looking up `User`, so the FK is a hard dependency.
+- There is no string field on the record to persist the sampling personnel name independently.
+
+**Affected Code Locations:**
+- `app/core/models.py` — `DischargeTestingRecord.sampling_personnel` ForeignKey definition
+- `app/core/migrations/0004_rename_line_personnel.py`, `0007_alter_dischargetestingrecord_sampling_personnel.py` — FK history
+- `app/core/selectors/discharge_testing_selectors.py` — `select_related('sampling_personnel')`, `get_sampling_personnel_options()`
+- `app/core/services/discharge_testing_services.py` — `sampling_personnel_id` validation and FK assignment
+- `app/core/views/api.py` — serialization (`sampling_personnel_id`, `_sampling_personnel_display`) and PATCH validation
+- `app/core/templates/core/discharge_testing_entry.html` — select field `name="sampling_personnel_id"`
+- `app/core/templates/core/discharge_testing_records.html` — `data-field="sampling_personnel_id"`, display via FK
+- `app/core/static/core/js/pageModules/DischargeTestingEntry.js` — payload uses `sampling_personnel_id`/`sampling_personnel_name`
+- `app/core/static/core/js/pageModules/DischargeTestingRecords.js` — edit mode, payload, and rendering rely on `sampling_personnel_id`
+
+**Fix Approach:**
+Replace the FK with a string field on `DischargeTestingRecord` (e.g., `sampling_personnel_name`), migrate existing data from the FK to the new string field, and update all code paths to read/write the string instead of a User reference. Keep the dropdown options by continuing to generate options from active users, but store the selected display name in the record.
+
+### Tasks
+
+- [x] 9.1 Decide final field name and size (`sampling_personnel_name`, max_length=255).
+- [x] 9.2 Add a new CharField for sampling personnel name and create a data migration to backfill from the FK (`get_full_name` or `username` fallback).
+- [x] 9.3 Remove the FK field (or rename the new field to the legacy column) and update the model accordingly.
+- [x] 9.4 Update `discharge_testing_services.create_discharge_test` to accept/store a name string (with `sampling_personnel_id` → display name fallback for backward compatibility).
+- [x] 9.5 Update API serialization to return `sampling_personnel_name`; PATCH accepts name strings (keeps `sampling_personnel_id` fallback for backward compatibility).
+- [x] 9.6 Remove `select_related('sampling_personnel')` from selectors; update any helper functions that expect a User object.
+- [x] 9.7 Update entry + records templates to use the string field for `data-field`, `data-value`, and payload names.
+- [x] 9.8 Update `DischargeTestingEntry.js` and `DischargeTestingRecords.js` to validate, compare, and submit `sampling_personnel_name` (string) instead of ID.
+- [x] 9.9 Update any documentation/tests that refer to `sampling_personnel_id` or FK behavior.
+- [x] 9.10 Test: Existing records migrated — sampling personnel name is populated from FK (full name preferred, username fallback).
+- [x] 9.11 Test: Delete a user who is referenced by past records → historical records still show the same sampling personnel name.
+- [x] 9.12 Test: Entry form dropdown still lists only active users in configured groups.
+- [x] 9.13 Test: Create new discharge test → saved record stores/display string name (no FK/id dependency).
+- [x] 9.14 Test: Edit a record → sampling personnel dropdown preselects the current name (including names not in eligible groups).
+- [x] 9.15 Test: Save edited record with a historical sampling personnel name → name persists after reload.
+- [x] 9.16 Test: Records table displays sampling personnel name for all rows, including those with deleted users.
 
 ---
 
