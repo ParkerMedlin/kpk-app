@@ -268,9 +268,9 @@ def build_audit_group_display_items(
     return audit_items, audit_group_list
 
 
-def build_count_status_display(record_type=None):
+def build_count_status_display(record_type=None, counted_filter='all'):
     """Build count status display data for the latest transactions and counts."""
-    return get_count_status_rows(record_type=record_type)
+    return get_count_status_rows(record_type=record_type, counted_filter=counted_filter)
 
 
 def _serialize_audit_group(record):
