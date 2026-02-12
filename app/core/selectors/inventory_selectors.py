@@ -651,3 +651,132 @@ def get_latest_count_details(item_codes):
         )
 
     return merged
+
+
+def get_count_status_rows(record_type=None):
+    """
+    Return count status rows with latest transaction and latest count details.
+
+    This is optimized as a single SQL pipeline using CTEs and DISTINCT ON
+    to avoid expensive Python-side joins/merges and correlated subqueries.
+    """
+    record_type_clause = """
+        AND (
+            ci.itemcodedesc ILIKE 'BLEND%%'
+            OR ci.itemcodedesc ILIKE 'CHEM%%'
+            OR ci.itemcodedesc ILIKE 'DYE%%'
+            OR ci.itemcodedesc ILIKE 'FRAGRANCE%%'
+        )
+    """
+    if record_type == 'blend':
+        record_type_clause = "AND ci.itemcodedesc ILIKE 'BLEND%%'"
+    elif record_type == 'blendcomponent':
+        record_type_clause = """
+            AND (
+                ci.itemcodedesc ILIKE 'CHEM%%'
+                OR ci.itemcodedesc ILIKE 'DYE%%'
+                OR ci.itemcodedesc ILIKE 'FRAGRANCE%%'
+            )
+        """
+
+    sql = f"""
+        WITH filtered_items AS (
+            SELECT DISTINCT ci.itemcode AS item_code, ci.itemcodedesc AS item_description
+            FROM ci_item ci
+            WHERE ci.itemcode IS NOT NULL
+              AND ci.itemcode NOT LIKE '/%%'
+              AND (ci.itemcodedesc IS NULL OR ci.itemcodedesc NOT ILIKE 'DO NOT USE%%')
+              {record_type_clause}
+        ),
+        latest_txn AS (
+            SELECT DISTINCT ON (ith.itemcode)
+                ith.itemcode AS item_code,
+                ith.transactioncode,
+                ith.transactiondate,
+                ith.transactionqty
+            FROM im_itemtransactionhistory ith
+            INNER JOIN filtered_items fi ON fi.item_code = ith.itemcode
+            WHERE ith.transactioncode IN ('BI', 'BR', 'II', 'IA')
+            ORDER BY ith.itemcode, ith.transactiondate DESC, ith.id DESC
+        ),
+        latest_blend_count AS (
+            SELECT DISTINCT ON (b.item_code)
+                b.item_code,
+                b.counted_date,
+                b.counted,
+                b.counted_quantity,
+                b.variance
+            FROM core_blendcountrecord b
+            INNER JOIN filtered_items fi ON fi.item_code = b.item_code
+            WHERE b.counted = TRUE
+              AND b.counted_date IS NOT NULL
+            ORDER BY b.item_code, b.counted_date DESC, b.id DESC
+        ),
+        latest_component_count AS (
+            SELECT DISTINCT ON (c.item_code)
+                c.item_code,
+                c.counted_date,
+                c.counted,
+                c.counted_quantity,
+                c.variance
+            FROM core_blendcomponentcountrecord c
+            INNER JOIN filtered_items fi ON fi.item_code = c.item_code
+            WHERE c.counted = TRUE
+              AND c.counted_date IS NOT NULL
+            ORDER BY c.item_code, c.counted_date DESC, c.id DESC
+        )
+        SELECT
+            fi.item_code,
+            COALESCE(fi.item_description, '') AS item_description,
+            lt.transactioncode,
+            lt.transactiondate,
+            lt.transactionqty,
+            CASE
+                WHEN lbc.counted_date IS NULL THEN lcc.counted_date
+                WHEN lcc.counted_date IS NULL THEN lbc.counted_date
+                WHEN lbc.counted_date >= lcc.counted_date THEN lbc.counted_date
+                ELSE lcc.counted_date
+            END AS counted_date,
+            CASE
+                WHEN lbc.counted_date IS NULL THEN lcc.counted
+                WHEN lcc.counted_date IS NULL THEN lbc.counted
+                WHEN lbc.counted_date >= lcc.counted_date THEN lbc.counted
+                ELSE lcc.counted
+            END AS counted,
+            CASE
+                WHEN lbc.counted_date IS NULL THEN lcc.counted_quantity
+                WHEN lcc.counted_date IS NULL THEN lbc.counted_quantity
+                WHEN lbc.counted_date >= lcc.counted_date THEN lbc.counted_quantity
+                ELSE lcc.counted_quantity
+            END AS counted_quantity,
+            CASE
+                WHEN lbc.counted_date IS NULL THEN lcc.variance
+                WHEN lcc.counted_date IS NULL THEN lbc.variance
+                WHEN lbc.counted_date >= lcc.counted_date THEN lbc.variance
+                ELSE lcc.variance
+            END AS variance
+        FROM filtered_items fi
+        LEFT JOIN latest_txn lt ON lt.item_code = fi.item_code
+        LEFT JOIN latest_blend_count lbc ON lbc.item_code = fi.item_code
+        LEFT JOIN latest_component_count lcc ON lcc.item_code = fi.item_code
+        ORDER BY fi.item_code;
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(sql)
+        rows = cursor.fetchall()
+
+    return [
+        {
+            'item_code': row[0],
+            'item_description': row[1],
+            'transaction_code': row[2],
+            'transaction_date': row[3],
+            'transaction_qty': row[4],
+            'counted_date': row[5],
+            'counted': row[6],
+            'counted_quantity': row[7],
+            'variance': row[8],
+        }
+        for row in rows
+    ]
