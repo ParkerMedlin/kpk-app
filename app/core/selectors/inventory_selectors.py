@@ -731,10 +731,20 @@ def get_count_status_rows(record_type=None, counted_filter='all'):
               AND c.counted_date IS NOT NULL
             ORDER BY c.item_code, c.counted_date DESC, c.id DESC
         ),
+        qty_on_hand AS (
+            SELECT
+                iw.itemcode AS item_code,
+                SUM(iw.quantityonhand) AS qty_on_hand
+            FROM im_itemwarehouse iw
+            INNER JOIN filtered_items fi ON fi.item_code = iw.itemcode
+            WHERE iw.warehousecode = 'MTG'
+            GROUP BY iw.itemcode
+        ),
         report_rows AS (
             SELECT
                 fi.item_code,
                 COALESCE(fi.item_description, '') AS item_description,
+                qoh.qty_on_hand,
                 lt.transactioncode,
                 lt.transactiondate,
                 lt.transactionqty,
@@ -763,6 +773,7 @@ def get_count_status_rows(record_type=None, counted_filter='all'):
                     ELSE lcc.variance
                 END AS variance
             FROM filtered_items fi
+            LEFT JOIN qty_on_hand qoh ON qoh.item_code = fi.item_code
             LEFT JOIN latest_txn lt ON lt.item_code = fi.item_code
             LEFT JOIN latest_blend_count lbc ON lbc.item_code = fi.item_code
             LEFT JOIN latest_component_count lcc ON lcc.item_code = fi.item_code
@@ -770,6 +781,7 @@ def get_count_status_rows(record_type=None, counted_filter='all'):
         SELECT
             rr.item_code,
             rr.item_description,
+            rr.qty_on_hand,
             rr.transactioncode,
             rr.transactiondate,
             rr.transactionqty,
@@ -790,13 +802,14 @@ def get_count_status_rows(record_type=None, counted_filter='all'):
         {
             'item_code': row[0],
             'item_description': row[1],
-            'transaction_code': row[2],
-            'transaction_date': row[3],
-            'transaction_qty': row[4],
-            'counted_date': row[5],
-            'counted': row[6],
-            'counted_quantity': row[7],
-            'variance': row[8],
+            'qty_on_hand': row[2],
+            'transaction_code': row[3],
+            'transaction_date': row[4],
+            'transaction_qty': row[5],
+            'counted_date': row[6],
+            'counted': row[7],
+            'counted_quantity': row[8],
+            'variance': row[9],
         }
         for row in rows
     ]

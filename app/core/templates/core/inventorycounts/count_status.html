@@ -42,6 +42,7 @@
                 <tr>
                     <th scope="col" class="text-center">Item Code</th>
                     <th scope="col" class="text-center">Description</th>
+                    <th scope="col" class="text-center">QtyOnHand</th>
                     <th scope="col" class="text-center">Last Txn Code</th>
                     <th scope="col" class="text-center">Last Txn Date</th>
                     <th scope="col" class="text-center">Last Txn Qty</th>
@@ -56,6 +57,13 @@
                     <tr>
                         <td class="text-nowrap">{{ item.item_code }}</td>
                         <td class="text-nowrap">{{ item.item_description|default:"--" }}</td>
+                        <td class="text-end">
+                            {% if item.qty_on_hand is None %}
+                                --
+                            {% else %}
+                                {{ item.qty_on_hand|floatformat:4 }}
+                            {% endif %}
+                        </td>
                         <td class="text-center">{{ item.transaction_code|default:"--" }}</td>
                         <td class="text-nowrap" data-order="{% if item.transaction_date %}{{ item.transaction_date|date:'Y-m-d' }}{% endif %}">
                             {% if item.transaction_date %}
@@ -104,7 +112,7 @@
                     </tr>
                 {% empty %}
                     <tr>
-                        <td colspan="9" class="text-center">No items found for the selected filters.</td>
+                        <td colspan="10" class="text-center">No items found for the selected filters.</td>
                     </tr>
                 {% endfor %}
             </tbody>
