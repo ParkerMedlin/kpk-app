@@ -33,6 +33,7 @@ urlpatterns = [
     path('display-count-report/', web.display_count_report, name='display-finished-counts'),
     path('display-count-collection-links/', web.display_count_collection_links, name='display-count-collection-links'),
     path('count-records/', web.display_count_records, name='display-count-records'),
+    path('count-status/', web.display_count_status, name='count-status'),
     path('list-to-count-list/', web.display_list_to_count_list, name='list-to-count-list'),
     path('production-blend-runs/', web.display_all_upcoming_production, name='production-blend-runs'),
     path('bom-cost-tool/', web.display_bom_cost_tool, name='bom-cost-tool'),

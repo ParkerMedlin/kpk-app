@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from django.db import connection
-from django.db.models import Q, Max
+from django.db.models import Q, Max, OuterRef, Subquery
 from django.utils import timezone
 from core.models import (
     ImItemWarehouse,
@@ -163,6 +163,50 @@ def get_latest_transaction_dates(item_codes):
         cursor.execute(sql, item_codes)
         result = {item[0]: (item[1], item[2]) for item in cursor.fetchall()}
     
+    return result
+
+
+def get_latest_transactions_for_items(item_codes):
+    """
+    Gets the most recent transaction details for a list of item codes.
+
+    Args:
+        item_codes: List of item codes to look up
+
+    Returns:
+        Dict mapping item codes to dicts of:
+            - transactioncode
+            - transactiondate
+            - transactionqty
+        Limited to transaction codes in ('BI', 'BR', 'II', 'IA')
+    """
+    if not item_codes:
+        return {}
+
+    placeholders = ','.join(['%s'] * len(item_codes))
+    sql = f"""SELECT itemcode, transactioncode, transactiondate, transactionqty
+            FROM im_itemtransactionhistory
+            WHERE (itemcode, transactiondate) IN (
+                SELECT itemcode, MAX(transactiondate)
+                FROM im_itemtransactionhistory
+                WHERE itemcode IN ({placeholders})
+                AND transactioncode IN ('BI', 'BR', 'II', 'IA')
+                GROUP BY itemcode
+            )
+            AND transactioncode IN ('BI', 'BR', 'II', 'IA')
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(sql, item_codes)
+        result = {
+            item[0]: {
+                'transactioncode': item[1],
+                'transactiondate': item[2],
+                'transactionqty': item[3],
+            }
+            for item in cursor.fetchall()
+        }
+
     return result
 
 def get_relevant_ci_item_itemcodes(filter_string, exclude_audit_group_items=True):
@@ -539,3 +583,71 @@ def get_latest_count_dates_any(item_codes):
         last_dates.setdefault(item_code, None)
 
     return last_dates
+
+
+def get_latest_count_details(item_codes):
+    """
+    Return mapping of item_code -> latest count details for counted items.
+
+    Uses ORM subqueries to fetch the row with MAX(counted_date) per item_code
+    from both BlendCountRecord and BlendComponentCountRecord, and prefers the
+    most recent date when an item exists in both.
+    """
+    if not item_codes:
+        return {}
+
+    def build_latest_counts(model):
+        latest_qs = model.objects.filter(
+            item_code=OuterRef('item_code'),
+            counted=True,
+            counted_date__isnull=False,
+        ).order_by('-counted_date')
+
+        rows = (
+            model.objects
+            .filter(item_code__in=item_codes, counted=True, counted_date__isnull=False)
+            .values('item_code')
+            .distinct()
+            .annotate(
+                counted_date=Subquery(latest_qs.values('counted_date')[:1]),
+                counted=Subquery(latest_qs.values('counted')[:1]),
+                counted_quantity=Subquery(latest_qs.values('counted_quantity')[:1]),
+                variance=Subquery(latest_qs.values('variance')[:1]),
+            )
+        )
+        return {
+            row['item_code']: {
+                'counted_date': row['counted_date'],
+                'counted': row['counted'],
+                'counted_quantity': row['counted_quantity'],
+                'variance': row['variance'],
+            }
+            for row in rows
+        }
+
+    blend_counts = build_latest_counts(BlendCountRecord)
+    component_counts = build_latest_counts(BlendComponentCountRecord)
+
+    merged = dict(blend_counts)
+    for item_code, details in component_counts.items():
+        existing = merged.get(item_code)
+        if existing is None:
+            merged[item_code] = details
+            continue
+        existing_date = existing.get('counted_date')
+        new_date = details.get('counted_date')
+        if existing_date is None or (new_date and new_date > existing_date):
+            merged[item_code] = details
+
+    for item_code in item_codes:
+        merged.setdefault(
+            item_code,
+            {
+                'counted_date': None,
+                'counted': None,
+                'counted_quantity': None,
+                'variance': None,
+            },
+        )
+
+    return merged
