@@ -1,4 +1,5 @@
 import datetime as dt
+import csv
 from datetime import date
 import time
 import pytz
@@ -15,7 +16,7 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.forms.models import modelformset_factory
-from django.http import HttpResponseRedirect, JsonResponse, HttpResponseForbidden
+from django.http import HttpResponseRedirect, JsonResponse, HttpResponseForbidden, HttpResponse
 from django.core.paginator import Paginator
 from django.db.models import Sum, Subquery, OuterRef, Q, CharField
 from django.utils import timezone
@@ -170,6 +171,98 @@ def display_production_value_forecast_report(request):
 def display_cost_impact_report(request):
     """Render the Cost Impact Analysis report UI."""
     return render(request, 'core/reports/cost_impact_report.html')
+
+
+@login_required
+def display_production_history(request):
+    rows = ProductionHistory.objects.all()
+    return render(request, 'core/reports/production_history.html', {'rows': rows})
+
+
+@login_required
+def export_production_history_csv(request):
+    def _excel_text_if_numeric(value):
+        if value is None:
+            return ''
+        text = str(value).strip()
+        if text.isdigit():
+            return f'="{text}"'
+        return text
+
+    all_data = request.GET.get('all') in ('1', 'true', 'yes', 'on')
+    start_date_str = (request.GET.get('start_date') or '').strip()
+    end_date_str = (request.GET.get('end_date') or '').strip()
+
+    rows = ProductionHistory.objects.all()
+
+    if not all_data:
+        start_date = None
+        end_date = None
+
+        if start_date_str:
+            try:
+                start_date = dt.datetime.strptime(start_date_str, '%Y-%m-%d').date()
+            except ValueError:
+                return HttpResponse('Invalid start_date. Use YYYY-MM-DD.', status=400)
+        if end_date_str:
+            try:
+                end_date = dt.datetime.strptime(end_date_str, '%Y-%m-%d').date()
+            except ValueError:
+                return HttpResponse('Invalid end_date. Use YYYY-MM-DD.', status=400)
+
+        if start_date and end_date and start_date > end_date:
+            return HttpResponse('start_date cannot be after end_date.', status=400)
+
+        if start_date:
+            rows = rows.filter(run_date__gte=start_date)
+        if end_date:
+            rows = rows.filter(run_date__lte=end_date)
+
+    response = HttpResponse(content_type='text/csv')
+    timestamp = timezone.localtime().strftime('%Y%m%d_%H%M%S')
+    response['Content-Disposition'] = f'attachment; filename="production_history_{timestamp}.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow([
+        'Run Date',
+        'Line',
+        'P/N',
+        'PO #',
+        'Product',
+        'Blend',
+        'Case/Size',
+        'Scheduled',
+        'Produced',
+        'Bottle',
+        'Cap',
+        'Runtime Est',
+        'Runtime (min)',
+        'Employees',
+        'Notes',
+        'Logged At',
+    ])
+
+    for row in rows:
+        writer.writerow([
+            row.run_date.strftime('%Y-%m-%d') if row.run_date else '',
+            row.line_name or '',
+            _excel_text_if_numeric(row.item_code),
+            _excel_text_if_numeric(row.po_number),
+            row.product_description or '',
+            row.blend or '',
+            row.case_size or '',
+            '' if row.scheduled_qty is None else row.scheduled_qty,
+            '' if row.produced_qty is None else row.produced_qty,
+            row.bottle or '',
+            row.cap or '',
+            '' if row.runtime_estimate is None else row.runtime_estimate,
+            '' if row.runtime_minutes is None else row.runtime_minutes,
+            '' if row.num_employees is None else row.num_employees,
+            row.notes or '',
+            timezone.localtime(row.created_at).strftime('%Y-%m-%d %H:%M:%S') if row.created_at else '',
+        ])
+
+    return response
 
 
 @login_required
