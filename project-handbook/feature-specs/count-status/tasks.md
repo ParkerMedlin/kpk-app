@@ -9,19 +9,19 @@ Implementation tasks for count status report. Work through sequentially, marking
 
 ## Phase 1: Data Layer (Selectors)
 
-- [ ] **1.1** Add `get_latest_transactions_for_items()` selector
+- [x] **1.1** Add `get_latest_transactions_for_items()` selector
   - **Do**: In `app/core/selectors/inventory_selectors.py`, add function that takes a list of item_codes and returns a dict mapping each item_code to `{transactioncode, transactiondate, transactionqty}` for its most recent transaction. Use raw SQL with subquery for `MAX(transactiondate)` per item, filtered to codes `('BI', 'BR', 'II', 'IA')`. Pattern after existing `get_latest_transaction_dates()` but include `transactionqty`.
   - **Deliverable**: Working selector function
   - **Requirement**: Latest transaction fields per item
 
-- [ ] **1.2** Add `get_latest_count_details()` selector
+- [x] **1.2** Add `get_latest_count_details()` selector
   - **Do**: In `app/core/selectors/inventory_selectors.py`, add function that takes a list of item_codes and returns a dict mapping each item_code to `{counted_date, counted, counted_quantity, variance}`. Query both `BlendCountRecord` and `BlendComponentCountRecord` using Django ORM subqueries to get the row with `MAX(counted_date)` per item_code (where `counted=True`). Merge results, preferring the more recent date when an item exists in both tables.
   - **Deliverable**: Working selector function
   - **Requirement**: Latest count fields per item
 
 ## Phase 2: Business Logic (Service)
 
-- [ ] **2.1** Add `build_count_status_display()` service
+- [x] **2.1** Add `build_count_status_display()` service
   - **Do**: In `app/core/services/inventory_services.py`, add function that accepts `record_type=None`. Calls `get_ci_items_for_audit_group(record_type)`, extracts item_codes, calls both new selectors, assembles list of dicts with keys: `item_code`, `item_description`, `transaction_code`, `transaction_date`, `transaction_qty`, `counted_date`, `counted`, `counted_quantity`, `variance`. Returns list sorted by item_code.
   - **Deliverable**: Working service function
   - **Requirement**: Combined dataset for report

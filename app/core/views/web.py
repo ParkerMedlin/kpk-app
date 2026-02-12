@@ -42,6 +42,7 @@ from core.services.inventory_services import (
     get_tintpaste_needs,
     build_audit_group_display_items,
     build_count_list_display_data,
+    build_count_status_display,
     build_uncounted_items_display,
 )
 from core.selectors.production_planning_selectors import get_schedulable_blend_shortages
@@ -920,6 +921,19 @@ def display_uncounted_items(request):
         'item_type': raw_item_type,
         'search_query': search_query,
         'audit_group_choices': get_distinct_audit_groups(),
+    })
+
+def display_count_status(request):
+    """Render the count status report with optional record type filtering."""
+    record_type_param = (request.GET.get('recordType') or '').strip().lower()
+    if record_type_param not in {'blend', 'blendcomponent'}:
+        record_type_param = None
+
+    items = build_count_status_display(record_type=record_type_param)
+
+    return render(request, 'core/inventorycounts/count_status.html', {
+        'items': items,
+        'record_type': record_type_param or 'all',
     })
 
 def display_list_to_count_list(request):
