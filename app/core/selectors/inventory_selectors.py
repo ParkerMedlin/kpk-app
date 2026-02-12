@@ -730,7 +730,7 @@ def get_count_status_rows(record_type=None, counted_filter='all'):
             WHERE c.counted = TRUE
               AND c.counted_date IS NOT NULL
             ORDER BY c.item_code, c.counted_date DESC, c.id DESC
-        )
+        ),
         report_rows AS (
             SELECT
                 fi.item_code,
