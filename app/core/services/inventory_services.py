@@ -29,10 +29,12 @@ from core.selectors.inventory_selectors import (
     get_distinct_audit_groups,
     get_latest_count_dates,
     get_latest_transaction_dates,
+    get_latest_transactions_for_items,
     get_recently_counted_item_codes,
     get_relevant_ci_item_itemcodes,
     get_last_counted_dates,
     get_latest_count_dates_any,
+    get_latest_count_details,
 )
 from core.services.purchasing_alias_services import extract_supply_type
 
@@ -265,6 +267,49 @@ def build_audit_group_display_items(
 
     audit_group_list = get_distinct_audit_groups(record_type)
     return audit_items, audit_group_list
+
+
+def build_count_status_display(record_type=None):
+    """Build count status display data for the latest transactions and counts."""
+    ci_queryset = get_ci_items_for_audit_group(record_type)
+    ci_values = (
+        ci_queryset
+        .values('itemcode', 'itemcodedesc')
+        .distinct()
+        .order_by('itemcode')
+    )
+
+    items = [
+        {'item_code': item['itemcode'], 'item_description': item['itemcodedesc']}
+        for item in ci_values
+    ]
+    item_codes = [item['item_code'] for item in items]
+    if not item_codes:
+        return []
+
+    latest_transactions = get_latest_transactions_for_items(item_codes)
+    latest_counts = get_latest_count_details(item_codes)
+
+    display_items = []
+    for item in items:
+        item_code = item['item_code']
+        transaction_info = latest_transactions.get(item_code)
+        count_info = latest_counts.get(item_code)
+
+        display_items.append({
+            'item_code': item_code,
+            'item_description': item['item_description'] or '',
+            'transaction_code': transaction_info.get('transactioncode') if transaction_info else None,
+            'transaction_date': transaction_info.get('transactiondate') if transaction_info else None,
+            'transaction_qty': transaction_info.get('transactionqty') if transaction_info else None,
+            'counted_date': count_info.get('counted_date') if count_info else None,
+            'counted': count_info.get('counted') if count_info else None,
+            'counted_quantity': count_info.get('counted_quantity') if count_info else None,
+            'variance': count_info.get('variance') if count_info else None,
+        })
+
+    display_items.sort(key=lambda row: row['item_code'])
+    return display_items
 
 
 def _serialize_audit_group(record):
