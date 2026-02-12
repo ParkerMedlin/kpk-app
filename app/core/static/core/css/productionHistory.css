@@ -1,0 +1,32 @@
+#productionHistoryTable_wrapper {
+    width: 100%;
+}
+
+#productionHistoryTable_wrapper .dataTables_scrollHead {
+    position: sticky !important;
+    top: var(--sticky-header-offset) !important;
+    z-index: 10 !important;
+    background: #f8f9fa;
+}
+
+#productionHistoryTable_wrapper .dataTables_scrollHead thead th,
+#productionHistoryTable thead th {
+    background: #f8f9fa;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+#productionHistoryTable_wrapper table.dataTable tbody td,
+#productionHistoryTable_wrapper table.dataTable tbody th {
+    white-space: nowrap;
+}
+
+#productionHistoryTable_wrapper .dataTables_length,
+#productionHistoryTable_wrapper .dataTables_filter {
+    padding: 12px 16px 0;
+}
+
+#productionHistoryTable_wrapper .dataTables_info,
+#productionHistoryTable_wrapper .dataTables_paginate {
+    padding: 8px 16px 12px;
+}

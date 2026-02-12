@@ -86,6 +86,8 @@ urlpatterns = [
     path('discharge-testing-records/', web.discharge_testing_records_view, name='discharge-testing-records'),
     path('production-holidays/', web.display_production_holidays, name='production-holidays'),
     path('desk-labor-rates/', web.display_desk_labor_rates, name='desk-labor-rates'),
+    path('production-history/', web.display_production_history, name='production-history'),
+    path('production-history/export-csv/', web.export_production_history_csv, name='production-history-export-csv'),
 
     path('add-lot-num-record/', lot_numbers_services.add_lot_num_record, name='add-lot-num-record'),
     path('update-lot-num-record/<lot_num_id>', lot_numbers_services.update_lot_num_record, name='update-lot-num-record'),
@@ -192,6 +194,7 @@ urlpatterns = [
     path('api/production-holiday/<int:holiday_id>/delete/', api.delete_json_production_holiday, name='delete-production-holiday'),
     path('api/desk-labor-rates/', api.get_json_desk_labor_rates, name='api-desk-labor-rates'),
     path('api/desk-labor-rates/update/', api.update_json_desk_labor_rate, name='api-desk-labor-rate-update'),
+    path('api/production-history/create/', api.create_json_production_history, name='create-production-history'),
 ]
 
 websocket_urlpatterns = [
