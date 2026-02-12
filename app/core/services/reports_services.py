@@ -237,6 +237,14 @@ _MISC_REPORT_DEFINITIONS = [
         'requires_start_time': False,
         'direct_url': '/core/production-value-forecast/',
     },
+    {
+        'slug': 'Count-Status',
+        'label': 'Count Status Report',
+        'requires_item': False,
+        'requires_quantity': False,
+        'requires_start_time': False,
+        'direct_url': '/core/count-status/',
+    },
 ]
 
 

@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}<title>Count Status Report</title>{% endblock %}
+
+{% block scripts %}
+    {% include 'core/partials/datatableprerequisites.html' %}
+    <script type="module" src="{% static 'core/js/pageModules/countStatus.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+    <div class="text-center">
+        <h1>Count Status Report</h1>
+    </div>
+
+    <form id="countStatusFilterForm" method="get" class="row gy-2 gx-3 align-items-end mb-3">
+        <div class="col-md-3">
+            <label class="form-label" for="id_record_type">Record Type</label>
+            <select name="recordType" id="id_record_type" class="form-select">
+                <option value="all" {% if record_type == 'all' or not record_type %}selected{% endif %}>All</option>
+                <option value="blend" {% if record_type == 'blend' %}selected{% endif %}>Blends</option>
+                <option value="blendcomponent" {% if record_type == 'blendcomponent' %}selected{% endif %}>Components</option>
+            </select>
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+            <button type="submit" class="btn btn-primary flex-fill">Apply</button>
+            <a class="btn btn-outline-secondary flex-fill" href="{% url 'count-status' %}">Reset</a>
+        </div>
+    </form>
+
+    <div class="table-responsive-sm">
+        <table id="countStatusTable" class="table text-left table-bordered table-hover">
+            <thead class="thead-dark" style="position: sticky; top: 55px; z-index: 2 !important;">
+                <tr>
+                    <th scope="col" class="text-center">Item Code</th>
+                    <th scope="col" class="text-center">Description</th>
+                    <th scope="col" class="text-center">Last Txn Code</th>
+                    <th scope="col" class="text-center">Last Txn Date</th>
+                    <th scope="col" class="text-center">Last Txn Qty</th>
+                    <th scope="col" class="text-center">Last Counted Date</th>
+                    <th scope="col" class="text-center">Counted</th>
+                    <th scope="col" class="text-center">Counted Qty</th>
+                    <th scope="col" class="text-center">Variance</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                    <tr>
+                        <td class="text-nowrap">{{ item.item_code }}</td>
+                        <td class="text-nowrap">{{ item.item_description|default:"--" }}</td>
+                        <td class="text-center">{{ item.transaction_code|default:"--" }}</td>
+                        <td class="text-nowrap" data-order="{% if item.transaction_date %}{{ item.transaction_date|date:'Y-m-d' }}{% endif %}">
+                            {% if item.transaction_date %}
+                                {{ item.transaction_date|date:"m/d/y" }}
+                            {% else %}
+                                --
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if item.transaction_qty is None %}
+                                --
+                            {% else %}
+                                {{ item.transaction_qty|floatformat:4 }}
+                            {% endif %}
+                        </td>
+                        <td class="text-nowrap" data-order="{% if item.counted_date %}{{ item.counted_date|date:'Y-m-d' }}{% endif %}">
+                            {% if item.counted_date %}
+                                {{ item.counted_date|date:"m/d/y" }}
+                            {% else %}
+                                --
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if item.counted is None %}
+                                --
+                            {% elif item.counted %}
+                                Yes
+                            {% else %}
+                                No
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if item.counted_quantity is None %}
+                                --
+                            {% else %}
+                                {{ item.counted_quantity|floatformat:4 }}
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if item.variance is None %}
+                                --
+                            {% else %}
+                                {{ item.variance|floatformat:4 }}
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center">No items found for the selected filters.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock content %}
