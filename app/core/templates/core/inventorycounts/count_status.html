@@ -22,7 +22,15 @@
                 <option value="blendcomponent" {% if record_type == 'blendcomponent' %}selected{% endif %}>Components</option>
             </select>
         </div>
-        <div class="col-md-2 d-flex gap-2">
+        <div class="col-md-3">
+            <label class="form-label" for="id_counted">Counted</label>
+            <select name="counted" id="id_counted" class="form-select">
+                <option value="all" {% if counted_filter == 'all' or not counted_filter %}selected{% endif %}>All</option>
+                <option value="yes" {% if counted_filter == 'yes' %}selected{% endif %}>Yes</option>
+                <option value="not_yes" {% if counted_filter == 'not_yes' %}selected{% endif %}>Not Yes</option>
+            </select>
+        </div>
+        <div class="col-md-3 d-flex gap-2">
             <button type="submit" class="btn btn-primary flex-fill">Apply</button>
             <a class="btn btn-outline-secondary flex-fill" href="{% url 'count-status' %}">Reset</a>
         </div>

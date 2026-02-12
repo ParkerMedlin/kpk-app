@@ -1022,11 +1022,19 @@ def display_count_status(request):
     if record_type_param not in {'blend', 'blendcomponent'}:
         record_type_param = None
 
-    items = build_count_status_display(record_type=record_type_param)
+    counted_param = (request.GET.get('counted') or 'all').strip().lower()
+    if counted_param not in {'all', 'yes', 'not_yes'}:
+        counted_param = 'all'
+
+    items = build_count_status_display(
+        record_type=record_type_param,
+        counted_filter=counted_param,
+    )
 
     return render(request, 'core/inventorycounts/count_status.html', {
         'items': items,
         'record_type': record_type_param or 'all',
+        'counted_filter': counted_param,
     })
 
 def display_list_to_count_list(request):
