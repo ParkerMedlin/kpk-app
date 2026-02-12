@@ -137,6 +137,29 @@ Use any SQLite client (DB Browser for SQLite, DBeaver, SQLiteStudio) to view and
 2. Connect to `./db/sage_data.db`
 3. Browse tables or execute custom queries
 
+## 📈 Line Capacity (Sales-Side)
+
+This repo also includes a sales-side line capacity dataset builder + analysis notebook.
+
+### 1) Build the Base Dataset (from SQLite)
+
+`line_capacity_sales_extract.py` reads `./db/sage_data.db` (or `./db/@sage_data.db`) and writes:
+- `./db/line_capacity_sales_<year>.csv` (row-level, exploded by bottle)
+- `./db/line_capacity_sales_<year>_weekly.csv`
+- `./db/line_capacity_sales_<year>_monthly.csv`
+- `./db/line_capacity_sales_<year>_missing_bottle.csv`
+
+Run:
+```bash
+python line_capacity_sales_extract.py --year 2025
+```
+
+### 2) Explore / Adjust Line Rules (Notebook)
+
+Open `line_capacity_analysis.ipynb` to tweak line assignment rules and analyze gallons by line.
+- The notebook loads `./db/line_capacity_sales_<year>.csv`
+- Rule 1 (Fogg item codes) comes from `fogg_item_codes.csv`
+
 ## ⚰️ Troubleshooting
 
 1. **Connection Errors**
