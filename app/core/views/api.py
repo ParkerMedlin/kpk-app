@@ -36,6 +36,7 @@ from core.services.production_planning_services import (
     update_production_holiday,
     delete_production_holiday,
 )
+from core.services.production_history_services import create_production_history
 from core.services.blend_scheduling_services import (
     calculate_shortage_times,
     get_blend_schedule_querysets,
@@ -2753,3 +2754,91 @@ def discharge_testing_detail_api(request, pk):
             'tote': _serialize_flush_tote_reading(tote),
         }
     )
+
+
+@csrf_exempt
+@require_POST
+def create_json_production_history(request):
+    payload = _parse_json_payload(request) or request.POST
+
+    item_code = (payload.get('item_code') or '').strip()
+    line_name = (payload.get('line_name') or '').strip()
+    run_date_raw = (payload.get('run_date') or '').strip()
+    produced_qty_raw = payload.get('produced_qty')
+
+    if not item_code:
+        return JsonResponse({'status': 'error', 'error': 'item_code is required'}, status=400)
+    if not line_name:
+        return JsonResponse({'status': 'error', 'error': 'line_name is required'}, status=400)
+    if not run_date_raw:
+        return JsonResponse({'status': 'error', 'error': 'run_date is required'}, status=400)
+    if produced_qty_raw is None:
+        return JsonResponse({'status': 'error', 'error': 'produced_qty is required'}, status=400)
+
+    try:
+        produced_qty = int(produced_qty_raw)
+    except (TypeError, ValueError):
+        return JsonResponse({'status': 'error', 'error': 'produced_qty must be an integer'}, status=400)
+
+    try:
+        run_date = dt.date.fromisoformat(run_date_raw)
+    except ValueError:
+        return JsonResponse({'status': 'error', 'error': 'run_date must be YYYY-MM-DD'}, status=400)
+
+    scheduled_qty_raw = payload.get('scheduled_qty')
+    scheduled_qty = None
+    if scheduled_qty_raw is not None:
+        try:
+            scheduled_qty = int(scheduled_qty_raw)
+        except (TypeError, ValueError):
+            pass
+
+    runtime_estimate_raw = payload.get('runtime_estimate')
+    runtime_estimate = None
+    if runtime_estimate_raw is not None:
+        try:
+            runtime_estimate = float(runtime_estimate_raw)
+        except (TypeError, ValueError):
+            pass
+
+    runtime_minutes_raw = payload.get('runtime_minutes')
+    runtime_minutes = None
+    if runtime_minutes_raw is not None:
+        try:
+            runtime_minutes = int(runtime_minutes_raw)
+        except (TypeError, ValueError):
+            pass
+
+    num_employees_raw = payload.get('num_employees')
+    num_employees = None
+    if num_employees_raw is not None:
+        try:
+            num_employees = int(num_employees_raw)
+        except (TypeError, ValueError):
+            pass
+
+    try:
+        record = create_production_history(
+            item_code=item_code,
+            produced_qty=produced_qty,
+            line_name=line_name,
+            run_date=run_date,
+            po_number=(payload.get('po_number') or '').strip(),
+            product_description=(payload.get('product_description') or '').strip(),
+            blend=(payload.get('blend') or '').strip(),
+            case_size=(payload.get('case_size') or '').strip(),
+            scheduled_qty=scheduled_qty,
+            bottle=(payload.get('bottle') or '').strip(),
+            cap=(payload.get('cap') or '').strip(),
+            runtime_estimate=runtime_estimate,
+            carton=(payload.get('carton') or '').strip(),
+            pallet=(payload.get('pallet') or '').strip(),
+            po_due_date=(payload.get('po_due_date') or '').strip(),
+            runtime_minutes=runtime_minutes,
+            num_employees=num_employees,
+            notes=(payload.get('notes') or '').strip(),
+        )
+    except ValueError as exc:
+        return JsonResponse({'status': 'error', 'error': str(exc)}, status=400)
+
+    return JsonResponse({'status': 'success', 'record': record}, status=201)

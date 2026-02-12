@@ -1,0 +1,390 @@
+Option Explicit
+
+' Production Logger: POSTs production data to kpk app, then deletes the schedule row.
+' Horix shipping workbook interaction is preserved.
+
+'======================
+' CONFIG (EDIT THESE)
+'======================
+
+' Best-effort: after deleting the source row, force a save to push the structural change immediately.
+Private Const SAVE_SOURCE_AFTER_DELETE As Boolean = False
+
+' KPK App production history API endpoint
+Private Const API_URL As String = "https://jrd.kpkapp.lan/core/api/production-history/create/"
+
+' Lines schedule: column offsets relative to the Qty cell (col H)
+Private Const L_OFF_ITEM_CODE As Long = -5      'C: P/N
+Private Const L_OFF_PO_NUMBER As Long = -4      'D: PO #
+Private Const L_OFF_PRODUCT As Long = -3        'E: Product
+Private Const L_OFF_BLEND As Long = -2          'F: Blend
+Private Const L_OFF_CASE_SIZE As Long = -1      'G: Case/Size
+' Qty is at offset 0                            'H: Qty
+Private Const L_OFF_BOTTLE As Long = 1          'I: Bottle
+Private Const L_OFF_CAP As Long = 2             'J: Cap
+Private Const L_OFF_RUNTIME_EST As Long = 3     'K: Runtime
+Private Const L_OFF_CARTON As Long = 4          'L: Carton
+Private Const L_OFF_PALLET As Long = 6          'N: Pallet
+Private Const L_OFF_PO_DUE As Long = 7          'O: PO Due
+
+' Horix schedule: column offsets relative to the Qty cell (col I)
+Private Const H_OFF_ITEM_CODE As Long = -7      'B: P/N
+Private Const H_OFF_PO_NUMBER As Long = -6      'C: PO #
+Private Const H_OFF_PRODUCT As Long = -5        'D: Product
+Private Const H_OFF_BLEND As Long = -3          'F: Blend
+Private Const H_OFF_CASE_SIZE As Long = -1      'H: Case Size
+Private Const H_OFF_RUN_DATE As Long = 1        'J: Run Date
+
+'======================
+' SKU SETS (BUILT ONCE)
+'======================
+Private mSplash As Object
+Private mWest As Object
+Private mSb As Object
+Private mMerc As Object
+
+Private Sub EnsureSkuSets()
+    If Not mSplash Is Nothing Then Exit Sub
+
+    Set mSplash = MakeSet(Array( _
+        "619527", "634357-35", "129477", "235826-35", "236226-35", "236255", "234357-35", "234055", "238197-35", _
+        "234526-35", "234555", "234192-T35", "239192-35", "335826-35", "334526-35", "334192-35", "329477-35", _
+        "329477-35", "444526-35", "446526-35", "636226-35", "634526-35", "835826-35", "236826-35", "237526-35", _
+        "236375-35" _
+    ))
+
+    Set mWest = MakeSet(Array( _
+        "499848N", "3556610", "363798", "14823330", "363770", "208341", "14823348", "17016015", "208341X3", _
+        "10932804", "10932812", "17950601", "17950593", "11791704", "14823355", "7781024", "19254432", _
+        "19254440", "520411" _
+    ))
+
+    Set mSb = MakeSet(Array( _
+        "031100", "031200", "031300", "031400R", "031500", "031500PK", "031600", "031600PK", "311G55", "312G55", _
+        "313G55", "314G55", "315G55", "315G55PK", "316G55", "316G55PK", "316G55M", "316G80M", "311275", "312275", _
+        "313275", "314275", "315275", "316275", "315GA5", "823026", "2291508", "808301", "1080176", "031003", _
+        "031004", "031005", "031006" _
+    ))
+
+    Set mMerc = MakeSet(Array( _
+        "8M0073201", "8M0073203", "8M0073202", "8M0073204", "8M0073205", "8M0073196", "8M0073198", "8M0073197", _
+        "8M0073199", "8M0073200" _
+    ))
+End Sub
+
+Private Function MakeSet(values As Variant) As Object
+    Dim d As Object: Set d = CreateObject("Scripting.Dictionary")
+    d.CompareMode = vbTextCompare
+    Dim i As Long
+    For i = LBound(values) To UBound(values)
+        d(CStr(values(i))) = True
+    Next i
+    Set MakeSet = d
+End Function
+
+'======================
+' HTTP POST HELPER
+'======================
+Private Sub PostProductionHistory(ByVal qtyCell As Range, ByVal prodQty As Double, _
+                                   ByVal schQty As Double, ByVal lineName As String, _
+                                   ByVal runtimeMin As Variant, ByVal numEmp As Variant, _
+                                   ByVal notes As String)
+    On Error GoTo PostFail
+
+    Dim isHorix As Boolean
+    isHorix = (lineName = "Horix Line")
+
+    Dim itemCode As String, poNum As String, product As String
+    Dim blend As String, caseSize As String
+
+    If isHorix Then
+        itemCode = CStr(qtyCell.Offset(0, H_OFF_ITEM_CODE).Text)
+        poNum = CStr(qtyCell.Offset(0, H_OFF_PO_NUMBER).Text)
+        product = CStr(qtyCell.Offset(0, H_OFF_PRODUCT).Text)
+        blend = CStr(qtyCell.Offset(0, H_OFF_BLEND).Text)
+        caseSize = CStr(qtyCell.Offset(0, H_OFF_CASE_SIZE).Text)
+    Else
+        itemCode = CStr(qtyCell.Offset(0, L_OFF_ITEM_CODE).Text)
+        poNum = CStr(qtyCell.Offset(0, L_OFF_PO_NUMBER).Text)
+        product = CStr(qtyCell.Offset(0, L_OFF_PRODUCT).Text)
+        blend = CStr(qtyCell.Offset(0, L_OFF_BLEND).Text)
+        caseSize = CStr(qtyCell.Offset(0, L_OFF_CASE_SIZE).Text)
+    End If
+
+    Dim json As String
+    json = "{"
+    json = json & """item_code"":""" & EscapeJson(itemCode) & ""","
+    json = json & """po_number"":""" & EscapeJson(poNum) & ""","
+    json = json & """product_description"":""" & EscapeJson(product) & ""","
+    json = json & """blend"":""" & EscapeJson(blend) & ""","
+    json = json & """case_size"":""" & EscapeJson(caseSize) & ""","
+    json = json & """scheduled_qty"":" & CLng(schQty) & ","
+    json = json & """produced_qty"":" & CLng(prodQty) & ","
+
+    If isHorix Then
+        json = json & """bottle"":"""","
+        json = json & """cap"":"""","
+        json = json & """runtime_estimate"":null,"
+        json = json & """carton"":"""","
+        json = json & """pallet"":"""","
+        json = json & """po_due_date"":"""","
+    Else
+        json = json & """bottle"":""" & EscapeJson(CStr(qtyCell.Offset(0, L_OFF_BOTTLE).Text)) & ""","
+        json = json & """cap"":""" & EscapeJson(CStr(qtyCell.Offset(0, L_OFF_CAP).Text)) & ""","
+
+        Dim rtEst As Variant
+        rtEst = qtyCell.Offset(0, L_OFF_RUNTIME_EST).Value2
+        If IsNumeric(rtEst) Then
+            json = json & """runtime_estimate"":" & CDbl(rtEst) & ","
+        Else
+            json = json & """runtime_estimate"":null,"
+        End If
+
+        json = json & """carton"":""" & EscapeJson(CStr(qtyCell.Offset(0, L_OFF_CARTON).Text)) & ""","
+        json = json & """pallet"":""" & EscapeJson(CStr(qtyCell.Offset(0, L_OFF_PALLET).Text)) & ""","
+        json = json & """po_due_date"":""" & EscapeJson(CStr(qtyCell.Offset(0, L_OFF_PO_DUE).Text)) & ""","
+    End If
+
+    json = json & """line_name"":""" & EscapeJson(lineName) & ""","
+    json = json & """run_date"":""" & Format$(Date, "yyyy-mm-dd") & ""","
+
+    If IsNumeric(runtimeMin) Then
+        json = json & """runtime_minutes"":" & CLng(runtimeMin) & ","
+    Else
+        json = json & """runtime_minutes"":null,"
+    End If
+
+    If IsNumeric(numEmp) Then
+        json = json & """num_employees"":" & CLng(numEmp) & ","
+    Else
+        json = json & """num_employees"":null,"
+    End If
+
+    json = json & """notes"":""" & EscapeJson(notes) & """"
+    json = json & "}"
+
+    Dim http As Object
+    Set http = CreateObject("MSXML2.XMLHTTP")
+    http.Open "POST", API_URL, False
+    http.setRequestHeader "Content-Type", "application/json"
+    http.send json
+
+    If http.Status >= 400 Then
+        Debug.Print "PostProductionHistory: HTTP " & http.Status & " - " & http.responseText
+    Else
+        Debug.Print "PostProductionHistory: HTTP " & http.Status & " OK - " & lineName & " " & itemCode
+    End If
+
+    Exit Sub
+PostFail:
+    Debug.Print "PostProductionHistory failed: " & Err.Description & " (Error " & Err.Number & ")"
+End Sub
+
+Private Function EscapeJson(ByVal s As String) As String
+    s = Replace(s, "\", "\\")
+    s = Replace(s, """", "\""")
+    s = Replace(s, vbCr, "")
+    s = Replace(s, vbLf, "\n")
+    s = Replace(s, vbTab, "\t")
+    EscapeJson = s
+End Function
+
+'======================
+' MAIN
+'======================
+Public Sub Logger()
+    EnsureSkuSets
+
+    Dim prevScreen As Boolean, prevEvents As Boolean, prevAlerts As Boolean
+    Dim prevCalc As XlCalculation
+    prevScreen = Application.ScreenUpdating
+    prevEvents = Application.EnableEvents
+    prevAlerts = Application.DisplayAlerts
+    prevCalc = Application.Calculation
+
+    Dim wbSrc As Workbook, wsSrc As Worksheet
+
+    On Error GoTo Fail
+
+    Application.ScreenUpdating = False
+    Application.EnableEvents = False
+    Application.Calculation = xlCalculationManual
+
+    If TypeName(Selection) <> "Range" Or Selection.Cells.CountLarge <> 1 Then
+        Err.Raise vbObjectError + 100, , "Select a single cell (Scheduled Qty) before running Logger."
+    End If
+
+    Dim qtyCell As Range: Set qtyCell = Selection.Cells(1, 1)
+    Set wsSrc = qtyCell.Worksheet
+    Set wbSrc = wsSrc.Parent
+
+    If Not IsNumeric(qtyCell.Value2) Then
+        Err.Raise vbObjectError + 101, , "Selected Scheduled Qty cell isn't numeric."
+    End If
+
+    Dim schQty As Double: schQty = CDbl(qtyCell.Value2)
+
+    Dim prodQtyV As Variant
+    prodQtyV = Application.InputBox("Enter produced qty (or type exit)", "Produced Qty", schQty, Type:=2)
+    If prodQtyV = False Then GoTo CleanUp
+    If LCase$(Trim$(CStr(prodQtyV))) = "exit" Then GoTo CleanUp
+    If Not IsNumeric(prodQtyV) Then
+        Err.Raise vbObjectError + 102, , "Produced Qty must be numeric (or type exit)."
+    End If
+
+    Dim prodQty As Double: prodQty = CDbl(prodQtyV)
+    Dim difQty As Double: difQty = schQty - prodQty
+
+    ' Collect production worksheet fields
+    Dim runtimeMinV As Variant
+    runtimeMinV = Application.InputBox("Total runtime in minutes (or leave blank)", "Runtime Minutes", "", Type:=2)
+    If VarType(runtimeMinV) = vbBoolean Then If runtimeMinV = False Then GoTo CleanUp
+    If LCase$(Trim$(CStr(runtimeMinV))) = "exit" Then GoTo CleanUp
+
+    Dim numEmpV As Variant
+    numEmpV = Application.InputBox("Number of employees (or leave blank)", "Employees", "", Type:=2)
+    If VarType(numEmpV) = vbBoolean Then If numEmpV = False Then GoTo CleanUp
+    If LCase$(Trim$(CStr(numEmpV))) = "exit" Then GoTo CleanUp
+
+    Dim prodNotes As String
+    Dim notesV As Variant
+    notesV = Application.InputBox("Notes (or leave blank)", "Notes", "", Type:=2)
+    If VarType(notesV) = vbBoolean Then
+        If notesV = False Then GoTo CleanUp
+    Else
+        prodNotes = Trim$(CStr(notesV))
+    End If
+
+    Dim lineName As String: lineName = wsSrc.Name
+
+    ' POST to kpk app
+    PostProductionHistory qtyCell, prodQty, schQty, lineName, runtimeMinV, numEmpV, prodNotes
+
+    ' SKU is 7 columns left of qty cell; .Text preserves leading zeros if formatted that way.
+    Dim sku As String: sku = CStr(qtyCell.Offset(0, -7).Text)
+
+    ' Horix shipping workbook interaction
+    If lineName = "Horix Line" Then
+        OpenShippingCellForSku sku, Date
+    End If
+
+    ' Delete/update the source row.
+    If lineName <> "Horix Line" And difQty > 0 Then
+        qtyCell.Value2 = difQty
+        DoEvents
+    Else
+        DeleteSourceRow qtyCell
+    End If
+
+    If SAVE_SOURCE_AFTER_DELETE Then
+        On Error Resume Next
+        wbSrc.Save
+        On Error GoTo 0
+        DoEvents
+    End If
+
+CleanUp:
+    Application.CutCopyMode = False
+    Application.Calculation = prevCalc
+    Application.DisplayAlerts = prevAlerts
+    Application.EnableEvents = prevEvents
+    Application.ScreenUpdating = prevScreen
+    Exit Sub
+
+Fail:
+    MsgBox "Logger failed: " & Err.Description & " (Error " & Err.Number & ")"
+    Resume CleanUp
+End Sub
+
+Private Function GetOpenWorkbookByName(ByVal wbName As String) As Workbook
+    Dim wb As Workbook
+    For Each wb In Application.Workbooks
+        If StrComp(wb.Name, wbName, vbTextCompare) = 0 Then
+            Set GetOpenWorkbookByName = wb
+            Exit Function
+        End If
+    Next wb
+End Function
+
+Private Sub DeleteSourceRow(ByVal qtyCell As Range)
+    On Error Resume Next
+    qtyCell.EntireRow.Delete
+    DoEvents
+    On Error GoTo 0
+End Sub
+
+'======================
+' SHIPPING (HORIX)
+'======================
+Private Sub OpenShippingCellForSku(ByVal sku As String, ByVal runDate As Date)
+    Dim shipWbName As String, shipUrl As String, dateCol As String, headerRow As Long
+    If Not ShippingTargetForSku(sku, shipWbName, shipUrl, dateCol, headerRow) Then Exit Sub
+
+    Dim wb As Workbook
+    Set wb = GetOpenWorkbookByName(shipWbName)
+    If wb Is Nothing Then
+        Set wb = Application.Workbooks.Open(Filename:=shipUrl, UpdateLinks:=0, ReadOnly:=False, AddToMru:=False)
+    End If
+
+    Dim ws As Worksheet
+    Set ws = wb.ActiveSheet
+
+    Dim r As Long: r = FindRowByExact(ws, dateCol, runDate)
+    If r = 0 Then Exit Sub
+
+    Dim c As Long: c = FindColByExact(ws, headerRow, sku)
+    If c = 0 Then Exit Sub
+
+    ws.Activate
+    Application.Goto ws.Cells(r, c), True
+End Sub
+
+Private Function ShippingTargetForSku(ByVal sku As String, ByRef wbName As String, ByRef url As String, ByRef dateCol As String, ByRef headerRow As Long) As Boolean
+    If mSplash.Exists(sku) Then
+        wbName = "SPLASH AF 2.0.1.xlsx"
+        url = "https://starbriteinc.sharepoint.com/sites/AntifreezeShipping/Shared%20Documents/Splash-Kinpak/SPLASH%20AF%202.0.1.xlsx"
+        dateCol = "Q"
+        headerRow = 10
+        ShippingTargetForSku = True
+        Exit Function
+    End If
+
+    If mWest.Exists(sku) Then
+        wbName = "West AF.xlsx"
+        url = "https://starbriteinc.sharepoint.com/sites/AntifreezeShipping/Shared%20Documents/West%20Marine/West%20AF.xlsx"
+        dateCol = "I"
+        headerRow = 8
+        ShippingTargetForSku = True
+        Exit Function
+    End If
+
+    If mSb.Exists(sku) Then
+        wbName = "NonWest AF2.xlsx"
+        url = "https://starbriteinc.sharepoint.com/sites/AntifreezeShipping/Shared%20Documents/Non-West/NonWest%20AF2.xlsx"
+        dateCol = "M"
+        headerRow = 8
+        ShippingTargetForSku = True
+        Exit Function
+    End If
+
+    If mMerc.Exists(sku) Then
+        wbName = "Mercury Quicksilver AF.xlsx"
+        url = "https://starbriteinc.sharepoint.com/sites/AntifreezeShipping/Shared%20Documents/Mercury/Mercury%20Quicksilver%20AF.xlsx"
+        dateCol = "N"
+        headerRow = 7
+        ShippingTargetForSku = True
+        Exit Function
+    End If
+End Function
+
+Private Function FindRowByExact(ByVal ws As Worksheet, ByVal colLetter As String, ByVal whatDate As Date) As Long
+    Dim f As Range
+    Set f = ws.Columns(colLetter).Find(What:=whatDate, LookIn:=xlFormulas, LookAt:=xlWhole, SearchOrder:=xlByRows, SearchDirection:=xlNext, MatchCase:=False)
+    If Not f Is Nothing Then FindRowByExact = f.Row
+End Function
+
+Private Function FindColByExact(ByVal ws As Worksheet, ByVal hdrRow As Long, ByVal what As String) As Long
+    Dim f As Range
+    Set f = ws.Rows(hdrRow).Find(What:=what, LookIn:=xlValues, LookAt:=xlWhole, SearchOrder:=xlByColumns, SearchDirection:=xlNext, MatchCase:=False)
+    If Not f Is Nothing Then FindColByExact = f.Column
+End Function

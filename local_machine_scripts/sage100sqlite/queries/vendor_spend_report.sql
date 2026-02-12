@@ -47,8 +47,9 @@ FROM
         ith.TransactionCode = 'PO'
         -- Filter for positive quantities (actual purchases, not returns)
         AND CAST(ith.TransactionQty AS REAL) > 0
+        -- Calendar year 2025 only (start inclusive, end exclusive)
+        AND ith.TransactionDate >= '2025-01-01'
+        AND ith.TransactionDate < '2026-01-01'
     ) vs
-WHERE 
-    vs.TransactionYear IN (2023, 2024, 2025)
 ORDER BY 
     vs.VendorNo, vs.TransactionDate; 

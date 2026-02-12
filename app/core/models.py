@@ -1509,3 +1509,32 @@ class DischargeTestingRecord(models.Model):
 
         if errors:
             raise ValidationError(errors)
+
+
+class ProductionHistory(models.Model):
+    item_code = models.CharField(max_length=30)
+    po_number = models.CharField(max_length=30, blank=True, default='')
+    product_description = models.CharField(max_length=255, blank=True, default='')
+    blend = models.CharField(max_length=255, blank=True, default='')
+    case_size = models.CharField(max_length=50, blank=True, default='')
+    scheduled_qty = models.IntegerField(null=True, blank=True)
+    produced_qty = models.IntegerField()
+    bottle = models.CharField(max_length=100, blank=True, default='')
+    cap = models.CharField(max_length=100, blank=True, default='')
+    runtime_estimate = models.DecimalField(max_digits=10, decimal_places=4, null=True, blank=True)
+    carton = models.CharField(max_length=50, blank=True, default='')
+    pallet = models.CharField(max_length=50, blank=True, default='')
+    po_due_date = models.CharField(max_length=20, blank=True, default='')
+    line_name = models.CharField(max_length=50)
+    run_date = models.DateField()
+    runtime_minutes = models.IntegerField(null=True, blank=True)
+    num_employees = models.IntegerField(null=True, blank=True)
+    notes = models.TextField(blank=True, default='')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'core_productionhistory'
+        ordering = ['-run_date', '-created_at']
+
+    def __str__(self):
+        return f"{self.item_code} - {self.line_name} - {self.run_date}"

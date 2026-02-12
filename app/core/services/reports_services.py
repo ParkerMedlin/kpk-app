@@ -245,6 +245,14 @@ _MISC_REPORT_DEFINITIONS = [
         'requires_start_time': False,
         'direct_url': '/core/count-status/',
     },
+    {
+        'slug': 'Production-History',
+        'label': 'Production History',
+        'requires_item': False,
+        'requires_quantity': False,
+        'requires_start_time': False,
+        'direct_url': '/core/production-history/',
+    },
 ]
 
 
