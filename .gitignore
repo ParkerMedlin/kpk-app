@@ -180,3 +180,6 @@ host-services/config/alert_state.json
 nul
 host-services/launcher.vbs
 host-services/launcher.vbs
+
+# project handbook archive
+project-handbook/feature-specs/archive/
