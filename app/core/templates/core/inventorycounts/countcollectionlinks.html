@@ -31,6 +31,11 @@
                 <i class="fa fa-times-circle text-danger"></i> Countlist not created. Check console for errors.
             </span>
         </div>
+        <div class="text-center my-2">
+            <a href="{% url 'hidden-count-collection-links' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="fa-solid fa-eye-slash"></i> View Hidden Collections
+            </a>
+        </div>
     {% endif %}
     {% if count_collection_exists %}
         <div class="table-responsive-sm">
@@ -58,7 +63,7 @@
                 {% if user.is_staff %}
                     <td><a class="collectionLink" href="/core/count-list/display/?listId={{ item.id }}&recordType={{ item.record_type }}">Enter Counts >></a></td>
                     <td class="text-center">
-                        <i class="fa-solid fa-trash-alt btn btn-outline-danger deleteCountLinkButton" collectionlinkitemid="{{ item.id }}"  disabled="disabled"></i>
+                        <i class="fa-solid fa-eye-slash btn btn-outline-secondary hideCountLinkButton" collectionlinkitemid="{{ item.id }}"  disabled="disabled"></i>
                     </td>
                 {% endif %}
             </tr>

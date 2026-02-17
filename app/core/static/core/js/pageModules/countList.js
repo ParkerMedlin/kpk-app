@@ -5,85 +5,45 @@ import { CountListWebSocket, CountCollectionWebSocket } from '../websockets/inde
 import { getURLParameter } from '../requestFunctions/requestFunctions.js';
 // import { MultiContainerZebraPrintButton } from '../objects/buttonObjects.js'
 
-const COUNT_COLLECTION_LINKS_URL = '/core/display-count-collection-links/';
-let countCollectionDeletionModalShown = false;
+let countCollectionArchivedBannerShown = false;
 
-function ensureCountCollectionDeletedModal() {
-    let modalEl = document.getElementById('countCollectionLinkDeletedModal');
-    if (modalEl) {
-        return modalEl;
+function ensureArchivedBanner() {
+    let bannerEl = document.getElementById('archivedBanner');
+    if (bannerEl) {
+        return bannerEl;
     }
 
-    modalEl = document.createElement('div');
-    modalEl.id = 'countCollectionLinkDeletedModal';
-    modalEl.className = 'modal fade count-collection-deleted-modal';
-    modalEl.tabIndex = -1;
-    modalEl.setAttribute('aria-labelledby', 'countCollectionLinkDeletedModalLabel');
-    modalEl.setAttribute('aria-hidden', 'true');
+    bannerEl = document.createElement('div');
+    bannerEl.id = 'archivedBanner';
+    bannerEl.className = 'alert alert-warning alert-dismissible fade show';
+    bannerEl.setAttribute('role', 'alert');
+    bannerEl.textContent = 'This count list has been archived.';
 
-    modalEl.innerHTML = `
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-warning text-dark">
-                    <h5 class="modal-title" id="countCollectionLinkDeletedModalLabel">Count List Unavailable</h5>
-                </div>
-                <div class="modal-body px-4 text-center">
-                    <p class="mb-3 fw-semibold" data-role="deletion-message"></p>
-                    <p class="small text-muted mb-0" data-role="deletion-timestamp"></p>
-                </div>
-                <div class="modal-footer d-flex justify-content-center">
-                    <button type="button" class="btn btn-primary" data-role="redirect">Go to Count Collection Links</button>
-                </div>
-            </div>
-        </div>
-    `;
+    const closeButton = document.createElement('button');
+    closeButton.type = 'button';
+    closeButton.className = 'btn-close';
+    closeButton.setAttribute('data-bs-dismiss', 'alert');
+    closeButton.setAttribute('aria-label', 'Close');
+    bannerEl.appendChild(closeButton);
 
-    document.body.appendChild(modalEl);
-
-    const redirectButton = modalEl.querySelector('[data-role="redirect"]');
-    if (redirectButton) {
-        redirectButton.addEventListener('click', (event) => {
-            event.preventDefault();
-            window.location.assign(COUNT_COLLECTION_LINKS_URL);
-        });
+    const headerElement = document.getElementById('countListNameHeader');
+    const headerContainer = headerElement ? headerElement.closest('div') : null;
+    if (headerContainer && headerContainer.parentNode) {
+        headerContainer.parentNode.insertBefore(bannerEl, headerContainer.nextSibling);
+    } else {
+        document.body.prepend(bannerEl);
     }
 
-    return modalEl;
+    return bannerEl;
 }
 
-function showCountCollectionDeletedModal({ listName, receivedAt } = {}) {
-    const modalEl = ensureCountCollectionDeletedModal();
-    const messageEl = modalEl.querySelector('[data-role="deletion-message"]');
-    const timestampEl = modalEl.querySelector('[data-role="deletion-timestamp"]');
-
-    const safeListName = listName && listName.trim() !== '' ? listName.trim() : null;
-    const message = safeListName
-        ? `The count list "${safeListName}" is no longer available because a Counts Manager deleted its Count Collection Link.`
-        : 'This count list is no longer available because a Counts Manager deleted its Count Collection Link.';
-    if (messageEl) {
-        messageEl.textContent = message;
+function showArchivedBanner() {
+    const bannerEl = ensureArchivedBanner();
+    if (!bannerEl) {
+        return;
     }
-
-    const timestamp = receivedAt instanceof Date ? receivedAt : new Date();
-    if (timestampEl) {
-        timestampEl.textContent = `Update received ${timestamp.toLocaleString()}.`;
-    }
-
-    if (window.bootstrap && window.bootstrap.Modal) {
-        const modalInstance = window.bootstrap.Modal.getOrCreateInstance(modalEl, {
-            backdrop: 'static',
-            keyboard: false,
-        });
-        modalInstance.show();
-    } else if (typeof $ === 'function' && typeof $(modalEl).modal === 'function') {
-        $(modalEl).modal({
-            backdrop: 'static',
-            keyboard: false,
-        });
-    } else {
-        modalEl.classList.add('show');
-        modalEl.style.display = 'block';
-    }
+    bannerEl.classList.add('show');
+    bannerEl.style.display = '';
 }
 
 $(document).ready(function(){
@@ -92,30 +52,26 @@ $(document).ready(function(){
     const thisCountListWebSocket = new CountListWebSocket(listId);
     const thisCountListPage = new CountListPage(thisCountListWebSocket);
     const thisAddCountListItemModal = new AddCountListItemModal(thisCountListWebSocket);
+    const handleCollectionHidden = (payload) => {
+        if (!normalizedListId) {
+            return;
+        }
+        const hiddenId = payload && payload.collection_id !== undefined && payload.collection_id !== null
+            ? String(payload.collection_id)
+            : null;
+        if (!hiddenId || hiddenId !== normalizedListId) {
+            return;
+        }
+        if (countCollectionArchivedBannerShown) {
+            return;
+        }
+        countCollectionArchivedBannerShown = true;
+        showArchivedBanner();
+    };
+
     const thisCountCollectionWebSocket = new CountCollectionWebSocket({
-        onCollectionDeleted: (payload) => {
-            if (!normalizedListId) {
-                return;
-            }
-            const deletedId = payload && payload.collection_id !== undefined && payload.collection_id !== null
-                ? String(payload.collection_id)
-                : null;
-            if (!deletedId || deletedId !== normalizedListId) {
-                return;
-            }
-            if (countCollectionDeletionModalShown) {
-                return;
-            }
-            countCollectionDeletionModalShown = true;
-
-            if (thisCountListWebSocket && typeof thisCountListWebSocket.disconnect === 'function') {
-                thisCountListWebSocket.disconnect({ reason: 'count_collection_link_deleted' });
-            }
-
-            const headerElement = document.getElementById('countListNameHeader');
-            const listName = headerElement ? headerElement.textContent : '';
-            showCountCollectionDeletedModal({ listName });
-        },
+        onCollectionHidden: handleCollectionHidden,
+        onCollectionDeleted: handleCollectionHidden,
     });
 
     // Store the WebSocket instance globally

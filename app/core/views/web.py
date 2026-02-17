@@ -15,6 +15,7 @@ from django.db import connection
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
 from django.forms.models import modelformset_factory
 from django.http import HttpResponseRedirect, JsonResponse, HttpResponseForbidden, HttpResponse
 from django.core.paginator import Paginator
@@ -1087,6 +1088,10 @@ def display_count_list(request):
     )
 
     todays_date = dt.date.today()
+    count_collection_link = None
+    if count_list_id:
+        count_collection_link = CountCollectionLink.objects.filter(pk=count_list_id).first()
+    is_hidden = count_collection_link.is_hidden if count_collection_link else False
 
     if record_type == 'blendcomponent':
         location_options = [
@@ -1111,6 +1116,7 @@ def display_count_list(request):
         'count_list_id': count_list_data['count_list_id'],
         'record_type': count_list_data['record_type'],
         'count_list_name': count_list_data['count_list_name'],
+        'is_hidden': is_hidden,
     }
 
     return render(request, 'core/inventorycounts/countlist.html', context)
@@ -1132,7 +1138,7 @@ def display_count_collection_links(request):
     Template:
         core/inventorycounts/countcollectionlinks.html
     """
-    count_collection_links = CountCollectionLink.objects.all().order_by('link_order')
+    count_collection_links = CountCollectionLink.objects.filter(is_hidden=False).order_by('link_order')
     if not count_collection_links.exists():
         count_collection_exists = False
     else:
@@ -1140,6 +1146,16 @@ def display_count_collection_links(request):
 
     return render(request, 'core/inventorycounts/countcollectionlinks.html', {'count_collection_links' : count_collection_links,
                                                                               'count_collection_exists' : count_collection_exists})
+
+@login_required
+@staff_member_required
+def display_hidden_collection_links(request):
+    """Display hidden collection links for inventory tracking (staff only)."""
+    count_collection_links = CountCollectionLink.objects.filter(is_hidden=True).order_by('-created_at')
+    count_collection_exists = count_collection_links.exists()
+
+    return render(request, 'core/inventorycounts/hiddencountcollectionlinks.html', {'count_collection_links' : count_collection_links,
+                                                                                    'count_collection_exists' : count_collection_exists})
 
 def display_count_records(request):
     """Display count records for inventory tracking.

@@ -43,6 +43,8 @@ export class CountCollectionWebSocket {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         this.callbacks = {
             collection_updated: options.onCollectionUpdated,
+            collection_hidden: options.onCollectionHidden || options.onCollectionDeleted,
+            collection_restored: options.onCollectionRestored,
             collection_deleted: options.onCollectionDeleted,
             collection_added: options.onCollectionAdded,
             collection_order_updated: options.onCollectionOrderUpdated,
@@ -99,8 +101,12 @@ export class CountCollectionWebSocket {
             
             if (data.type === 'collection_updated') {
                 this.updateCollectionUI(data.collection_id, data.new_name);
+            } else if (data.type === 'collection_hidden') {
+                this.removeCollectionUI(data.collection_id);
             } else if (data.type === 'collection_deleted') {
                 this.removeCollectionUI(data.collection_id);
+            } else if (data.type === 'collection_restored') {
+                this.addCollectionUI(data);
             } else if (data.type === 'collection_added') { 
                 this.addCollectionUI(data);
             } else if (data.type === 'collection_order_updated') {
@@ -162,9 +168,20 @@ export class CountCollectionWebSocket {
         }));
     }
 
-    deleteCollection(collectionId) {
+    hideCollection(collectionId) {
         this.socket.send(JSON.stringify({
-            action: 'delete_collection',
+            action: 'hide_collection',
+            collection_id: collectionId
+        }));
+    }
+
+    deleteCollection(collectionId) {
+        this.hideCollection(collectionId);
+    }
+
+    restoreCollection(collectionId) {
+        this.socket.send(JSON.stringify({
+            action: 'restore_collection',
             collection_id: collectionId
         }));
     }
@@ -192,20 +209,22 @@ export class CountCollectionWebSocket {
     }
 
     addCollectionUI(data) {
-        console.log('adding ' + data);
+        const id = data.collection_id || data.id;
         let lastRow = $('table tr:last').clone();
-        lastRow.find('td').attr('data-collection-id', data.id);
-        lastRow.attr('collectionlinkitemid', data.id);
+        lastRow.attr('collectionlinkitemid', id);
+        lastRow.find('td[data-collection-id]').attr('data-collection-id', id);
         lastRow.find('td.listOrderCell').text(data.link_order);
-        lastRow.find('a.collectionLink').attr('href', `/core/count-list/display/?listId=${data.id}&recordType=${data.record_type}`);
-        lastRow.find('input.collectionNameElement').val(data.collection_name);
+        lastRow.find('a.collectionLink').attr('href', `/core/count-list/display/?listId=${id}&recordType=${data.record_type}`);
+        lastRow.find('input.collectionNameElement')
+            .val(data.collection_name)
+            .attr('id', `input${id}`)
+            .attr('collectionlinkitemid', id);
         lastRow
-            .find('i.deleteCountLinkButton')
-            .attr('collectionlinkitemid', data.id)
+            .find('i.hideCountLinkButton')
+            .attr('collectionlinkitemid', id)
             .removeAttr('disabled')
             .removeClass('disabled');
         $('#countCollectionLinkTable').append(lastRow);
-        // lastRow.find('td.collectionId').text(collectionLinkInfo.collection_id);
     }
 
     updateCollectionOrderUI(updatedOrderPairs) {

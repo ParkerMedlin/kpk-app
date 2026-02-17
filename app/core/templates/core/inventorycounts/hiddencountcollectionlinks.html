@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}<title>Hidden Count Collections</title>{% endblock %}
+
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <a href="{% url 'display-count-collection-links' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="fa-solid fa-arrow-left"></i> Back to Active Collections
+        </a>
+    </div>
+
+    <h2 class="mb-3">Hidden Count Collections</h2>
+
+    <div class="table-responsive-sm">
+        <table class="table text-left table-bordered table-hover" id="hiddenCountCollectionLinkTable">
+            <thead class="thead-dark">
+                <tr>
+                    <th scope="col">Collection Name</th>
+                    <th scope="col">Created Date</th>
+                    <th scope="col"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in count_collection_links %}
+                    <tr class="tableBodyRow" collectionlinkitemid="{{ item.id }}">
+                        <td>
+                            <a class="collectionLink" href="/core/count-list/display/?listId={{ item.id }}&recordType={{ item.record_type }}">{{ item.collection_name }}</a>
+                        </td>
+                        <td>{% if item.created_at %}{{ item.created_at|date:"m/d/Y" }}{% endif %}</td>
+                        <td class="text-center">
+                            <i class="fa-solid fa-rotate-left btn btn-outline-success restoreCountLinkButton" collectionlinkitemid="{{ item.id }}"></i>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if not count_collection_exists %}
+        <p id="hiddenCollectionEmptyState" class="text-muted">No hidden count collections.</p>
+    {% endif %}
+{% endblock content %}
+
+{% block belowdeckscripts %}
+    <script type="module" src="{% static 'core/js/pageModules/hiddenCountCollectionLinks.js' %}"></script>
+{% endblock %}
