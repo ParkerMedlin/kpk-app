@@ -14,21 +14,21 @@
 
 ### Hidden Collections Page (`/core/hidden-count-collection-links/`)
 
-- [ ] Page loads for staff user
-- [ ] Page redirects to login for non-staff user
-- [ ] Page redirects to login for anonymous (logged out) user
+- [x] Page loads for staff user
+- [x] Page redirects to login for non-staff user
+- [x] Page redirects to login for anonymous (logged out) user
 
 ### Active Collections Page – Staff Elements
 
-- [ ] Staff user sees the hide button (eye-slash icon) on each collection row
-- [ ] Non-staff user does NOT see the hide button
-- [ ] Staff user sees "View Hidden Collections" link/button on the page
-- [ ] Non-staff user does NOT see "View Hidden Collections" link
+- [x] Staff user sees the hide button (eye-slash icon) on each collection row
+- [x] Non-staff user does NOT see the hide button
+- [x] Staff user sees "View Hidden Collections" link/button on the page
+- [x] Non-staff user does NOT see "View Hidden Collections" link
 
 ### Count List – Read-Only for Hidden Collections
 
-- [ ] Staff user can view a hidden collection's count list via the hidden collections page link
-- [ ] Non-staff user cannot navigate to a hidden collection (it doesn't appear in the active list)
+- [x] Staff user can view a hidden collection's count list via the hidden collections page link
+- [x] Non-staff user cannot navigate to a hidden collection (it doesn't appear in the active list)
 
 ---
 
@@ -36,16 +36,16 @@
 
 ### Happy Path
 
-- [ ] Click the eye-slash hide button on a collection → collection row disappears from the table
-- [ ] After hiding, refresh the page → hidden collection is NOT in the list
-- [ ] After hiding, the collection's `is_hidden` field is `True` in the database (check Django admin or shell)
-- [ ] The count records (BlendCountRecord / BlendComponentCountRecord) associated with the hidden collection still exist in the database (not deleted)
+- [x] Click the eye-slash hide button on a collection → collection row disappears from the table
+- [x] After hiding, refresh the page → hidden collection is NOT in the list
+- [x] After hiding, the collection's `is_hidden` field is `True` in the database (check Django admin or shell)
+- [x] The count records (BlendCountRecord / BlendComponentCountRecord) associated with the hidden collection still exist in the database (not deleted)
 
 ### UI Details
 
-- [ ] Hide button icon is `fa-eye-slash` (not the old trash icon `fa-trash-alt`)
-- [ ] Hide button style is `btn-outline-secondary` (not the old `btn-outline-danger`)
-- [ ] Hide button has class `hideCountLinkButton` (not the old `deleteCountLinkButton`)
+- [x] Hide button icon is `fa-eye-slash` (not the old trash icon `fa-trash-alt`)
+- [x] Hide button style is `btn-outline-secondary` (not the old `btn-outline-danger`)
+- [x] Hide button has class `hideCountLinkButton` (not the old `deleteCountLinkButton`)
 
 ---
 
@@ -53,9 +53,9 @@
 
 ### Setup: Open the active collections page in two separate browser tabs (both as staff)
 
-- [ ] Hide a collection in Tab A → the row disappears in Tab A
-- [ ] The same row also disappears in Tab B without refreshing
-- [ ] Both tabs maintain their WebSocket connection (green "Connected" indicator stays, if visible)
+- [x] Hide a collection in Tab A → the row disappears in Tab A
+- [x] The same row also disappears in Tab B without refreshing
+- [x] Both tabs maintain their WebSocket connection (green "Connected" indicator stays, if visible)
 
 ---
 
@@ -63,14 +63,14 @@
 
 ### Setup: Open a count list in Tab A. Open the active collections page in Tab B (both as staff).
 
-- [ ] In Tab B, hide the collection that Tab A has open → Tab A shows a yellow warning banner: "This count list has been archived."
-- [ ] The banner is dismissible (click the X to close it)
-- [ ] After the banner appears, the user in Tab A can still enter count values (click "Enter >" button, type quantities)
-- [ ] After the banner appears, the user in Tab A can still check/uncheck the "Counted" checkbox
-- [ ] After the banner appears, the user in Tab A can still type in comment textareas
-- [ ] After the banner appears, the user in Tab A can still change the location dropdown
-- [ ] The WebSocket connection in Tab A stays connected (no disconnect, no redirect)
-- [ ] When the user in Tab A navigates away (clicks "Return to Count Links Page"), the hidden collection is no longer in the active list
+- [x] In Tab B, hide the collection that Tab A has open → Tab A shows a yellow warning banner: "This count list has been archived."
+- [x] The banner is dismissible (click the X to close it)
+- [x] After the banner appears, the user in Tab A can still enter count values (click "Enter >" button, type quantities)
+- [x] After the banner appears, the user in Tab A can still check/uncheck the "Counted" checkbox
+- [x] After the banner appears, the user in Tab A can still type in comment textareas
+- [x] After the banner appears, the user in Tab A can still change the location dropdown
+- [x] The WebSocket connection in Tab A stays connected (no disconnect, no redirect)
+- [x] When the user in Tab A navigates away (clicks "Return to Count Links Page"), the hidden collection is no longer in the active list
 
 ---
 
@@ -78,16 +78,16 @@
 
 ### Setup: Hide a collection, then navigate to it from the hidden collections page.
 
-- [ ] The yellow archived banner ("This count list has been archived.") appears at the top
-- [ ] "Enter >" buttons are disabled (cannot open the container entry modal)
-- [ ] Comment textareas are `readonly`
-- [ ] Location dropdowns are disabled
-- [ ] "Counted" checkboxes are disabled
-- [ ] Qty refresh buttons are hidden
-- [ ] The "Add Item" button row is hidden (not visible at all)
-- [ ] Discard button cells are hidden (not visible at all)
-- [ ] The discard column header is hidden
-- [ ] Count data is still visible (item codes, descriptions, quantities, dates)
+- [x] The yellow archived banner ("This count list has been archived.") appears at the top
+- [x] "Enter >" buttons are disabled (cannot open the container entry modal)
+- [x] Comment textareas are `readonly`
+- [x] Location dropdowns are disabled
+- [x] "Counted" checkboxes are disabled
+- [x] Qty refresh buttons are hidden
+- [x] The "Add Item" button row is hidden (not visible at all)
+- [x] Discard button cells are hidden (not visible at all)
+- [x] The discard column header is hidden
+- [x] Count data is still visible (item codes, descriptions, quantities, dates)
 
 ---
 
@@ -95,14 +95,14 @@
 
 ### Setup: Hide at least 2 collections first.
 
-- [ ] Page title is "Hidden Count Collections"
-- [ ] "Back to Active Collections" button links to `/core/display-count-collection-links/`
-- [ ] Table shows all hidden collections
-- [ ] Each row shows: collection name, created date, restore button
-- [ ] Collection name is a clickable link
-- [ ] Clicking a collection name navigates to the count list page for that collection
-- [ ] Created date is formatted as `mm/dd/yyyy`
-- [ ] Restore button uses the `fa-rotate-left` icon with `btn-outline-success` style
+- [x] Page title is "Hidden Count Collections"
+- [x] "Back to Active Collections" button links to `/core/display-count-collection-links/`
+- [x] Table shows all hidden collections
+- [x] Each row shows: collection name, created date, restore button
+- [x] Collection name is a clickable link
+- [x] Clicking a collection name navigates to the count list page for that collection
+- [x] Created date is formatted as `mm/dd/yyyy`
+- [x] Restore button uses the `fa-rotate-left` icon with `btn-outline-success` style
 
 ### Empty State
 

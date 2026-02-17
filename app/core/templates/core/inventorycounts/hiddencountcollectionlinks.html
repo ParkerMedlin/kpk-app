@@ -18,7 +18,7 @@
                 <tr>
                     <th scope="col">Collection Name</th>
                     <th scope="col">Created Date</th>
-                    <th scope="col"></th>
+                    <th scope="col">Restore</th>
                 </tr>
             </thead>
             <tbody>
@@ -29,7 +29,9 @@
                         </td>
                         <td>{% if item.created_at %}{{ item.created_at|date:"m/d/Y" }}{% endif %}</td>
                         <td class="text-center">
-                            <i class="fa-solid fa-rotate-left btn btn-outline-success restoreCountLinkButton" collectionlinkitemid="{{ item.id }}"></i>
+                            <button class="btn btn-outline-success restoreCountLinkButton" collectionlinkitemid="{{ item.id }}">
+                                <i class="fa-solid fa-rotate-left"></i>
+                            </button>
                         </td>
                     </tr>
                 {% endfor %}

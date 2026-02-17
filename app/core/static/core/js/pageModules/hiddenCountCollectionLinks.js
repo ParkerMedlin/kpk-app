@@ -67,9 +67,12 @@ $(document).ready(function () {
 
         const restoreCell = document.createElement('td');
         restoreCell.className = 'text-center';
-        const restoreButton = document.createElement('i');
-        restoreButton.className = 'fa-solid fa-rotate-left btn btn-outline-success restoreCountLinkButton';
+        const restoreButton = document.createElement('button');
+        restoreButton.className = 'btn btn-outline-success restoreCountLinkButton';
         restoreButton.setAttribute('collectionlinkitemid', collectionId);
+        const restoreIcon = document.createElement('i');
+        restoreIcon.className = 'fa-solid fa-rotate-left';
+        restoreButton.appendChild(restoreIcon);
         restoreCell.appendChild(restoreButton);
 
         row.appendChild(nameCell);
