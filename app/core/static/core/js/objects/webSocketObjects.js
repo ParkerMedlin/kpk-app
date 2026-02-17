@@ -203,28 +203,48 @@ export class CountCollectionWebSocket {
     }
 
     removeCollectionUI(collectionId) {
-        console.log("removing " + collectionId);
-        console.log($(`tr[collectionlinkitemid="${collectionId}"]`));
         $(`tr[collectionlinkitemid="${collectionId}"]`).remove();
+        if ($('#countCollectionLinkTable tbody tr').length === 0) {
+            $('#collectionTableWrapper').hide();
+            $('#emptyCollectionMessage').show();
+        }
     }
 
     addCollectionUI(data) {
         const id = data.collection_id || data.id;
-        let lastRow = $('table tr:last').clone();
-        lastRow.attr('collectionlinkitemid', id);
-        lastRow.find('td[data-collection-id]').attr('data-collection-id', id);
-        lastRow.find('td.listOrderCell').text(data.link_order);
-        lastRow.find('a.collectionLink').attr('href', `/core/count-list/display/?listId=${id}&recordType=${data.record_type}`);
-        lastRow.find('input.collectionNameElement')
-            .val(data.collection_name)
-            .attr('id', `input${id}`)
-            .attr('collectionlinkitemid', id);
-        lastRow
-            .find('i.hideCountLinkButton')
-            .attr('collectionlinkitemid', id)
-            .removeAttr('disabled')
-            .removeClass('disabled');
-        $('#countCollectionLinkTable').append(lastRow);
+
+        $('#emptyCollectionMessage').hide();
+        $('#collectionTableWrapper').show();
+
+        const row = $('<tr>', { class: 'tableBodyRow' }).attr('collectionlinkitemid', id);
+        row.append($('<td>', { class: 'listOrderCell', style: 'display:none;' }).text(data.link_order || ''));
+
+        const nameCell = $('<td>').attr('data-collection-id', id);
+        nameCell.append(
+            $('<input>', { class: 'collectionNameElement' })
+                .attr('id', `input${id}`)
+                .attr('collectionlinkitemid', id)
+                .val(data.collection_name || '')
+        );
+        row.append(nameCell);
+
+        row.append(
+            $('<td>').append(
+                $('<a>', { class: 'collectionLink' })
+                    .attr('href', `/core/count-list/display/?listId=${id}&recordType=${data.record_type}`)
+                    .text('Enter Counts >>')
+            )
+        );
+
+        row.append(
+            $('<td>', { class: 'text-center' }).append(
+                $('<button>', { class: 'btn btn-outline-secondary hideCountLinkButton' })
+                    .attr('collectionlinkitemid', id)
+                    .append($('<i>', { class: 'fa-solid fa-eye-slash' }))
+            )
+        );
+
+        $('#countCollectionLinkTable tbody').append(row);
     }
 
     updateCollectionOrderUI(updatedOrderPairs) {

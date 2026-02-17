@@ -37,41 +37,42 @@
             </a>
         </div>
     {% endif %}
-    {% if count_collection_exists %}
-        <div class="table-responsive-sm">
-            <table class="table text-left table-bordered table-hover" id="countCollectionLinkTable">
-                <thead class="thead-dark">
-                    <tr>
-                        {% comment %} {% if user.is_staff %}<th scope="col"></th>{% endif %} {% endcomment %}
-                        <th scope="col">Collection</th>
-                        {% if user.is_staff %}
-                            <th scope="col">Link</th>
-                            <th scope="col"></th>
-                        {% endif %}
-                    </tr>
-                </thead>
-        {% for item in count_collection_links %}
-            <tr class="tableBodyRow" collectionlinkitemid="{{ item.id }}">
-                <td class="listOrderCell" style="display:none;">{{ item.link_order }}</td>
-                <td data-collection-id="{{ item.id }}">
+    <div class="table-responsive-sm" id="collectionTableWrapper" {% if not count_collection_exists %}style="display: none;"{% endif %}>
+        <table class="table text-left table-bordered table-hover" id="countCollectionLinkTable">
+            <thead class="thead-dark">
+                <tr>
+                    <th scope="col">Collection</th>
                     {% if user.is_staff %}
-                        <input id="input{{ item.id }}" collectionlinkitemid="{{ item.id }}" class="collectionNameElement" value={{ item.collection_name }}></input>
-                    {% else %}
-                        <a class="collectionNameElement collectionLink" href="/core/count-list/display/?listId={{ item.id }}&recordType={{ item.record_type }}">{{ item.collection_name }}  >></a>
+                        <th scope="col">Link</th>
+                        <th scope="col"></th>
                     {% endif %}
-                </td>
-                {% if user.is_staff %}
-                    <td><a class="collectionLink" href="/core/count-list/display/?listId={{ item.id }}&recordType={{ item.record_type }}">Enter Counts >></a></td>
-                    <td class="text-center">
-                        <i class="fa-solid fa-eye-slash btn btn-outline-secondary hideCountLinkButton" collectionlinkitemid="{{ item.id }}"  disabled="disabled"></i>
+                </tr>
+            </thead>
+            <tbody>
+            {% for item in count_collection_links %}
+                <tr class="tableBodyRow" collectionlinkitemid="{{ item.id }}">
+                    <td class="listOrderCell" style="display:none;">{{ item.link_order }}</td>
+                    <td data-collection-id="{{ item.id }}">
+                        {% if user.is_staff %}
+                            <input id="input{{ item.id }}" collectionlinkitemid="{{ item.id }}" class="collectionNameElement" value={{ item.collection_name }}></input>
+                        {% else %}
+                            <a class="collectionNameElement collectionLink" href="/core/count-list/display/?listId={{ item.id }}&recordType={{ item.record_type }}">{{ item.collection_name }}  >></a>
+                        {% endif %}
                     </td>
-                {% endif %}
-            </tr>
-        {% endfor %}
-
-    {% else %}
-        <h2>No counts needed now.</h2>
-    {% endif %}
+                    {% if user.is_staff %}
+                        <td><a class="collectionLink" href="/core/count-list/display/?listId={{ item.id }}&recordType={{ item.record_type }}">Enter Counts >></a></td>
+                        <td class="text-center">
+                            <button class="btn btn-outline-secondary hideCountLinkButton" collectionlinkitemid="{{ item.id }}" disabled="disabled">
+                                <i class="fa-solid fa-eye-slash"></i>
+                            </button>
+                        </td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <h2 id="emptyCollectionMessage" {% if count_collection_exists %}style="display: none;"{% endif %}>No counts needed now.</h2>
 
 {% endblock content %}
 
