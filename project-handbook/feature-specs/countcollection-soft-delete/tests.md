@@ -106,7 +106,7 @@
 
 ### Empty State
 
-- [ ] When no collections are hidden, the page shows "No hidden count collections." message
+- [x] When no collections are hidden, the page shows "No hidden count collections." message
 
 ---
 
@@ -114,18 +114,18 @@
 
 ### Happy Path
 
-- [ ] Click the restore button on a hidden collection → the row disappears from the hidden table
-- [ ] After restoring, navigate to the active collections page → the restored collection appears in the active list
-- [ ] After restoring, the collection's `is_hidden` field is `False` in the database
-- [ ] The restored collection's name and count data are intact (nothing lost)
+- [x] Click the restore button on a hidden collection → the row disappears from the hidden table
+- [x] After restoring, navigate to the active collections page → the restored collection appears in the active list
+- [x] After restoring, the collection's `is_hidden` field is `False` in the database
+- [x] The restored collection's name and count data are intact (nothing lost)
 
 ### Restore to Active Page – Real-Time
 
 #### Setup: Open hidden collections page in Tab A, active collections page in Tab B.
 
-- [ ] Restore a collection in Tab A → the row disappears from Tab A's hidden table
-- [ ] Tab B's active collections table updates in real-time — the restored collection appears without refresh
-- [ ] The restored collection row on Tab B has a working hide button and clickable link
+- [x] Restore a collection in Tab A → the row disappears from Tab A's hidden table
+- [x] Tab B's active collections table updates in real-time — the restored collection appears without refresh
+- [x] The restored collection row on Tab B has a working hide button and clickable link
 
 ### Last Item Restored
 
