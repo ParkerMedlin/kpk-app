@@ -1088,11 +1088,6 @@ def display_count_list(request):
     )
 
     todays_date = dt.date.today()
-    count_collection_link = None
-    if count_list_id:
-        count_collection_link = CountCollectionLink.objects.filter(pk=count_list_id).first()
-    is_hidden = count_collection_link.is_hidden if count_collection_link else False
-
     if record_type == 'blendcomponent':
         location_options = [
             'BlendingRack', 'DI Tank', 'DyeShelves', 'ExtraRack', 'Joeys Warehouse',
@@ -1116,7 +1111,6 @@ def display_count_list(request):
         'count_list_id': count_list_data['count_list_id'],
         'record_type': count_list_data['record_type'],
         'count_list_name': count_list_data['count_list_name'],
-        'is_hidden': is_hidden,
     }
 
     return render(request, 'core/inventorycounts/countlist.html', context)
