@@ -3144,7 +3144,21 @@ export class CountCollectionLinksPage {
                                 deleteButton.addEventListener("click", function() {
                                     const collectionId = deleteButton.getAttribute("collectionlinkitemid");
                                     if (confirm("Are you sure you want to permanently delete this count collection?")) {
-                                        thisCountCollectionWebSocket.deleteCollection(collectionId);
+                                        if (confirm("Did you mean to click OK? You can still back out of this if you want to...")) {
+                                            if (confirm("Seriously? You're sure you want to delete this count collection?")) {
+                                                if (confirm("This is the last one, there's no going back after this...")) {
+                                                    if (confirm("Alright, you're making your bed, now you have to lie in it...")) {
+                                                        if (confirm("Are you sure?")) {
+                                                            if (confirm("Are you sure?")) {
+                                                                if (confirm("Are you sure?")) {
+                                                                    thisCountCollectionWebSocket.deleteCollection(collectionId);
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }
                                 });
                             }
