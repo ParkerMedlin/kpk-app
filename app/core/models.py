@@ -278,6 +278,7 @@ class CountCollectionLink(models.Model):
     collection_id = models.TextField(blank=True, null=True)
     count_id_list = models.JSONField(default=list)
     record_type = models.TextField(blank=True, null=True)
+    is_archived = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
 
     def __str__(self):

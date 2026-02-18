@@ -55,7 +55,12 @@
             <tbody>
                 {% for item in items %}
                     <tr>
-                        <td class="text-nowrap">{{ item.item_code }}</td>
+                        <td class="text-nowrap">
+                            {{ item.item_code }}
+                            {% if item.is_archived_collection %}
+                                <i class="fa-solid fa-box-archive text-muted" title="From archived collection"></i>
+                            {% endif %}
+                        </td>
                         <td class="text-nowrap">{{ item.item_description|default:"--" }}</td>
                         <td class="text-end">
                             {% if item.qty_on_hand is None %}

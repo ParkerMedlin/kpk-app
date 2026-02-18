@@ -711,7 +711,8 @@ def get_count_status_rows(record_type=None, counted_filter='all'):
                 b.counted_date,
                 b.counted,
                 b.counted_quantity,
-                b.variance
+                b.variance,
+                b.collection_id
             FROM core_blendcountrecord b
             INNER JOIN filtered_items fi ON fi.item_code = b.item_code
             WHERE b.counted = TRUE
@@ -724,7 +725,8 @@ def get_count_status_rows(record_type=None, counted_filter='all'):
                 c.counted_date,
                 c.counted,
                 c.counted_quantity,
-                c.variance
+                c.variance,
+                c.collection_id
             FROM core_blendcomponentcountrecord c
             INNER JOIN filtered_items fi ON fi.item_code = c.item_code
             WHERE c.counted = TRUE
@@ -771,12 +773,20 @@ def get_count_status_rows(record_type=None, counted_filter='all'):
                     WHEN lcc.counted_date IS NULL THEN lbc.variance
                     WHEN lbc.counted_date >= lcc.counted_date THEN lbc.variance
                     ELSE lcc.variance
-                END AS variance
+                END AS variance,
+                CASE
+                    WHEN lbc.counted_date IS NULL THEN COALESCE(ccl_lcc.is_archived, FALSE)
+                    WHEN lcc.counted_date IS NULL THEN COALESCE(ccl_lbc.is_archived, FALSE)
+                    WHEN lbc.counted_date >= lcc.counted_date THEN COALESCE(ccl_lbc.is_archived, FALSE)
+                    ELSE COALESCE(ccl_lcc.is_archived, FALSE)
+                END AS is_archived_collection
             FROM filtered_items fi
             LEFT JOIN qty_on_hand qoh ON qoh.item_code = fi.item_code
             LEFT JOIN latest_txn lt ON lt.item_code = fi.item_code
             LEFT JOIN latest_blend_count lbc ON lbc.item_code = fi.item_code
             LEFT JOIN latest_component_count lcc ON lcc.item_code = fi.item_code
+            LEFT JOIN core_countcollectionlink ccl_lbc ON ccl_lbc.collection_id = lbc.collection_id
+            LEFT JOIN core_countcollectionlink ccl_lcc ON ccl_lcc.collection_id = lcc.collection_id
         )
         SELECT
             rr.item_code,
@@ -788,7 +798,8 @@ def get_count_status_rows(record_type=None, counted_filter='all'):
             rr.counted_date,
             rr.counted,
             rr.counted_quantity,
-            rr.variance
+            rr.variance,
+            rr.is_archived_collection
         FROM report_rows rr
         {counted_filter_clause}
         ORDER BY rr.item_code;
@@ -810,6 +821,7 @@ def get_count_status_rows(record_type=None, counted_filter='all'):
             'counted': row[7],
             'counted_quantity': row[8],
             'variance': row[9],
+            'is_archived_collection': row[10],
         }
         for row in rows
     ]

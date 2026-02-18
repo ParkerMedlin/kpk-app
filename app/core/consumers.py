@@ -75,10 +75,14 @@ class CountCollectionConsumer(AsyncWebsocketConsumer):
 
         if action == 'update_collection':
             await self.update_collection(data)
-        elif action == 'delete_collection':
-            await self.delete_collection(data)
+        elif action == 'archive_collection':
+            await self.archive_collection(data)
+        elif action == 'restore_collection':
+            await self.restore_collection(data)
         elif action == 'add_collection':
             await self.add_collection(data)
+        elif action == 'delete_collection':
+            await self.delete_collection(data)
         elif action == 'update_collection_order':
             await self.update_collection_order(data)
 
@@ -100,18 +104,28 @@ class CountCollectionConsumer(AsyncWebsocketConsumer):
             'new_name': new_name
         })
 
-    async def delete_collection(self, data):
+    async def archive_collection(self, data):
         collection_id = data['collection_id']
 
-        await self.delete_collection_link(collection_id)
+        collection_data = await self.archive_collection_link(collection_id)
+        if not collection_data:
+            return
 
         event_payload = {
-            'type': 'collection_deleted',
+            'type': 'collection_archived',
             'collection_id': collection_id,
+            'collection_name': collection_data['collection_name'],
+            'record_type': collection_data['record_type'],
+            'created_at': collection_data['created_at'],
             'sender_channel_name': self.channel_name
         }
         await self.channel_layer.group_send(self.group_name, event_payload)
-        await persist_event(self.redis_key, 'collection_deleted', {'collection_id': collection_id})
+        await persist_event(self.redis_key, 'collection_archived', {
+            'collection_id': collection_id,
+            'collection_name': collection_data['collection_name'],
+            'record_type': collection_data['record_type'],
+            'created_at': collection_data['created_at'],
+        })
 
     async def add_collection(self, data):
         collection_id = data['collection_id']
@@ -128,7 +142,47 @@ class CountCollectionConsumer(AsyncWebsocketConsumer):
             'collection_id': collection_id,
             'record_type': record_type
         })
-    
+
+    async def restore_collection(self, data):
+        collection_id = data['collection_id']
+
+        collection_data = await self.restore_collection_link(collection_id)
+        if not collection_data:
+            return
+
+        event_payload = {
+            'type': 'collection_restored',
+            'collection_id': collection_id,
+            'collection_name': collection_data['collection_name'],
+            'record_type': collection_data['record_type'],
+            'link_order': collection_data['link_order'],
+            'sender_channel_name': self.channel_name
+        }
+        await self.channel_layer.group_send(self.group_name, event_payload)
+        await persist_event(self.redis_key, 'collection_restored', {
+            'collection_id': collection_id,
+            'collection_name': collection_data['collection_name'],
+            'record_type': collection_data['record_type'],
+            'link_order': collection_data['link_order']
+        })
+
+    async def delete_collection(self, data):
+        collection_id = data['collection_id']
+
+        deleted = await self.delete_collection_link(collection_id)
+        if not deleted:
+            return
+
+        event_payload = {
+            'type': 'collection_deleted',
+            'collection_id': collection_id,
+            'sender_channel_name': self.channel_name
+        }
+        await self.channel_layer.group_send(self.group_name, event_payload)
+        await persist_event(self.redis_key, 'collection_deleted', {
+            'collection_id': collection_id,
+        })
+
     async def update_collection_order(self, data):
         order_pairs = data['collection_link_order']
         sanitized_order = await self.update_collection_link_order(order_pairs)
@@ -197,10 +251,16 @@ class CountCollectionConsumer(AsyncWebsocketConsumer):
     async def collection_updated(self, event):
         await self._forward_collection_event(event)
 
-    async def collection_deleted(self, event):
+    async def collection_archived(self, event):
+        await self._forward_collection_event(event, forward_to_sender=True)
+
+    async def collection_restored(self, event):
         await self._forward_collection_event(event, forward_to_sender=True)
 
     async def collection_added(self, event):
+        await self._forward_collection_event(event, forward_to_sender=True)
+
+    async def collection_deleted(self, event):
         await self._forward_collection_event(event, forward_to_sender=True)
 
     async def collection_order_updated(self, event):
@@ -213,12 +273,41 @@ class CountCollectionConsumer(AsyncWebsocketConsumer):
         collection.save()
 
     @database_sync_to_async
+    def archive_collection_link(self, collection_id):
+        try:
+            collection = CountCollectionLink.objects.get(id=collection_id)
+            collection.is_archived = True
+            collection.save(update_fields=['is_archived'])
+            return {
+                'collection_name': collection.collection_name,
+                'record_type': collection.record_type,
+                'created_at': collection.created_at.isoformat() if collection.created_at else None,
+            }
+        except ObjectDoesNotExist:
+            return None
+
+    @database_sync_to_async
+    def restore_collection_link(self, collection_id):
+        try:
+            collection = CountCollectionLink.objects.get(id=collection_id)
+            collection.is_archived = False
+            collection.save(update_fields=['is_archived'])
+            return {
+                'collection_name': collection.collection_name,
+                'record_type': collection.record_type,
+                'link_order': collection.link_order,
+            }
+        except ObjectDoesNotExist:
+            return None
+
+    @database_sync_to_async
     def delete_collection_link(self, collection_id):
         try:
             collection = CountCollectionLink.objects.get(id=collection_id)
             collection.delete()
+            return True
         except ObjectDoesNotExist:
-            pass
+            return False
 
     @database_sync_to_async
     def update_collection_link_order(self, order_pairs):

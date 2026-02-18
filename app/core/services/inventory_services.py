@@ -1264,29 +1264,6 @@ def get_variance_analysis(count_record, from_date, to_date):
             'variance_as_percentage_of_BI' : variance_as_percentage_of_BI, 
             'variance_last_year' : variance_last_year}
 
-def delete_count_collection_links(request):
-    """Delete selected count collection links.
-    
-    Deletes CountCollectionLink records based on provided list of IDs.
-    Used to remove unwanted count collection links from the system.
-
-    Args:
-        request: HTTP request containing:
-            list (str): Comma-separated list of collection link IDs to delete
-
-    Returns:
-        HttpResponseRedirect to count collection links display page
-    """
-    pk_list = request.GET.get("list")
-
-    collection_ids_list = list(pk_list.replace('[', '').replace(']', '').replace('"', '').split(","))
-
-    for collection_id in collection_ids_list:
-        this_collection_link = CountCollectionLink.objects.get(pk=collection_id)
-        this_collection_link.delete()
-    
-    return HttpResponseRedirect("/core/display-count-collection-links/")
-
 def update_count_collection_link(request):
     """Update collection ID for a count collection link.
     
