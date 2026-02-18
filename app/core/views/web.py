@@ -1145,14 +1145,19 @@ def display_count_collection_links(request):
 @staff_member_required
 def display_archived_collection_links(request):
     """Display archived collection links for inventory tracking (staff only)."""
-    count_collection_links = list(CountCollectionLink.objects.filter(is_archived=True).order_by('-created_at'))
-    count_collection_exists = len(count_collection_links) > 0
+    all_links = CountCollectionLink.objects.filter(is_archived=True).order_by('-created_at')
+    count_collection_exists = all_links.exists()
 
-    for link in count_collection_links:
+    paginator = Paginator(all_links, 50)
+    page_number = request.GET.get('page', 1)
+    page = paginator.get_page(page_number)
+
+    for link in page:
         link.encoded_list = base64.b64encode(json.dumps(link.count_id_list).encode()).decode()
 
-    return render(request, 'core/inventorycounts/archivedcountcollectionlinks.html', {'count_collection_links' : count_collection_links,
-                                                                                       'count_collection_exists' : count_collection_exists})
+    return render(request, 'core/inventorycounts/archivedcountcollectionlinks.html', {'count_collection_links' : page,
+                                                                                       'count_collection_exists' : count_collection_exists,
+                                                                                       'current_page' : page})
 
 def display_count_records(request):
     """Display count records for inventory tracking.
