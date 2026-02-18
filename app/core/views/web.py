@@ -1132,11 +1132,11 @@ def display_count_collection_links(request):
     Template:
         core/inventorycounts/countcollectionlinks.html
     """
-    count_collection_links = CountCollectionLink.objects.filter(is_archived=False).order_by('link_order')
-    if not count_collection_links.exists():
-        count_collection_exists = False
-    else:
-        count_collection_exists = True
+    count_collection_links = list(CountCollectionLink.objects.filter(is_archived=False).order_by('link_order'))
+    count_collection_exists = len(count_collection_links) > 0
+
+    for link in count_collection_links:
+        link.encoded_list = base64.b64encode(json.dumps(link.count_id_list).encode()).decode()
 
     return render(request, 'core/inventorycounts/countcollectionlinks.html', {'count_collection_links' : count_collection_links,
                                                                               'count_collection_exists' : count_collection_exists})
@@ -1145,8 +1145,11 @@ def display_count_collection_links(request):
 @staff_member_required
 def display_archived_collection_links(request):
     """Display archived collection links for inventory tracking (staff only)."""
-    count_collection_links = CountCollectionLink.objects.filter(is_archived=True).order_by('-created_at')
-    count_collection_exists = count_collection_links.exists()
+    count_collection_links = list(CountCollectionLink.objects.filter(is_archived=True).order_by('-created_at'))
+    count_collection_exists = len(count_collection_links) > 0
+
+    for link in count_collection_links:
+        link.encoded_list = base64.b64encode(json.dumps(link.count_id_list).encode()).decode()
 
     return render(request, 'core/inventorycounts/archivedcountcollectionlinks.html', {'count_collection_links' : count_collection_links,
                                                                                        'count_collection_exists' : count_collection_exists})
