@@ -1,7 +1,7 @@
 import { CountCollectionWebSocket } from '../objects/webSocketObjects.js';
 
 $(document).ready(function () {
-    const table = document.getElementById('hiddenCountCollectionLinkTable');
+    const table = document.getElementById('archivedCountCollectionLinkTable');
     const tableBody = table ? table.querySelector('tbody') : null;
     const tableContainer = table ? table.parentElement : null;
 
@@ -28,7 +28,7 @@ $(document).ready(function () {
     }
 
     function removeEmptyState() {
-        const existing = document.getElementById('hiddenCollectionEmptyState');
+        const existing = document.getElementById('archivedCollectionEmptyState');
         if (existing) {
             existing.remove();
         }
@@ -38,14 +38,14 @@ $(document).ready(function () {
         if (!tableContainer) {
             return;
         }
-        const existing = document.getElementById('hiddenCollectionEmptyState');
+        const existing = document.getElementById('archivedCollectionEmptyState');
         if (existing) {
             return;
         }
         const message = document.createElement('p');
-        message.id = 'hiddenCollectionEmptyState';
+        message.id = 'archivedCollectionEmptyState';
         message.className = 'text-muted';
-        message.textContent = 'No hidden count collections.';
+        message.textContent = 'No archived count collections.';
         tableContainer.insertAdjacentElement('afterend', message);
     }
 
@@ -81,7 +81,7 @@ $(document).ready(function () {
         return row;
     }
 
-    function handleCollectionHidden(payload) {
+    function handleCollectionArchived(payload) {
         const collectionId = resolveCollectionId(payload);
         if (!collectionId || !tableBody) {
             return;
@@ -113,9 +113,9 @@ $(document).ready(function () {
     }
 
     const countCollectionWebSocket = new CountCollectionWebSocket({
-        onCollectionHidden: handleCollectionHidden,
+        onCollectionArchived: handleCollectionArchived,
         onCollectionRestored: handleCollectionRestored,
-        onCollectionDeleted: handleCollectionHidden,
+        onCollectionDeleted: handleCollectionArchived,
     });
 
     $(document).on('click', '.restoreCountLinkButton', function () {

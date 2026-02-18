@@ -32,8 +32,8 @@
             </span>
         </div>
         <div class="text-center my-2">
-            <a href="{% url 'hidden-count-collection-links' %}" class="btn btn-outline-secondary btn-sm">
-                <i class="fa-solid fa-eye-slash"></i> View Hidden Collections
+            <a href="{% url 'archived-count-collection-links' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="fa-solid fa-box-archive"></i> View Archived Collections
             </a>
         </div>
     {% endif %}
@@ -62,8 +62,8 @@
                     {% if user.is_staff %}
                         <td><a class="collectionLink" href="/core/count-list/display/?listId={{ item.id }}&recordType={{ item.record_type }}">Enter Counts >></a></td>
                         <td class="text-center">
-                            <button class="btn btn-outline-secondary hideCountLinkButton" collectionlinkitemid="{{ item.id }}" disabled="disabled">
-                                <i class="fa-solid fa-eye-slash"></i>
+                            <button class="btn btn-outline-secondary archiveCountLinkButton" collectionlinkitemid="{{ item.id }}" disabled="disabled">
+                                <i class="fa-solid fa-box-archive"></i>
                             </button>
                         </td>
                     {% endif %}
