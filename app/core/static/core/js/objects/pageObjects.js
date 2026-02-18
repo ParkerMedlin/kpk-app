@@ -3,6 +3,7 @@ import { getMaxProducibleQuantity, getURLParameter, getItemInfo } from '../reque
 import { logContainerLabelPrint, updateCountCollection } from '../requestFunctions/updateFunctions.js'
 // import { ItemReferenceFieldPair } from './lookupFormObjects.js'
 import { SortableRows } from './tableObjects.js'
+import { confirmAction } from './confirmModal.js'
 
 // Initialize a cache for conversion data
 const conversionCache = {};
@@ -3113,10 +3114,26 @@ export class CountCollectionLinksPage {
 
         document.querySelectorAll(".deleteCountLinkButton").forEach(deleteButton => {
             enableDeleteButton(deleteButton);
-            deleteButton.addEventListener("click", function() {
+            deleteButton.addEventListener("click", async function() {
                 const collectionId = deleteButton.getAttribute("collectionlinkitemid");
-                if (confirm("Are you sure you want to permanently delete this count collection?")) {
-                    thisCountCollectionWebSocket.deleteCollection(collectionId);
+                if (await confirmAction("Are you sure you want to permanently delete this count collection?")) {
+                    if (await confirmAction("Are you SURE you want to PERMANENTLY delete this COUNT COLLECTION????")) {
+                        if (await confirmAction("Did you mean to click Yes? You can still back out of this if you want to...")) {
+                            if (await confirmAction("Seriously? You're sure you want to delete this count collection?")) {
+                                if (await confirmAction("This is the last one, there's no going back after this...")) {
+                                    if (await confirmAction("Alright, you're making your bed, now you have to lie in it...")) {
+                                        if (await confirmAction("Are you sure?")) {
+                                            if (await confirmAction("Are you sure?")) {
+                                                if (await confirmAction("Are you sure?")) {
+                                                    thisCountCollectionWebSocket.deleteCollection(collectionId);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             });
         });
@@ -3141,17 +3158,19 @@ export class CountCollectionLinksPage {
                             const deleteButton = addedNode.querySelector('.deleteCountLinkButton');
                             if (deleteButton) {
                                 enableDeleteButton(deleteButton);
-                                deleteButton.addEventListener("click", function() {
+                                deleteButton.addEventListener("click", async function() {
                                     const collectionId = deleteButton.getAttribute("collectionlinkitemid");
-                                    if (confirm("Are you sure you want to permanently delete this count collection?")) {
-                                        if (confirm("Did you mean to click OK? You can still back out of this if you want to...")) {
-                                            if (confirm("Seriously? You're sure you want to delete this count collection?")) {
-                                                if (confirm("This is the last one, there's no going back after this...")) {
-                                                    if (confirm("Alright, you're making your bed, now you have to lie in it...")) {
-                                                        if (confirm("Are you sure?")) {
-                                                            if (confirm("Are you sure?")) {
-                                                                if (confirm("Are you sure?")) {
-                                                                    thisCountCollectionWebSocket.deleteCollection(collectionId);
+                                    if (await confirmAction("Are you sure you want to permanently delete this count collection?")) {
+                                        if (await confirmAction("Are you sure you want to permanently delete this count collection?")) {
+                                            if (await confirmAction("Did you mean to click OK? You can still back out of this if you want to...")) {
+                                                if (await confirmAction("Seriously? You're sure you want to delete this count collection?")) {
+                                                    if (await confirmAction("This is the last one, there's no going back after this...")) {
+                                                        if (await confirmAction("Alright, you're making your bed, now you have to lie in it...")) {
+                                                            if (await confirmAction("Are you sure?")) {
+                                                                if (await confirmAction("Are you sure?")) {
+                                                                    if (await confirmAction("Are you sure?")) {
+                                                                        thisCountCollectionWebSocket.deleteCollection(collectionId);
+                                                                    }
                                                                 }
                                                             }
                                                         }
