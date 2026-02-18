@@ -1132,7 +1132,7 @@ def display_count_collection_links(request):
     Template:
         core/inventorycounts/countcollectionlinks.html
     """
-    count_collection_links = CountCollectionLink.objects.filter(is_hidden=False).order_by('link_order')
+    count_collection_links = CountCollectionLink.objects.filter(is_archived=False).order_by('link_order')
     if not count_collection_links.exists():
         count_collection_exists = False
     else:
@@ -1143,13 +1143,13 @@ def display_count_collection_links(request):
 
 @login_required
 @staff_member_required
-def display_hidden_collection_links(request):
-    """Display hidden collection links for inventory tracking (staff only)."""
-    count_collection_links = CountCollectionLink.objects.filter(is_hidden=True).order_by('-created_at')
+def display_archived_collection_links(request):
+    """Display archived collection links for inventory tracking (staff only)."""
+    count_collection_links = CountCollectionLink.objects.filter(is_archived=True).order_by('-created_at')
     count_collection_exists = count_collection_links.exists()
 
-    return render(request, 'core/inventorycounts/hiddencountcollectionlinks.html', {'count_collection_links' : count_collection_links,
-                                                                                    'count_collection_exists' : count_collection_exists})
+    return render(request, 'core/inventorycounts/archivedcountcollectionlinks.html', {'count_collection_links' : count_collection_links,
+                                                                                       'count_collection_exists' : count_collection_exists})
 
 def display_count_records(request):
     """Display count records for inventory tracking.

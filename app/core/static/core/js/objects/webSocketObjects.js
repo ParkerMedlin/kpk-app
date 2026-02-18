@@ -43,7 +43,7 @@ export class CountCollectionWebSocket {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         this.callbacks = {
             collection_updated: options.onCollectionUpdated,
-            collection_hidden: options.onCollectionHidden || options.onCollectionDeleted,
+            collection_archived: options.onCollectionArchived || options.onCollectionDeleted,
             collection_restored: options.onCollectionRestored,
             collection_deleted: options.onCollectionDeleted,
             collection_added: options.onCollectionAdded,
@@ -101,7 +101,7 @@ export class CountCollectionWebSocket {
             
             if (data.type === 'collection_updated') {
                 this.updateCollectionUI(data.collection_id, data.new_name);
-            } else if (data.type === 'collection_hidden') {
+            } else if (data.type === 'collection_archived') {
                 this.removeCollectionUI(data.collection_id);
             } else if (data.type === 'collection_deleted') {
                 this.removeCollectionUI(data.collection_id);
@@ -168,15 +168,11 @@ export class CountCollectionWebSocket {
         }));
     }
 
-    hideCollection(collectionId) {
+    archiveCollection(collectionId) {
         this.socket.send(JSON.stringify({
-            action: 'hide_collection',
+            action: 'archive_collection',
             collection_id: collectionId
         }));
-    }
-
-    deleteCollection(collectionId) {
-        this.hideCollection(collectionId);
     }
 
     restoreCollection(collectionId) {
@@ -238,9 +234,9 @@ export class CountCollectionWebSocket {
 
         row.append(
             $('<td>', { class: 'text-center' }).append(
-                $('<button>', { class: 'btn btn-outline-secondary hideCountLinkButton' })
+                $('<button>', { class: 'btn btn-outline-secondary archiveCountLinkButton' })
                     .attr('collectionlinkitemid', id)
-                    .append($('<i>', { class: 'fa-solid fa-eye-slash' }))
+                    .append($('<i>', { class: 'fa-solid fa-box-archive' }))
             )
         );
 

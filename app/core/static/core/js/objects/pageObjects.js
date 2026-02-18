@@ -3103,11 +3103,11 @@ export class CountCollectionLinksPage {
                 buttonElement.setAttribute("style", "display:none;");
             });
         });
-        document.querySelectorAll(".hideCountLinkButton").forEach(hideButton => {
-            enableDeleteButton(hideButton);
-            hideButton.addEventListener("click",function(){
-                const collectionId = hideButton.getAttribute("collectionlinkitemid");
-                thisCountCollectionWebSocket.hideCollection(collectionId);
+        document.querySelectorAll(".archiveCountLinkButton").forEach(archiveButton => {
+            enableDeleteButton(archiveButton);
+            archiveButton.addEventListener("click",function(){
+                const collectionId = archiveButton.getAttribute("collectionlinkitemid");
+                thisCountCollectionWebSocket.archiveCollection(collectionId);
             });
         });
 
@@ -3120,12 +3120,12 @@ export class CountCollectionLinksPage {
                             if (renameInput) {
                                 attachRenameHandlers(renameInput);
                             }
-                            const hideButton = addedNode.querySelector('.hideCountLinkButton');
-                            if (hideButton) {
-                                enableDeleteButton(hideButton);
-                                hideButton.addEventListener("click", function() {
-                                    const collectionId = hideButton.getAttribute("collectionlinkitemid");
-                                    thisCountCollectionWebSocket.hideCollection(collectionId);
+                            const archiveButton = addedNode.querySelector('.archiveCountLinkButton');
+                            if (archiveButton) {
+                                enableDeleteButton(archiveButton);
+                                archiveButton.addEventListener("click", function() {
+                                    const collectionId = archiveButton.getAttribute("collectionlinkitemid");
+                                    thisCountCollectionWebSocket.archiveCollection(collectionId);
                                 });
                             }
                         }

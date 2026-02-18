@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}<title>Hidden Count Collections</title>{% endblock %}
+{% block title %}<title>Archived Count Collections</title>{% endblock %}
 
 {% block content %}
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -10,10 +10,10 @@
         </a>
     </div>
 
-    <h2 class="mb-3">Hidden Count Collections</h2>
+    <h2 class="mb-3">Archived Count Collections</h2>
 
     <div class="table-responsive-sm">
-        <table class="table text-left table-bordered table-hover" id="hiddenCountCollectionLinkTable">
+        <table class="table text-left table-bordered table-hover" id="archivedCountCollectionLinkTable">
             <thead class="thead-dark">
                 <tr>
                     <th scope="col">Collection Name</th>
@@ -40,10 +40,10 @@
     </div>
 
     {% if not count_collection_exists %}
-        <p id="hiddenCollectionEmptyState" class="text-muted">No hidden count collections.</p>
+        <p id="archivedCollectionEmptyState" class="text-muted">No archived count collections.</p>
     {% endif %}
 {% endblock content %}
 
 {% block belowdeckscripts %}
-    <script type="module" src="{% static 'core/js/pageModules/hiddenCountCollectionLinks.js' %}"></script>
+    <script type="module" src="{% static 'core/js/pageModules/archivedCountCollectionLinks.js' %}"></script>
 {% endblock %}

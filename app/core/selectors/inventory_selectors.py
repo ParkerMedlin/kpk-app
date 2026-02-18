@@ -775,11 +775,11 @@ def get_count_status_rows(record_type=None, counted_filter='all'):
                     ELSE lcc.variance
                 END AS variance,
                 CASE
-                    WHEN lbc.counted_date IS NULL THEN COALESCE(ccl_lcc.is_hidden, FALSE)
-                    WHEN lcc.counted_date IS NULL THEN COALESCE(ccl_lbc.is_hidden, FALSE)
-                    WHEN lbc.counted_date >= lcc.counted_date THEN COALESCE(ccl_lbc.is_hidden, FALSE)
-                    ELSE COALESCE(ccl_lcc.is_hidden, FALSE)
-                END AS is_hidden_collection
+                    WHEN lbc.counted_date IS NULL THEN COALESCE(ccl_lcc.is_archived, FALSE)
+                    WHEN lcc.counted_date IS NULL THEN COALESCE(ccl_lbc.is_archived, FALSE)
+                    WHEN lbc.counted_date >= lcc.counted_date THEN COALESCE(ccl_lbc.is_archived, FALSE)
+                    ELSE COALESCE(ccl_lcc.is_archived, FALSE)
+                END AS is_archived_collection
             FROM filtered_items fi
             LEFT JOIN qty_on_hand qoh ON qoh.item_code = fi.item_code
             LEFT JOIN latest_txn lt ON lt.item_code = fi.item_code
@@ -799,7 +799,7 @@ def get_count_status_rows(record_type=None, counted_filter='all'):
             rr.counted,
             rr.counted_quantity,
             rr.variance,
-            rr.is_hidden_collection
+            rr.is_archived_collection
         FROM report_rows rr
         {counted_filter_clause}
         ORDER BY rr.item_code;
@@ -821,7 +821,7 @@ def get_count_status_rows(record_type=None, counted_filter='all'):
             'counted': row[7],
             'counted_quantity': row[8],
             'variance': row[9],
-            'is_hidden_collection': row[10],
+            'is_archived_collection': row[10],
         }
         for row in rows
     ]
