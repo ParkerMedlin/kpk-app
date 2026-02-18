@@ -1,1 +1,5 @@
+<<<<<<< HEAD
 SET "PGPASSWORD=blend2021"&& "C:\Program Files\PostgreSQL\15\bin\psql.exe" -h localhost -p 5432 -U postgres -d blendversedb -f "%USERPROFILE%\Desktop\core_foamfactor_dump.sql"
+=======
+SET "PGPASSWORD=REDACTED_DB_PASSWORD"&& "C:\Program Files\PostgreSQL\15\bin\psql.exe" -h localhost -p 5432 -U postgres -d blendversedb -f "%USERPROFILE%\Desktop\core_foamfactor_dump.sql"
+>>>>>>> 05e735d1 (Sanitize secrets and purge tracked private/media artifacts)

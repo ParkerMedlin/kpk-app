@@ -107,7 +107,7 @@ get_sage_table('IM_ItemTransactionHistory')
 #     print(f'{dt.datetime.now()} -- starting creation of blends_produced_table.')
 #     csv_path = os.path.expanduser('~\\Documents') + '\\kpk-app\\db_imports\\blends_produced.csv'
 #     try:
-#         connection_MAS90 = pyodbc.connect("DSN=SOTAMAS90;UID=parker;PWD=Blend2021;",autocommit=True)
+#         connection_MAS90 = pyodbc.connect("DSN=SOTAMAS90;UID=parker;PWD=REDACTED_DB_PASSWORD;",autocommit=True)
 #     except Error as this_error:
 #         print('SAGE ERROR: Could not connect to Sage. Please verify that internet is connected and Sage is operational.')
 #         with open(os.path.expanduser('~\\Documents\\kpk-app\\local_machine_scripts\\python_db_scripts\\last_touch\\' + table_name + '_last_update.txt'), 'w', encoding="utf-8") as f:
@@ -157,5 +157,6 @@ get_sage_table('IM_ItemTransactionHistory')
 #     connection_postgres.close()
 #     print(f'{dt.datetime.now()} -- blends_produced table created.')
     
+
 
 

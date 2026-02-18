@@ -430,3 +430,4 @@ def get_sage_daily_transactions():
 
     except Exception as e:
         print(f'{dt.datetime.now()} :: sage_to_postgres.py :: get_sage_daily_transactions :: ERROR: {str(e)}')
+

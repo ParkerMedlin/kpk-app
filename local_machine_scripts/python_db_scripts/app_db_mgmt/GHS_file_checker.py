@@ -215,3 +215,4 @@ def check_all_filenames():
     print("\nRemaining blend items without GHS files:")
     for item in blend_items_list:
         print(item)
+

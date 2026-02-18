@@ -277,3 +277,4 @@ if __name__ == '__main__':
     Process(target=update_xlsb_tables).start()
     Process(target=log_tank_levels_table).start()
     Process(target=check_latest_table_updates).start()
+
