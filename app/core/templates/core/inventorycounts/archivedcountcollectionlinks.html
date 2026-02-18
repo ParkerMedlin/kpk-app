@@ -19,6 +19,7 @@
                     <th scope="col">Collection Name</th>
                     <th scope="col">Created Date</th>
                     <th scope="col">Restore</th>
+                    <th scope="col">Delete</th>
                 </tr>
             </thead>
             <tbody>
@@ -31,6 +32,11 @@
                         <td class="text-center">
                             <button class="btn btn-outline-success restoreCountLinkButton" collectionlinkitemid="{{ item.id }}">
                                 <i class="fa-solid fa-rotate-left"></i>
+                            </button>
+                        </td>
+                        <td class="text-center">
+                            <button class="btn btn-outline-danger deleteCountLinkButton" collectionlinkitemid="{{ item.id }}">
+                                <i class="fa-solid fa-trash"></i>
                             </button>
                         </td>
                     </tr>

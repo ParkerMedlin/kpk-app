@@ -44,7 +44,8 @@
                     <th scope="col">Collection</th>
                     {% if user.is_staff %}
                         <th scope="col">Link</th>
-                        <th scope="col"></th>
+                        <th scope="col">Archive</th>
+                        <th scope="col">Delete</th>
                     {% endif %}
                 </tr>
             </thead>
@@ -64,6 +65,11 @@
                         <td class="text-center">
                             <button class="btn btn-outline-secondary archiveCountLinkButton" collectionlinkitemid="{{ item.id }}" disabled="disabled">
                                 <i class="fa-solid fa-box-archive"></i>
+                            </button>
+                        </td>
+                        <td class="text-center">
+                            <button class="btn btn-outline-danger deleteCountLinkButton" collectionlinkitemid="{{ item.id }}" disabled="disabled">
+                                <i class="fa-solid fa-trash"></i>
                             </button>
                         </td>
                     {% endif %}
