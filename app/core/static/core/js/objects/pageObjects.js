@@ -3111,6 +3111,16 @@ export class CountCollectionLinksPage {
             });
         });
 
+        document.querySelectorAll(".deleteCountLinkButton").forEach(deleteButton => {
+            enableDeleteButton(deleteButton);
+            deleteButton.addEventListener("click", function() {
+                const collectionId = deleteButton.getAttribute("collectionlinkitemid");
+                if (confirm("Are you sure you want to permanently delete this count collection?")) {
+                    thisCountCollectionWebSocket.deleteCollection(collectionId);
+                }
+            });
+        });
+
         const observer = new MutationObserver(function(mutationsList) {
             for (let mutation of mutationsList) {
                 if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
@@ -3126,6 +3136,16 @@ export class CountCollectionLinksPage {
                                 archiveButton.addEventListener("click", function() {
                                     const collectionId = archiveButton.getAttribute("collectionlinkitemid");
                                     thisCountCollectionWebSocket.archiveCollection(collectionId);
+                                });
+                            }
+                            const deleteButton = addedNode.querySelector('.deleteCountLinkButton');
+                            if (deleteButton) {
+                                enableDeleteButton(deleteButton);
+                                deleteButton.addEventListener("click", function() {
+                                    const collectionId = deleteButton.getAttribute("collectionlinkitemid");
+                                    if (confirm("Are you sure you want to permanently delete this count collection?")) {
+                                        thisCountCollectionWebSocket.deleteCollection(collectionId);
+                                    }
                                 });
                             }
                         }

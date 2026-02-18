@@ -182,6 +182,13 @@ export class CountCollectionWebSocket {
         }));
     }
 
+    deleteCollection(collectionId) {
+        this.socket.send(JSON.stringify({
+            action: 'delete_collection',
+            collection_id: collectionId
+        }));
+    }
+
     updateCollectionOrder(collectionLinkDict) {
         this.socket.send(JSON.stringify({
             action: 'update_collection_order',
@@ -237,6 +244,14 @@ export class CountCollectionWebSocket {
                 $('<button>', { class: 'btn btn-outline-secondary archiveCountLinkButton' })
                     .attr('collectionlinkitemid', id)
                     .append($('<i>', { class: 'fa-solid fa-box-archive' }))
+            )
+        );
+
+        row.append(
+            $('<td>', { class: 'text-center' }).append(
+                $('<button>', { class: 'btn btn-outline-danger deleteCountLinkButton' })
+                    .attr('collectionlinkitemid', id)
+                    .append($('<i>', { class: 'fa-solid fa-trash' }))
             )
         );
 

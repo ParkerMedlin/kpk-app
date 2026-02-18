@@ -81,6 +81,8 @@ class CountCollectionConsumer(AsyncWebsocketConsumer):
             await self.restore_collection(data)
         elif action == 'add_collection':
             await self.add_collection(data)
+        elif action == 'delete_collection':
+            await self.delete_collection(data)
         elif action == 'update_collection_order':
             await self.update_collection_order(data)
 
@@ -163,7 +165,24 @@ class CountCollectionConsumer(AsyncWebsocketConsumer):
             'record_type': collection_data['record_type'],
             'link_order': collection_data['link_order']
         })
-    
+
+    async def delete_collection(self, data):
+        collection_id = data['collection_id']
+
+        deleted = await self.delete_collection_link(collection_id)
+        if not deleted:
+            return
+
+        event_payload = {
+            'type': 'collection_deleted',
+            'collection_id': collection_id,
+            'sender_channel_name': self.channel_name
+        }
+        await self.channel_layer.group_send(self.group_name, event_payload)
+        await persist_event(self.redis_key, 'collection_deleted', {
+            'collection_id': collection_id,
+        })
+
     async def update_collection_order(self, data):
         order_pairs = data['collection_link_order']
         sanitized_order = await self.update_collection_link_order(order_pairs)
@@ -241,6 +260,9 @@ class CountCollectionConsumer(AsyncWebsocketConsumer):
     async def collection_added(self, event):
         await self._forward_collection_event(event, forward_to_sender=True)
 
+    async def collection_deleted(self, event):
+        await self._forward_collection_event(event, forward_to_sender=True)
+
     async def collection_order_updated(self, event):
         await self._forward_collection_event(event)
 
@@ -277,6 +299,15 @@ class CountCollectionConsumer(AsyncWebsocketConsumer):
             }
         except ObjectDoesNotExist:
             return None
+
+    @database_sync_to_async
+    def delete_collection_link(self, collection_id):
+        try:
+            collection = CountCollectionLink.objects.get(id=collection_id)
+            collection.delete()
+            return True
+        except ObjectDoesNotExist:
+            return False
 
     @database_sync_to_async
     def update_collection_link_order(self, order_pairs):

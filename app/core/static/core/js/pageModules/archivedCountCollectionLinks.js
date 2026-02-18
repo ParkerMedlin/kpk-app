@@ -75,9 +75,20 @@ $(document).ready(function () {
         restoreButton.appendChild(restoreIcon);
         restoreCell.appendChild(restoreButton);
 
+        const deleteCell = document.createElement('td');
+        deleteCell.className = 'text-center';
+        const deleteButton = document.createElement('button');
+        deleteButton.className = 'btn btn-outline-danger deleteCountLinkButton';
+        deleteButton.setAttribute('collectionlinkitemid', collectionId);
+        const deleteIcon = document.createElement('i');
+        deleteIcon.className = 'fa-solid fa-trash';
+        deleteButton.appendChild(deleteIcon);
+        deleteCell.appendChild(deleteButton);
+
         row.appendChild(nameCell);
         row.appendChild(createdCell);
         row.appendChild(restoreCell);
+        row.appendChild(deleteCell);
         return row;
     }
 
@@ -112,10 +123,24 @@ $(document).ready(function () {
         }
     }
 
+    function handleCollectionDeleted(payload) {
+        const collectionId = resolveCollectionId(payload);
+        if (!collectionId) {
+            return;
+        }
+        const row = document.querySelector(`tr[collectionlinkitemid="${collectionId}"]`);
+        if (row) {
+            row.remove();
+        }
+        if (tableBody && tableBody.children.length === 0) {
+            ensureEmptyState();
+        }
+    }
+
     const countCollectionWebSocket = new CountCollectionWebSocket({
         onCollectionArchived: handleCollectionArchived,
         onCollectionRestored: handleCollectionRestored,
-        onCollectionDeleted: handleCollectionArchived,
+        onCollectionDeleted: handleCollectionDeleted,
     });
 
     $(document).on('click', '.restoreCountLinkButton', function () {
@@ -124,5 +149,15 @@ $(document).ready(function () {
             return;
         }
         countCollectionWebSocket.restoreCollection(collectionId);
+    });
+
+    $(document).on('click', '.deleteCountLinkButton', function () {
+        const collectionId = $(this).attr('collectionlinkitemid');
+        if (!collectionId) {
+            return;
+        }
+        if (confirm("Are you sure you want to permanently delete this count collection?")) {
+            countCollectionWebSocket.deleteCollection(collectionId);
+        }
     });
 });
