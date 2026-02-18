@@ -15,6 +15,7 @@ from django.db import connection
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
 from django.forms.models import modelformset_factory
 from django.http import HttpResponseRedirect, JsonResponse, HttpResponseForbidden, HttpResponse
 from django.core.paginator import Paginator
@@ -1087,7 +1088,6 @@ def display_count_list(request):
     )
 
     todays_date = dt.date.today()
-
     if record_type == 'blendcomponent':
         location_options = [
             'BlendingRack', 'DI Tank', 'DyeShelves', 'ExtraRack', 'Joeys Warehouse',
@@ -1132,14 +1132,32 @@ def display_count_collection_links(request):
     Template:
         core/inventorycounts/countcollectionlinks.html
     """
-    count_collection_links = CountCollectionLink.objects.all().order_by('link_order')
-    if not count_collection_links.exists():
-        count_collection_exists = False
-    else:
-        count_collection_exists = True
+    count_collection_links = list(CountCollectionLink.objects.filter(is_archived=False).order_by('link_order'))
+    count_collection_exists = len(count_collection_links) > 0
+
+    for link in count_collection_links:
+        link.encoded_list = base64.b64encode(json.dumps(link.count_id_list).encode()).decode()
 
     return render(request, 'core/inventorycounts/countcollectionlinks.html', {'count_collection_links' : count_collection_links,
                                                                               'count_collection_exists' : count_collection_exists})
+
+@login_required
+@staff_member_required
+def display_archived_collection_links(request):
+    """Display archived collection links for inventory tracking (staff only)."""
+    all_links = CountCollectionLink.objects.filter(is_archived=True).order_by('-created_at')
+    count_collection_exists = all_links.exists()
+
+    paginator = Paginator(all_links, 50)
+    page_number = request.GET.get('page', 1)
+    page = paginator.get_page(page_number)
+
+    for link in page:
+        link.encoded_list = base64.b64encode(json.dumps(link.count_id_list).encode()).decode()
+
+    return render(request, 'core/inventorycounts/archivedcountcollectionlinks.html', {'count_collection_links' : page,
+                                                                                       'count_collection_exists' : count_collection_exists,
+                                                                                       'current_page' : page})
 
 def display_count_records(request):
     """Display count records for inventory tracking.
@@ -1234,19 +1252,34 @@ def display_count_report(request):
     #         count_record.variance_last_year = analysis['variance_last_year']
 
     item_codes = [item.item_code for item in count_records_queryset]
-    oldest_receiptnos = {item.receiptno: (item.itemcode, item.receiptdate) for item in ImItemCost.objects.filter(itemcode__in=item_codes).filter(quantityonhand__gt=0).order_by('receiptdate')}
+    _valid_receipt_regex = r'^[A-Z]\d{6}$'
 
-    # Ensure only the oldest tuple is kept for each part number in oldest_receiptnos
-    filtered_oldest_receiptnos = {}
-    for receiptno, (itemcode, receiptdate) in oldest_receiptnos.items():
-        if itemcode not in filtered_oldest_receiptnos or receiptdate < filtered_oldest_receiptnos[itemcode][1]:
-            filtered_oldest_receiptnos[itemcode] = (receiptno, receiptdate)
-            # print(f'KEEPING {itemcode, (receiptno, receiptdate) }')
-    oldest_receiptnos = filtered_oldest_receiptnos
+    oldest_receiptnos = {}
+    for row in (
+        ImItemCost.objects.filter(itemcode__in=item_codes)
+        .filter(receiptno__regex=_valid_receipt_regex)
+        .filter(quantityonhand__gt=0)
+        .order_by('receiptdate')
+    ):
+        oldest_receiptnos.setdefault(row.itemcode, (row.receiptno, row.receiptdate))
+
+    newest_receiptnos = {}
+    for row in (
+        ImItemCost.objects.filter(itemcode__in=item_codes)
+        .filter(receiptno__regex=_valid_receipt_regex)
+        .order_by('receiptdate')
+    ):
+        newest_receiptnos[row.itemcode] = (row.receiptno, row.receiptdate)
 
     for item in count_records_queryset:
-        item.receiptno = oldest_receiptnos.get(item.item_code,['Not found','Not found'])[0]
-        item.receiptdate = oldest_receiptnos.get(item.item_code,['Not found','Not found'])[1]
+        expected = item.expected_quantity or 0
+        counted = item.counted_quantity or 0
+        if expected == 0 and counted > 0:
+            lookup = newest_receiptnos
+        else:
+            lookup = oldest_receiptnos
+        item.receiptno = lookup.get(item.item_code, ('Not found', 'Not found'))[0]
+        item.receiptdate = lookup.get(item.item_code, ('Not found', 'Not found'))[1]
         if item.variance:
             if abs(item.variance) > 200:
                 item.suspicious = True

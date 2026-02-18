@@ -43,6 +43,8 @@ export class CountCollectionWebSocket {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         this.callbacks = {
             collection_updated: options.onCollectionUpdated,
+            collection_archived: options.onCollectionArchived || options.onCollectionDeleted,
+            collection_restored: options.onCollectionRestored,
             collection_deleted: options.onCollectionDeleted,
             collection_added: options.onCollectionAdded,
             collection_order_updated: options.onCollectionOrderUpdated,
@@ -99,8 +101,12 @@ export class CountCollectionWebSocket {
             
             if (data.type === 'collection_updated') {
                 this.updateCollectionUI(data.collection_id, data.new_name);
+            } else if (data.type === 'collection_archived') {
+                this.removeCollectionUI(data.collection_id);
             } else if (data.type === 'collection_deleted') {
                 this.removeCollectionUI(data.collection_id);
+            } else if (data.type === 'collection_restored') {
+                this.addCollectionUI(data);
             } else if (data.type === 'collection_added') { 
                 this.addCollectionUI(data);
             } else if (data.type === 'collection_order_updated') {
@@ -162,6 +168,20 @@ export class CountCollectionWebSocket {
         }));
     }
 
+    archiveCollection(collectionId) {
+        this.socket.send(JSON.stringify({
+            action: 'archive_collection',
+            collection_id: collectionId
+        }));
+    }
+
+    restoreCollection(collectionId) {
+        this.socket.send(JSON.stringify({
+            action: 'restore_collection',
+            collection_id: collectionId
+        }));
+    }
+
     deleteCollection(collectionId) {
         this.socket.send(JSON.stringify({
             action: 'delete_collection',
@@ -186,26 +206,56 @@ export class CountCollectionWebSocket {
     }
 
     removeCollectionUI(collectionId) {
-        console.log("removing " + collectionId);
-        console.log($(`tr[collectionlinkitemid="${collectionId}"]`));
         $(`tr[collectionlinkitemid="${collectionId}"]`).remove();
+        if ($('#countCollectionLinkTable tbody tr').length === 0) {
+            $('#collectionTableWrapper').hide();
+            $('#emptyCollectionMessage').show();
+        }
     }
 
     addCollectionUI(data) {
-        console.log('adding ' + data);
-        let lastRow = $('table tr:last').clone();
-        lastRow.find('td').attr('data-collection-id', data.id);
-        lastRow.attr('collectionlinkitemid', data.id);
-        lastRow.find('td.listOrderCell').text(data.link_order);
-        lastRow.find('a.collectionLink').attr('href', `/core/count-list/display/?listId=${data.id}&recordType=${data.record_type}`);
-        lastRow.find('input.collectionNameElement').val(data.collection_name);
-        lastRow
-            .find('i.deleteCountLinkButton')
-            .attr('collectionlinkitemid', data.id)
-            .removeAttr('disabled')
-            .removeClass('disabled');
-        $('#countCollectionLinkTable').append(lastRow);
-        // lastRow.find('td.collectionId').text(collectionLinkInfo.collection_id);
+        const id = data.collection_id || data.id;
+
+        $('#emptyCollectionMessage').hide();
+        $('#collectionTableWrapper').show();
+
+        const row = $('<tr>', { class: 'tableBodyRow' }).attr('collectionlinkitemid', id);
+        row.append($('<td>', { class: 'listOrderCell', style: 'display:none;' }).text(data.link_order || ''));
+
+        const nameCell = $('<td>').attr('data-collection-id', id);
+        nameCell.append(
+            $('<input>', { class: 'collectionNameElement' })
+                .attr('id', `input${id}`)
+                .attr('collectionlinkitemid', id)
+                .val(data.collection_name || '')
+        );
+        row.append(nameCell);
+
+        row.append(
+            $('<td>').append(
+                $('<a>', { class: 'collectionLink' })
+                    .attr('href', `/core/count-list/display/?listId=${id}&recordType=${data.record_type}`)
+                    .text('Enter Counts >>')
+            )
+        );
+
+        row.append(
+            $('<td>', { class: 'text-center' }).append(
+                $('<button>', { class: 'btn btn-outline-secondary archiveCountLinkButton' })
+                    .attr('collectionlinkitemid', id)
+                    .append($('<i>', { class: 'fa-solid fa-box-archive' }))
+            )
+        );
+
+        row.append(
+            $('<td>', { class: 'text-center' }).append(
+                $('<button>', { class: 'btn btn-outline-danger deleteCountLinkButton' })
+                    .attr('collectionlinkitemid', id)
+                    .append($('<i>', { class: 'fa-solid fa-trash' }))
+            )
+        );
+
+        $('#countCollectionLinkTable tbody').append(row);
     }
 
     updateCollectionOrderUI(updatedOrderPairs) {
