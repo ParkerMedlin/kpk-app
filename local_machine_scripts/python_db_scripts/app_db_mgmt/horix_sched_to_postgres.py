@@ -347,3 +347,4 @@ def ensure_daily_runtime_minimum(df, prod_line, target_hours=10):
             df.loc[df['id2'] == df.at[id2, 'id2'], 'run_time'] += remainder
 
     return df
+

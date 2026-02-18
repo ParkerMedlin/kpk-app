@@ -143,6 +143,7 @@ app/prodverse/static/prodverse/html/OneDrive - Kinpak, Inc/.849C9593-D756-4E56-8
 /db_imports/*
 !/db_imports/.gitkeep
 !/db_imports/sql_columns_with_types/*
+/db_backups/*
 **/prodverse/static/prodverse/html/
 
 # static folder created by manage.py collectstatic
@@ -159,9 +160,16 @@ app/static/shared/js/*
 nginx/ssl/*.key
 nginx/ssl/*.csr
 nginx/ssl/*.crt
+nginx/ssl/**/*.key
+nginx/ssl/**/*.csr
+nginx/ssl/**/*.crt
 !nginx/ssl/*.cnf
 !nginx/ssl/README.md
 !nginx/ssl/notes/**
+
+# keep media assets local/prod but out of git history
+ws4kp/server/music/default/
+ws4kp/server/images/gimp/
 
 control-panel/bin/kpk-control-panel.exe
 control-panel/bin/*

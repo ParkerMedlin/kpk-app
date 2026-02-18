@@ -614,3 +614,4 @@ def sync_production_schedule(file_buffer=None):
 
     total_time = time.perf_counter() - time_start
     print(f'{dt.datetime.now()} :: prod_sched_to_postgres.py :: sync_production_schedule :: Complete in {total_time:.1f}s')
+

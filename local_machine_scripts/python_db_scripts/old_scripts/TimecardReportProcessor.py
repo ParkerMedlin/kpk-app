@@ -295,3 +295,4 @@ def set_null_attendance_flags_to_false(cursor_postgres):
 
 if __name__ == '__main__':
     process_timecard_report()
+

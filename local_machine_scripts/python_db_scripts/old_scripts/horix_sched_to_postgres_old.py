@@ -96,3 +96,4 @@ def get_horix_line_blends():
     connection_postgres.commit()
     cursor_postgres.close()
     connection_postgres.close()
+
