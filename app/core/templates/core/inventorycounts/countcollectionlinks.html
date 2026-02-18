@@ -42,10 +42,9 @@
             <thead class="thead-dark">
                 <tr>
                     <th scope="col">Collection</th>
+                    <th scope="col">Link</th>
                     {% if user.is_staff %}
-                        <th scope="col">Link</th>
-                        <th scope="col">Archive</th>
-                        <th scope="col">Delete</th>
+                        <th scope="col"></th>
                     {% endif %}
                 </tr>
             </thead>
@@ -63,11 +62,12 @@
                     {% if user.is_staff %}
                         <td><a class="collectionLink" href="/core/count-list/display/?listId={{ item.id }}&recordType={{ item.record_type }}">Enter Counts >></a></td>
                         <td class="text-center">
+                            <a class="btn btn-outline-primary" href="{% url 'display-finished-counts' %}?encodedList={{ item.encoded_list }}&recordType={{ item.record_type }}">
+                                <i class="fa-solid fa-paper-plane"></i>
+                            </a>
                             <button class="btn btn-outline-secondary archiveCountLinkButton" collectionlinkitemid="{{ item.id }}" disabled="disabled">
                                 <i class="fa-solid fa-box-archive"></i>
                             </button>
-                        </td>
-                        <td class="text-center">
                             <button class="btn btn-outline-danger deleteCountLinkButton" collectionlinkitemid="{{ item.id }}" disabled="disabled">
                                 <i class="fa-solid fa-trash"></i>
                             </button>

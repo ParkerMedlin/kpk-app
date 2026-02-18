@@ -18,8 +18,7 @@
                 <tr>
                     <th scope="col">Collection Name</th>
                     <th scope="col">Created Date</th>
-                    <th scope="col">Restore</th>
-                    <th scope="col">Delete</th>
+                    <th scope="col"></th>
                 </tr>
             </thead>
             <tbody>
@@ -30,11 +29,12 @@
                         </td>
                         <td>{% if item.created_at %}{{ item.created_at|date:"m/d/Y" }}{% endif %}</td>
                         <td class="text-center">
+                            <a class="btn btn-outline-primary" href="{% url 'display-finished-counts' %}?encodedList={{ item.encoded_list }}&recordType={{ item.record_type }}">
+                                <i class="fa-solid fa-paper-plane"></i>
+                            </a>
                             <button class="btn btn-outline-success restoreCountLinkButton" collectionlinkitemid="{{ item.id }}">
                                 <i class="fa-solid fa-rotate-left"></i>
                             </button>
-                        </td>
-                        <td class="text-center">
                             <button class="btn btn-outline-danger deleteCountLinkButton" collectionlinkitemid="{{ item.id }}">
                                 <i class="fa-solid fa-trash"></i>
                             </button>
