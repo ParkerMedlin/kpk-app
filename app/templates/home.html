@@ -8,18 +8,9 @@
   {% if user.is_authenticated %}
     Hi {{ user.first_name }}!
     <br><br>
-    {% with user.username|lower as username_lower %}
-      {% if username_lower == 'jdavis' %}
-        {% include_optional 'jdavis_local_only/home.html' as jdavis_home %}
-        {% if jdavis_home %}
-          {{ jdavis_home }}
-        {% elif user.is_staff or user.username == 'kkeyes' %}
-          {% include 'blendmanagerhome.html' %}
-        {% endif %}
-      {% elif user.is_staff or user.username == 'kkeyes' %}
-        {% include 'blendmanagerhome.html' %}
-      {% endif %}
-    {% endwith %}
+    {% if user.is_staff or user.username == 'kkeyes' %}
+      {% include 'blendmanagerhome.html' %}
+    {% endif %}
     {% comment %} <a class="btn btn-secondary" href="/core/forklift-checklist">Create New Forklift Log</a> {% endcomment %}
   {% else %}
     <p class='text-left'>You are not logged in.</p>

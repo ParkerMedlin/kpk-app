@@ -46,7 +46,6 @@ ALLOWED_HOSTS.extend(
 ALLOWED_HOSTS.extend([
     'kpkapp.lan',
     '.kpkapp.lan',
-    'jrd.kpkapp.lan',
     'rpm.kpkapp.lan',
 ])
 
@@ -70,7 +69,6 @@ CSRF_TRUSTED_ORIGINS = [
     '*.192.168.178.101:1338',
     'kpkapp.lan',
     '.kpkapp.lan',
-    'jrd.kpkapp.lan',
     'rpm.kpkapp.lan',
 ]
 
@@ -114,7 +112,6 @@ INSTALLED_APPS = [
     'django',
     'croniter',
     'core.templatetags',
-    'nav3d',
 ]
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
