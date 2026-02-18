@@ -1,1 +1,0 @@
-SET "PGPASSWORD=REDACTED_DB_PASSWORD"&& "C:\Program Files\PostgreSQL\15\bin\psql.exe" -h localhost -p 5432 -U postgres -d blendversedb -f "%USERPROFILE%\Desktop\core_deskoneschedule_dump.sql"

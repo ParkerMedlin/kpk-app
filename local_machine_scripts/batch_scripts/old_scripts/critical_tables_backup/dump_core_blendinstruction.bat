@@ -1,1 +1,0 @@
-docker exec -t kpk-app_db_1 pg_dump --table="public.core_blendinstruction" -d blendversedb -U postgres > "%USERPROFILE%\Desktop\core_blendinstruction_dump.sql"
