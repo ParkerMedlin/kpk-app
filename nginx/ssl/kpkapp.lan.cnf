@@ -20,7 +20,6 @@ subjectAltName = @alt_names
 [ alt_names ]
 DNS.1 = kpkapp.lan
 DNS.2 = *.kpkapp.lan
-DNS.3 = jrd.kpkapp.lan
-DNS.4 = rpm.kpkapp.lan
+DNS.3 = rpm.kpkapp.lan
 IP.1 = 192.168.178.168
 IP.2 = 192.168.178.169

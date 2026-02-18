@@ -1,7 +1,7 @@
 # Kinpak Internal TLS Playbook
 
 This workflow replaces the ad-hoc “exceladdin” certificates with an internal CA that can issue trusted
-certificates for `kpkapp.lan` and any subdomain you stand up (e.g. `jrd.kpkapp.lan`, `rpm.kpkapp.lan`).
+certificates for `kpkapp.lan` and any subdomain you stand up (e.g. `rpm.kpkapp.lan`).
 Certificates live in `nginx/ssl/` but are generated locally so private keys stay off of Git.
 
 ## 1. Generate / refresh certificates
@@ -15,7 +15,7 @@ What the script does:
 - creates (or reuses) `nginx/ssl/kpkapp-rootCA.crt` and `.key`
 - issues `kpkapp.lan.crt`, `kpkapp.lan.key`, plus chain/PEM bundles with SANs for:
   - `kpkapp.lan`, `*.kpkapp.lan`
-  - `jrd.kpkapp.lan`, `rpm.kpkapp.lan`
+  - `rpm.kpkapp.lan`
   - 192.168.178.168 and 192.168.178.169
 
 Environment overrides:
