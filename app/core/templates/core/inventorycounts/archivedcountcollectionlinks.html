@@ -45,6 +45,18 @@
         </table>
     </div>
 
+    {% if current_page.paginator.num_pages > 1 %}
+        <div class="text-center mt-3">
+            {% if current_page.has_previous %}
+                <a href="?page={{ current_page.previous_page_number }}" class="btn btn-outline-secondary btn-sm">Previous</a>
+            {% endif %}
+            <span class="mx-2">Page {{ current_page.number }} of {{ current_page.paginator.num_pages }}</span>
+            {% if current_page.has_next %}
+                <a href="?page={{ current_page.next_page_number }}" class="btn btn-outline-secondary btn-sm">Next</a>
+            {% endif %}
+        </div>
+    {% endif %}
+
     {% if not count_collection_exists %}
         <p id="archivedCollectionEmptyState" class="text-muted">No archived count collections.</p>
     {% endif %}
