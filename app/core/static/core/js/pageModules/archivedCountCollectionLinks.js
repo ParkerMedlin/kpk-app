@@ -1,4 +1,5 @@
 import { CountCollectionWebSocket } from '../objects/webSocketObjects.js';
+import { confirmAction } from '../objects/confirmModal.js';
 
 $(document).ready(function () {
     const table = document.getElementById('archivedCountCollectionLinkTable');
@@ -151,12 +152,12 @@ $(document).ready(function () {
         countCollectionWebSocket.restoreCollection(collectionId);
     });
 
-    $(document).on('click', '.deleteCountLinkButton', function () {
+    $(document).on('click', '.deleteCountLinkButton', async function () {
         const collectionId = $(this).attr('collectionlinkitemid');
         if (!collectionId) {
             return;
         }
-        if (confirm("Are you sure you want to permanently delete this count collection?")) {
+        if (await confirmAction("Are you sure you want to permanently delete this count collection?")) {
             countCollectionWebSocket.deleteCollection(collectionId);
         }
     });
